@@ -23,7 +23,7 @@ import { fileURLToPath } from 'node:url';
  * реестр MAPS в scripts/import-pptx.py (там же презентации и профили разбора);
  * их совпадение сторожит tests/mapRegistry.test.ts.
  */
-export const MAP_IDS = ['snp', 'mrp'] as const;
+export const MAP_IDS = ['snp', 'mrp', 'dp', 'meio'] as const;
 export type MapId = (typeof MAP_IDS)[number];
 
 /** Карта, которая раздаётся из корня сайта и собирается без флагов. */

@@ -32,6 +32,8 @@ const importerSource = readFileSync(IMPORTER_PATH, 'utf8');
 const MAPS = [
   { id: 'snp', suffix: '' },
   { id: 'mrp', suffix: '_MRP' },
+  { id: 'dp', suffix: '_DP' },
+  { id: 'meio', suffix: '_MEIO' },
 ] as const;
 
 /** Читает python-константу-строку верхнего уровня по имени. */

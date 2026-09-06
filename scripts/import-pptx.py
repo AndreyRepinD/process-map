@@ -164,6 +164,23 @@ MAP_MODULE_LABEL_MRP = "Модуль MRP"
 MAP_UPDATED_AT_MRP = "2026-09-01"
 MAP_DATA_FINGERPRINT_MRP = "394e6ee9b381b0fd01eda89ffc7391993810474ae7c0cdee669023bf429fc9cd"
 
+# --- карты DP и MEIO ---------------------------------------------------------
+# Собираются с одиночного слайда, СГЕНЕРИРОВАННОГО из authoring source владельца
+# (scripts/author/<map>.json → scripts/author/<map>.py → pptx). Презентации у этих
+# карт исходно не было: содержание задано двумя слайдами владельца и заморожено.
+# Имена констант плоские с суффиксом — этого требует tests/mapFingerprint.test.ts.
+MAP_ID_DP = "dp"
+MAP_TITLE_DP = "Процесс планирования спроса"
+MAP_MODULE_LABEL_DP = "Модуль DP"
+MAP_UPDATED_AT_DP = "2026-09-06"
+MAP_DATA_FINGERPRINT_DP = "6bbdda7fc8ccde2e988ab3dca60e4b419b7bfbc5fbe6f0ff5a0305d081236b79"
+
+MAP_ID_MEIO = "meio"
+MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
+MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
+MAP_UPDATED_AT_MEIO = "2026-09-06"
+MAP_DATA_FINGERPRINT_MEIO = "48dbe25b0d0e8c4324aa33eb92ed3ef93547bee81e2cd003fb70499d1d08858c"
+
 
 @dataclass(frozen=True)
 class MapSpec:
@@ -198,11 +215,10 @@ class MapSpec:
     #
     # БЫЛО КОНСТАНТОЙ STAGE_COUNT = 4 с комментарием «ограничение zod-схемы:
     # number ∈ {1,2,3,4}». Комментарий устарел задачей process-map-70e.4:
-    # StageSchema.number стал z.number().int().min(1), а проверка «ровно четыре»
-    # переехала в tests/<map>/content.test.ts. Импортёр остался единственным
-    # местом, где четвёрка ещё жёсткая, — и молча не давал собрать карту с
-    # пятью этапами. Мёртвая константа врёт тише, чем падает, поэтому число
-    # переехало в реестр, к своей карте.
+    # StageSchema.number стал z.number().int().min(1), а импортёр остался
+    # единственным местом, где четвёрка ещё жёсткая — и он молча не давал
+    # собрать карту DP с её пятью этапами. Мёртвая константа врёт тише, чем
+    # падает, поэтому число переехало в реестр, к своей карте.
     stages_expected: int
     map_id: str
     title: str
@@ -241,6 +257,36 @@ MAPS: dict[str, MapSpec] = {
         module_label=MAP_MODULE_LABEL_MRP,
         updated_at=MAP_UPDATED_AT_MRP,
         fingerprint=MAP_DATA_FINGERPRINT_MRP,
+    ),
+    "dp": MapSpec(
+        key="dp",
+        pptx=ROOT / "In.Plan DP process 06-09-2026.pptx",
+        json=ROOT / "src" / "data" / "dp" / "process.json",
+        required_nodes=ROOT / "tests" / "fixtures" / "dp" / "required-nodes.json",
+        profile="single-slide",
+        slides=1,
+        slide_index=0,
+        stages_expected=5,
+        map_id=MAP_ID_DP,
+        title=MAP_TITLE_DP,
+        module_label=MAP_MODULE_LABEL_DP,
+        updated_at=MAP_UPDATED_AT_DP,
+        fingerprint=MAP_DATA_FINGERPRINT_DP,
+    ),
+    "meio": MapSpec(
+        key="meio",
+        pptx=ROOT / "In.Plan MEIO process 06-09-2026.pptx",
+        json=ROOT / "src" / "data" / "meio" / "process.json",
+        required_nodes=ROOT / "tests" / "fixtures" / "meio" / "required-nodes.json",
+        profile="single-slide",
+        slides=1,
+        slide_index=0,
+        stages_expected=4,
+        map_id=MAP_ID_MEIO,
+        title=MAP_TITLE_MEIO,
+        module_label=MAP_MODULE_LABEL_MEIO,
+        updated_at=MAP_UPDATED_AT_MEIO,
+        fingerprint=MAP_DATA_FINGERPRINT_MEIO,
     ),
 }
 
@@ -1864,9 +1910,138 @@ def choose_key_outputs(
 #
 # Карты snp и mrp здесь НЕ ПЕРЕЧИСЛЕНЫ намеренно: их содержание снято с
 # презентаций и меняться не должно.
-STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {}
+STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
+    "dp": {
+        "podgotovka-sopostavimoy-istorii": (
+            "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, "
+            "промо, ML-очистка. Перенос истории при смене схемы, замена SKU через DFU, "
+            "исключения планеру.\n\n"
+            "BPMN: DP-020 — Очистка данных"
+        ),
+        "segmentaciya-klasterizaciya-i-nastroyka-metodov": (
+            "Сегментация и кластеризация номенклатуры: ABC/XYZ, непрерывность, тренд, "
+            "ML-кластеризация, сезонность. Привязка методов и параметров прогнозирования "
+            "к сегменту.\n\n"
+            "BPMN: DP-040 — Управление сегментами (семействами)"
+        ),
+        "assortiment-metody-i-chempion": (
+            "Расчёт прогноза по ассортименту: статистика, ансамбли, ML. Выбор чемпиона "
+            "для серии по backtest. Референс, коэффициент, даты действия.\n\n"
+            "BPMN: DP-060 — Прогнозирование базовой линии"
+        ),
+        "novinki-pohozhie-tovary": (
+            "Прогноз новинок по похожим товарам.\n\n"
+            "BPMN: DP-070-020 — Планирование новинки"
+        ),
+        "promo-light-prognoz-promo-obemov-opcionalno": (
+            "Прогноз промо-объёмов: календарь акций и механик; промо-объёмы по "
+            "промо-эффектам из истории или промо-план из TPM/NRM.\n\n"
+            "«Опционально» означает, что шаг может быть пропущен по содержанию: если "
+            "промо нет, базовый прогноз проходит этап без изменений. Из потока шаг при "
+            "этом не выпадает — он единственный выход этапа 2.\n\n"
+            "BPMN: DP-070-050 — Анализ промо-плана"
+        ),
+        "pryamye-kanaly-pryamoy-prognoz-sell-in": "Прямой прогноз Sell-In для прямых каналов сбыта.",
+        "sell-out-balans-sell-in": (
+            "Пересчёт Sell-Out в Sell-In через материальный баланс: остатки, транзит, "
+            "открытые заказы, целевой запас; прогнозный остаток и дни покрытия.\n\n"
+            "BPMN: DP-070-070 — Demand Propagation. Автоматизированный расчет Sell-In "
+            "дистрибутора"
+        ),
+        "building-blocks-i-korrektirovki": (
+            "Обогащение прогноза блоками Building Blocks: объёмные, процентные, "
+            "замещающие. Распределение вниз и пересчёт вверх, версии и аудит правок.\n\n"
+            "BPMN: DP-070 — Обогащение прогноза"
+        ),
+        "demand-review-meeting": (
+            "Согласование прогноза на Demand Review Meeting: консенсус в объёме и в "
+            "деньгах, согласование исключений, согласованный план спроса Sell-In.\n\n"
+            "BPMN: DP-080-010 — Анализ скорректированного прогноза по итогам DRM"
+        ),
+        "publikaciya-i-analiz-tochnosti": (
+            "Дезагрегация DFU → SKU и публикация плана с лагом, передача плана в SNP и "
+            "MEIO. Контроль точности: FA, MAPE, BIAS, алерты. Разрыв с планом SNP "
+            "выносится на решение.\n\n"
+            "BPMN: DP-080-030 — Дезагрегация DFU->SKU и публикация прогноза"
+        ),
+    },
+    "meio": {
+        "podgotovka-dannyh": (
+            "Анализ структуры текущих запасов и фактических отгрузок за период; "
+            "формирование модели данных для расчёта.\n\n"
+            "BPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)"
+        ),
+        "nastroyka-parametrov-dlya-rascheta-urovney-zapasov": (
+            "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и "
+            "волатильность, затраты на хранение, минимальный размер партии и кратность.\n\n"
+            "BPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)"
+        ),
+        "segmentaciya": (
+            "Сегментация номенклатуры по пяти признакам: Lifecycle — стадия жизненного "
+            "цикла; ADI-CV — характер спроса по среднему интервалу между заказами и "
+            "коэффициенту вариации; ABC — вклад в оборот; FMR — частота обращения; XYZ — "
+            "стабильность потребления.\n\n"
+            "Отдельной задачи сегментации в модуле IO модели BPMN нет: шаг существует "
+            "только на слайде."
+        ),
+        "raschet-rekomendaciy-po-urovnyam-zapasov": (
+            "Оптимизационный расчёт уровней запасов по параметрам и ограничениям: "
+            "страховой, целевой и циклический запас, точка заказа, рекомендованный "
+            "уровень сервиса.\n\n"
+            "BPMN: IO-020 — Расчет рекомендаций по уровням запасов (IO)"
+        ),
+        "analiz-poluchennyh-znacheniy": (
+            "Сценарное моделирование: три сценария с изменением политик пополнения, "
+            "интерпретация полученных значений и корректировка.\n\n"
+            "Варианты сценариев будут уточнены по ходу проекта (сноска слайда).\n\n"
+            "BPMN: IO-030 — Расчет альтернативного сценария с новыми входными данными"
+        ),
+        "ocenka-effektov": (
+            "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев, "
+            "формирование рекомендаций для бизнеса.\n\n"
+            "BPMN: IO-040 — Отчетность: проверка соответствия рассчитанных запасов "
+            "бюджетным значениям"
+        ),
+    },
+}
 
-STAGE_KEY_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {}
+STAGE_KEY_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
+    "dp": {
+        "stage-1-podgotovka-istorii": (
+            "Сопоставимая история",
+        ),
+        "stage-2-raschet-prognoza": (
+            "Базовый прогноз с чемпионом по серии",
+            "Промо-объёмы",
+        ),
+        "stage-3-sell-in-po-modeli-kanala": (
+            "Прогноз Sell-In по каналам",
+        ),
+        "stage-4-obogaschenie-i-soglasovanie": (
+            "Согласованный план спроса Sell-In",
+        ),
+        "stage-5-publikaciya-i-kontrol-tochnosti": (
+            "Опубликованный план спроса в SNP и MEIO",
+            "KPI точности прогноза",
+        ),
+    },
+    "meio": {
+        "stage-1-poluchenie-dannyh": (
+            "Модель данных для расчёта",
+        ),
+        "stage-2-podgotovka-k-raschetu": (
+            "Настроенные параметры расчёта",
+            "Сегментация по пяти признакам",
+        ),
+        "stage-3-raschet-i-analiz": (
+            "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
+            "Три сценария",
+        ),
+        "stage-4-ocenka-effektov": (
+            "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев",
+        ),
+    },
+}
 
 
 # --------------------------------------------------------------------------------------

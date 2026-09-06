@@ -14,16 +14,46 @@ export interface MapExpectations {
   moduleLabel: string;
   /** Заголовок вкладки: его подставляет плагин сборки из данных карты. */
   pageTitle: string;
+  /** Сколько карточек этапов на обзоре. */
+  stageCount: number;
+  /**
+   * Текст бейджа в шапке целиком: «4 этапа», «5 этапов».
+   *
+   * ПОЧЕМУ СТРОКОЙ, А НЕ ФОРМУЛОЙ ОТ stageCount. Множественное число считает
+   * pluralRu из src/utils/format.ts, а e2e намеренно ничего из src/ не
+   * импортируют: проверка «что видит пользователь» не должна брать ожидаемое
+   * значение оттуда же, откуда его берёт приложение. Формула здесь была бы
+   * копией той же логики и молча повторила бы её ошибку.
+   */
+  stageBadge: string;
 }
 
 export const MAP_EXPECTATIONS: Record<string, MapExpectations> = {
   snp: {
     moduleLabel: 'Модуль SNP',
     pageTitle: 'E2E-процесс планирования поставок',
+    stageCount: 4,
+    stageBadge: '4 этапа',
   },
   mrp: {
     moduleLabel: 'Модуль MRP',
     pageTitle: 'Процесс планирования потребности в материалах',
+    stageCount: 4,
+    stageBadge: '4 этапа',
+  },
+  dp: {
+    moduleLabel: 'Модуль DP',
+    pageTitle: 'Процесс планирования спроса',
+    // Пять этапов — первая карта репозитория не с четырьмя. Обзор раскладывает
+    // их сеткой 4+1 (MAX_STAGE_COLUMNS в overviewGraph.ts), а не одним рядом.
+    stageCount: 5,
+    stageBadge: '5 этапов',
+  },
+  meio: {
+    moduleLabel: 'Модуль MEIO',
+    pageTitle: 'Процесс мультиэшелонной оптимизации запасов',
+    stageCount: 4,
+    stageBadge: '4 этапа',
   },
 };
 

@@ -1,0 +1,162 @@
+// Содержание карты MEIO: что именно задано authoring source владельца.
+//
+// ЗАЧЕМ ДОСЛОВНЫЕ СТРОКИ — см. шапку tests/dp/content.test.ts: фикстуру пишет
+// сам импортёр, и тихую регрессию разбора она не поймает.
+//
+// СОДЕРЖАНИЕ ЗАМОРОЖЕНО (CONTENT_FROZEN, решение владельца от 06.09.2026).
+import { describe, expect, it } from 'vitest';
+import { ProcessMapSchema, type ProcessNode } from '../../src/data/schema.ts';
+import processJson from '../../src/data/meio/process.json';
+
+const map = ProcessMapSchema.parse(processJson);
+const nodes = map.stages.flatMap((stage) => stage.nodes);
+const steps = nodes.filter((node) => node.type !== 'data');
+const data = nodes.filter((node) => node.type === 'data');
+
+const STAGE_TITLES = [
+  'Получение данных',
+  'Подготовка к расчёту',
+  'Расчёт и анализ',
+  'Оценка эффектов',
+];
+
+const STEPS_BY_STAGE: string[][] = [
+  ['Подготовка данных'],
+  ['Настройка параметров для расчёта уровней запасов', 'Сегментация'],
+  ['Расчёт рекомендаций по уровням запасов', 'Анализ полученных значений'],
+  ['Оценка эффектов'],
+];
+
+const INPUTS = [
+  'Структура текущих запасов и фактические отгрузки из ERP',
+  'Спрос и волатильность из DP',
+  'Параметры цепочки из ERP',
+];
+
+const OUTPUTS = ['Уровни запасов в SNP/PS и MRP', 'Оценка эффектов и рекомендации'];
+
+function labels(list: ProcessNode[]): string[] {
+  return list.map((node) => node.label).sort();
+}
+
+describe('карта MEIO: четыре этапа', () => {
+  it('ровно четыре этапа с номерами 1..4 и заголовками дословно', () => {
+    expect(map.stages).toHaveLength(4);
+    expect(map.stages.map((stage) => stage.number)).toEqual([1, 2, 3, 4]);
+    expect(map.stages.map((stage) => stage.title)).toEqual(STAGE_TITLES);
+  });
+});
+
+describe('карта MEIO: содержание', () => {
+  it('шесть шагов, по этапам, дословно', () => {
+    expect(steps).toHaveLength(6);
+    for (const [index, stage] of map.stages.entries()) {
+      expect(
+        labels(stage.nodes.filter((node) => node.type !== 'data')),
+        `этап ${stage.number}`,
+      ).toEqual([...(STEPS_BY_STAGE[index] ?? [])].sort());
+    }
+  });
+
+  it('три входа и два выхода, каждый при своём этапе', () => {
+    expect(data).toHaveLength(5);
+    expect(labels(data.filter((node) => node.direction === 'in'))).toEqual([...INPUTS].sort());
+    expect(labels(data.filter((node) => node.direction === 'out'))).toEqual([...OUTPUTS].sort());
+
+    const stageOf = (label: string): number | undefined =>
+      map.stages.find((stage) => stage.nodes.some((node) => node.label === label))?.number;
+    expect(stageOf('Структура текущих запасов и фактические отгрузки из ERP')).toBe(1);
+    expect(stageOf('Спрос и волатильность из DP')).toBe(2);
+    expect(stageOf('Параметры цепочки из ERP')).toBe(2);
+    expect(stageOf('Уровни запасов в SNP/PS и MRP')).toBe(3);
+    expect(stageOf('Оценка эффектов и рекомендации')).toBe(4);
+  });
+
+  it('рёбра внутри этапов: 1 + 3 + 2 + 1', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([1, 3, 2, 1]);
+  });
+
+  it('обзорные рёбра — линейный поток 1 → 2 → 3 → 4 без обратного', () => {
+    // Обратной связи «анализ → расчёт» нет: шлюз «Необх. корректировка?» есть в
+    // BPMN (docs/reconciliation/dp-meio-bpmn.md, BPMN_ONLY), но на слайде
+    // отсутствует, а рёбра не из презентации заводятся только решением владельца.
+    const ids = map.stages.map((stage) => stage.id);
+    const pairs = map.overviewEdges
+      .filter((edge) => edge.kind === 'process')
+      .map((edge) => [ids.indexOf(edge.source) + 1, ids.indexOf(edge.target) + 1])
+      .sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0));
+    expect(pairs).toEqual([
+      [1, 2],
+      [2, 3],
+      [3, 4],
+    ]);
+  });
+
+  it('выход этапа 3 называет ТРИ модуля одной подписью', () => {
+    // Решение владельца от 06.09.2026: подпись называет модуль тем именем,
+    // которое знает словарь систем. Исходная формулировка «Уровни запасов в
+    // SP/PS и MRP» дала бы PS и MRP: токена «SP» в SYSTEM_TOKENS нет, а «PS»
+    // есть, и INPLAN потерялся бы молча. SNP → INPLAN через SYSTEM_ALIASES.
+    expect(map.stages[2]?.outputs.map((io) => io.system)).toEqual(['INPLAN', 'PS', 'MRP']);
+    for (const io of map.stages[2]?.outputs ?? []) {
+      expect(io.label).toBe('Уровни запасов в SNP/PS и MRP');
+    }
+  });
+
+  it('внешние системы входов: ERP на этапе 1, DP и ERP на этапе 2', () => {
+    expect(map.stages[0]?.inputs.map((io) => io.system)).toEqual(['ERP']);
+    expect(map.stages[1]?.inputs.map((io) => io.system)).toEqual(['DP', 'ERP']);
+  });
+
+  it('«Оценка эффектов и рекомендации» внешней системой НЕ стала', () => {
+    // Отчёт для бизнеса: системы в тексте нет, и угадывать её запрещено. Плашка
+    // остаётся data-узлом направления out без ExternalIO — поэтому у этапа 4
+    // выходов среди внешних систем нет, хотя выходная плашка есть.
+    expect(map.stages[3]?.outputs).toEqual([]);
+    expect(data.find((node) => node.label === 'Оценка эффектов и рекомендации')?.direction).toBe(
+      'out',
+    );
+  });
+
+  it('у карты есть и вход, и выход', () => {
+    expect(map.stages.flatMap((stage) => stage.inputs).length).toBeGreaterThan(0);
+    expect(map.stages.flatMap((stage) => stage.outputs).length).toBeGreaterThan(0);
+  });
+
+  it('ключевые выходы объявлены у каждого этапа', () => {
+    expect(map.stages.map((stage) => stage.keyOutputs)).toEqual([
+      ['Модель данных для расчёта'],
+      ['Настроенные параметры расчёта', 'Сегментация по пяти признакам'],
+      [
+        'Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период',
+        'Три сценария',
+      ],
+      ['Комплексная оценка эффектов и параметров поставок на основе трёх сценариев'],
+    ]);
+  });
+
+  it('у каждого шага есть описание; сноска про сценарии — в описании, не в подписи', () => {
+    for (const step of steps) {
+      expect(step.description, `шаг «${step.id}» без описания`).toBeTruthy();
+    }
+    const analysis = steps.find((step) => step.label === 'Анализ полученных значений');
+    expect(analysis?.description).toContain('уточнены по ходу проекта');
+    expect(analysis?.label).not.toContain('уточнены');
+
+    // У «Сегментации» кода BPMN нет: отдельной задачи сегментации в модуле IO
+    // модели нет вовсе (SLIDE_ONLY). Остальные пять шагов код несут.
+    const withCode = steps.filter((step) =>
+      (step.description ?? '').split('\n\n').at(-1)?.startsWith('BPMN: '),
+    );
+    expect(withCode).toHaveLength(5);
+    expect(steps.find((step) => step.label === 'Сегментация')?.description).not.toContain('BPMN:');
+  });
+
+  it('warningsCount не проставлен, группы пусты', () => {
+    for (const stage of map.stages) {
+      expect(stage.warningsCount, `этап ${stage.number}`).toBeUndefined();
+      expect(stage.groups, `этап ${stage.number}`).toEqual([]);
+      expect(stage.nodes.every((node) => node.group === undefined)).toBe(true);
+    }
+  });
+});

@@ -20,13 +20,19 @@ test.beforeEach(async ({ page }) => {
   await page.waitForSelector('.react-flow__node-stage');
 });
 
-test('обзор: шапка, четыре карточки этапов, дата', async ({ page }) => {
+test('обзор: шапка, карточки этапов, дата', async ({ page }, testInfo) => {
   // Здесь же ловится дефект относительных путей к ассетам (base: './'): при
   // нерабочем base бандл не загрузился бы и полотно осталось бы пустым.
+  //
+  // ЧИСЛО ЭТАПОВ — ИЗ ТАБЛИЦЫ, А НЕ ЛИТЕРАЛОМ. Было зашито «4 этапа» и
+  // toHaveCount(4): четвёрка держалась на том, что обе карты репозитория
+  // четырёхэтапные. Карта DP пятиэтапная, и литерал уронил бы смоук на ней —
+  // причём с диагнозом «не загрузилось», хотя загрузилось всё.
+  const expected = expectationsFor(testInfo.project.name);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await expect(page.getByText('4 этапа')).toBeVisible();
+  await expect(page.getByText(expected.stageBadge)).toBeVisible();
   await expect(page.getByText(/^Обновлено /)).toBeVisible();
-  await expect(page.locator('.react-flow__node-stage')).toHaveCount(4);
+  await expect(page.locator('.react-flow__node-stage')).toHaveCount(expected.stageCount);
 });
 
 test('заголовок вкладки — заголовок этой карты', async ({ page }, testInfo) => {
@@ -42,7 +48,7 @@ test('поток этапов обведён рамкой с подписью с
   await expect(frame).toHaveText(expectationsFor(testInfo.project.name).moduleLabel);
 });
 
-test('переход на уровень 2 и возврат кнопкой «Назад»', async ({ page }) => {
+test('переход на уровень 2 и возврат кнопкой «Назад»', async ({ page }, testInfo) => {
   const card = page.locator('.react-flow__node-stage button').first();
   await expect(card).toHaveAttribute('aria-label', /^Этап \d: /);
 
@@ -64,5 +70,7 @@ test('переход на уровень 2 и возврат кнопкой «Н
   // проверять литералом и здесь.
   await expect(page.getByText('E2E-процесс')).toBeVisible();
   await page.getByRole('button', { name: 'Назад к обзору процесса' }).click();
-  await expect(page.locator('.react-flow__node-stage')).toHaveCount(4);
+  await expect(page.locator('.react-flow__node-stage')).toHaveCount(
+    expectationsFor(testInfo.project.name).stageCount,
+  );
 });

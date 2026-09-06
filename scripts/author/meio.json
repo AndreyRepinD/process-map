@@ -1,0 +1,152 @@
+{
+  "_note": "authoring source владельца для карты MEIO (паста §6). Из этого файла scripts/author/meio.py генерирует «In.Plan MEIO process <дата>.pptx» в профиле single-slide и сверяет таблицы STEP_DESCRIPTIONS/STAGE_KEY_OUTPUTS импортёра. CONTENT_FROZEN с 06.09.2026.",
+  "id": "meio",
+  "title": "Процесс мультиэшелонной оптимизации запасов",
+  "moduleLabel": "Модуль MEIO",
+  "stages": [
+    {
+      "number": 1,
+      "title": "Получение данных",
+      "keyOutputs": ["Модель данных для расчёта"],
+      "steps": [
+        {
+          "key": "podgotovka-dannyh",
+          "label": "Подготовка данных",
+          "inputs": ["Анализ структуры текущих запасов", "Фактические отгрузки за период"],
+          "description": "Анализ структуры текущих запасов и фактических отгрузок за период; формирование модели данных для расчёта.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "in",
+          "label": "Структура текущих запасов и фактические отгрузки из ERP",
+          "attachTo": "podgotovka-dannyh",
+          "expectSystems": ["ERP"]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Подготовка к расчёту",
+      "keyOutputs": ["Настроенные параметры расчёта", "Сегментация по пяти признакам"],
+      "steps": [
+        {
+          "key": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "label": "Настройка параметров для расчёта уровней запасов",
+          "inputs": [
+            "Плановые лидтаймы и отклонения",
+            "Квоты",
+            "Спрос и волатильность",
+            "Затраты на хранение",
+            "Минимальный размер партии и кратность"
+          ],
+          "description": "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и волатильность, затраты на хранение, минимальный размер партии и кратность.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)"
+        },
+        {
+          "key": "segmentaciya",
+          "label": "Сегментация",
+          "inputs": ["Lifecycle", "ADI-CV", "ABC", "FMR", "XYZ"],
+          "description": "Сегментация номенклатуры по пяти признакам: Lifecycle — стадия жизненного цикла; ADI-CV — характер спроса по среднему интервалу между заказами и коэффициенту вариации; ABC — вклад в оборот; FMR — частота обращения; XYZ — стабильность потребления.\n\nОтдельной задачи сегментации в модуле IO модели BPMN нет: шаг существует только на слайде."
+        }
+      ],
+      "externals": [
+        {
+          "direction": "in",
+          "label": "Спрос и волатильность из DP",
+          "attachTo": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "expectSystems": ["DP"]
+        },
+        {
+          "direction": "in",
+          "label": "Параметры цепочки из ERP",
+          "attachTo": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "expectSystems": ["ERP"]
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Расчёт и анализ",
+      "keyOutputs": [
+        "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
+        "Три сценария"
+      ],
+      "steps": [
+        {
+          "key": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "label": "Расчёт рекомендаций по уровням запасов",
+          "inputs": [
+            "Параметры оптимизации",
+            "Ограничения",
+            "Страховой, целевой, циклический запас",
+            "Точка заказа",
+            "Рекомендованный уровень сервиса"
+          ],
+          "description": "Оптимизационный расчёт уровней запасов по параметрам и ограничениям: страховой, целевой и циклический запас, точка заказа, рекомендованный уровень сервиса.\n\nBPMN: IO-020 — Расчет рекомендаций по уровням запасов (IO)"
+        },
+        {
+          "key": "analiz-poluchennyh-znacheniy",
+          "label": "Анализ полученных значений",
+          "inputs": [
+            "Сценарное моделирование, 3 сценария",
+            "Изменение политик пополнения",
+            "Интерпретация и корректировка"
+          ],
+          "description": "Сценарное моделирование: три сценария с изменением политик пополнения, интерпретация полученных значений и корректировка.\n\nВарианты сценариев будут уточнены по ходу проекта (сноска слайда).\n\nBPMN: IO-030 — Расчет альтернативного сценария с новыми входными данными"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "out",
+          "label": "Уровни запасов в SNP/PS и MRP",
+          "attachFrom": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "expectSystems": ["INPLAN", "PS", "MRP"]
+        }
+      ]
+    },
+    {
+      "number": 4,
+      "title": "Оценка эффектов",
+      "keyOutputs": ["Комплексная оценка эффектов и параметров поставок на основе трёх сценариев"],
+      "steps": [
+        {
+          "key": "ocenka-effektov",
+          "label": "Оценка эффектов",
+          "inputs": ["Оценка эффектов и формирование рекомендаций"],
+          "description": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев, формирование рекомендаций для бизнеса.\n\nBPMN: IO-040 — Отчетность: проверка соответствия рассчитанных запасов бюджетным значениям"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "out",
+          "label": "Оценка эффектов и рекомендации",
+          "attachFrom": "ocenka-effektov",
+          "expectSystems": []
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "podgotovka-dannyh",
+      "to": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov"
+    },
+    {
+      "from": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+      "to": "segmentaciya"
+    },
+    {
+      "from": "segmentaciya",
+      "to": "raschet-rekomendaciy-po-urovnyam-zapasov"
+    },
+    {
+      "from": "raschet-rekomendaciy-po-urovnyam-zapasov",
+      "to": "analiz-poluchennyh-znacheniy"
+    },
+    {
+      "from": "analiz-poluchennyh-znacheniy",
+      "to": "ocenka-effektov"
+    }
+  ],
+  "ownerDecisionEdges": []
+}

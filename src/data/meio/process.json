@@ -1,0 +1,403 @@
+{
+  "version": "1.0.0",
+  "id": "meio",
+  "updatedAt": "2026-09-06",
+  "title": "Процесс мультиэшелонной оптимизации запасов",
+  "moduleLabel": "Модуль MEIO",
+  "stages": [
+    {
+      "id": "stage-1-poluchenie-dannyh",
+      "number": 1,
+      "title": "Получение данных",
+      "shortTitle": "Получение данных",
+      "keyOutputs": [
+        "Модель данных для расчёта"
+      ],
+      "groups": [],
+      "nodes": [
+        {
+          "id": "struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp",
+          "type": "data",
+          "label": "Структура текущих запасов и фактические отгрузки из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 103
+          }
+        },
+        {
+          "id": "podgotovka-dannyh",
+          "type": "step",
+          "label": "Подготовка данных",
+          "description": "Анализ структуры текущих запасов и фактических отгрузок за период; формирование модели данных для расчёта.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
+          "inputs": [
+            "Анализ структуры текущих запасов",
+            "Фактические отгрузки за период"
+          ],
+          "position": {
+            "x": 296,
+            "y": 2
+          },
+          "slidePosition": {
+            "x": 204,
+            "y": 109
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e-struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp--podgotovka-dannyh",
+          "source": "struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        }
+      ],
+      "inputs": [
+        {
+          "system": "ERP",
+          "label": "Структура текущих запасов и фактические отгрузки из ERP",
+          "stage": 1,
+          "direction": "in"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "stage-2-podgotovka-k-raschetu",
+      "number": 2,
+      "title": "Подготовка к расчёту",
+      "shortTitle": "Подготовка к расчёту",
+      "keyOutputs": [
+        "Настроенные параметры расчёта",
+        "Сегментация по пяти признакам"
+      ],
+      "groups": [],
+      "nodes": [
+        {
+          "id": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "type": "step",
+          "label": "Настройка параметров для расчёта уровней запасов",
+          "description": "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и волатильность, затраты на хранение, минимальный размер партии и кратность.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
+          "inputs": [
+            "Плановые лидтаймы и отклонения",
+            "Квоты",
+            "Спрос и волатильность",
+            "Затраты на хранение",
+            "Минимальный размер партии и кратность"
+          ],
+          "position": {
+            "x": 296,
+            "y": 38
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 109
+          }
+        },
+        {
+          "id": "segmentaciya",
+          "type": "step",
+          "label": "Сегментация",
+          "description": "Сегментация номенклатуры по пяти признакам: Lifecycle — стадия жизненного цикла; ADI-CV — характер спроса по среднему интервалу между заказами и коэффициенту вариации; ABC — вклад в оборот; FMR — частота обращения; XYZ — стабильность потребления.\n\nОтдельной задачи сегментации в модуле IO модели BPMN нет: шаг существует только на слайде.",
+          "inputs": [
+            "Lifecycle",
+            "ADI-CV",
+            "ABC",
+            "FMR",
+            "XYZ"
+          ],
+          "position": {
+            "x": 646,
+            "y": 38
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 289
+          }
+        },
+        {
+          "id": "spros-i-volatilnost-iz-dp",
+          "type": "data",
+          "label": "Спрос и волатильность из DP",
+          "direction": "in",
+          "system": "DP",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 359
+          }
+        },
+        {
+          "id": "parametry-cepochki-iz-erp",
+          "type": "data",
+          "label": "Параметры цепочки из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 615
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e-spros-i-volatilnost-iz-dp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "spros-i-volatilnost-iz-dp",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-parametry-cepochki-iz-erp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "parametry-cepochki-iz-erp",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-nastroyka-parametrov-dlya-rascheta-urovney-zapasov--segmentaciya",
+          "source": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "segmentaciya",
+          "kind": "process"
+        }
+      ],
+      "inputs": [
+        {
+          "system": "DP",
+          "label": "Спрос и волатильность из DP",
+          "stage": 2,
+          "direction": "in"
+        },
+        {
+          "system": "ERP",
+          "label": "Параметры цепочки из ERP",
+          "stage": 2,
+          "direction": "in"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "stage-3-raschet-i-analiz",
+      "number": 3,
+      "title": "Расчёт и анализ",
+      "shortTitle": "Расчёт и анализ",
+      "keyOutputs": [
+        "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
+        "Три сценария"
+      ],
+      "groups": [],
+      "nodes": [
+        {
+          "id": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "type": "step",
+          "label": "Расчёт рекомендаций по уровням запасов",
+          "description": "Оптимизационный расчёт уровней запасов по параметрам и ограничениям: страховой, целевой и циклический запас, точка заказа, рекомендованный уровень сервиса.\n\nBPMN: IO-020 — Расчет рекомендаций по уровням запасов (IO)",
+          "inputs": [
+            "Параметры оптимизации",
+            "Ограничения",
+            "Страховой, целевой, циклический запас",
+            "Точка заказа",
+            "Рекомендованный уровень сервиса"
+          ],
+          "position": {
+            "x": 0,
+            "y": 2
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 109
+          }
+        },
+        {
+          "id": "analiz-poluchennyh-znacheniy",
+          "type": "step",
+          "label": "Анализ полученных значений",
+          "description": "Сценарное моделирование: три сценария с изменением политик пополнения, интерпретация полученных значений и корректировка.\n\nВарианты сценариев будут уточнены по ходу проекта (сноска слайда).\n\nBPMN: IO-030 — Расчет альтернативного сценария с новыми входными данными",
+          "inputs": [
+            "Сценарное моделирование, 3 сценария",
+            "Изменение политик пополнения",
+            "Интерпретация и корректировка"
+          ],
+          "position": {
+            "x": 350,
+            "y": 2
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 289
+          }
+        },
+        {
+          "id": "urovni-zapasov-v-snp-ps-i-mrp",
+          "type": "data",
+          "label": "Уровни запасов в SNP/PS и MRP",
+          "direction": "out",
+          "system": "INPLAN",
+          "position": {
+            "x": 764,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 433
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e-raschet-rekomendaciy-po-urovnyam-zapasov--analiz-poluchennyh-znacheniy",
+          "source": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "target": "analiz-poluchennyh-znacheniy",
+          "kind": "process"
+        },
+        {
+          "id": "e-raschet-rekomendaciy-po-urovnyam-zapasov--urovni-zapasov-v-snp-ps-i-mrp",
+          "source": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "target": "urovni-zapasov-v-snp-ps-i-mrp",
+          "kind": "process"
+        }
+      ],
+      "inputs": [],
+      "outputs": [
+        {
+          "system": "INPLAN",
+          "label": "Уровни запасов в SNP/PS и MRP",
+          "stage": 3,
+          "direction": "out"
+        },
+        {
+          "system": "PS",
+          "label": "Уровни запасов в SNP/PS и MRP",
+          "stage": 3,
+          "direction": "out"
+        },
+        {
+          "system": "MRP",
+          "label": "Уровни запасов в SNP/PS и MRP",
+          "stage": 3,
+          "direction": "out"
+        }
+      ]
+    },
+    {
+      "id": "stage-4-ocenka-effektov",
+      "number": 4,
+      "title": "Оценка эффектов",
+      "shortTitle": "Оценка эффектов",
+      "keyOutputs": [
+        "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев"
+      ],
+      "groups": [],
+      "nodes": [
+        {
+          "id": "ocenka-effektov",
+          "type": "step",
+          "label": "Оценка эффектов",
+          "description": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев, формирование рекомендаций для бизнеса.\n\nBPMN: IO-040 — Отчетность: проверка соответствия рассчитанных запасов бюджетным значениям",
+          "inputs": [
+            "Оценка эффектов и формирование рекомендаций"
+          ],
+          "position": {
+            "x": 0,
+            "y": 2
+          },
+          "slidePosition": {
+            "x": 1015,
+            "y": 109
+          }
+        },
+        {
+          "id": "ocenka-effektov-i-rekomendacii",
+          "type": "data",
+          "label": "Оценка эффектов и рекомендации",
+          "direction": "out",
+          "position": {
+            "x": 414,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 1015,
+            "y": 236
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e-ocenka-effektov--ocenka-effektov-i-rekomendacii",
+          "source": "ocenka-effektov",
+          "target": "ocenka-effektov-i-rekomendacii",
+          "kind": "process"
+        }
+      ],
+      "inputs": [],
+      "outputs": []
+    }
+  ],
+  "overviewEdges": [
+    {
+      "id": "ov-stage-1-poluchenie-dannyh--stage-2-podgotovka-k-raschetu",
+      "source": "stage-1-poluchenie-dannyh",
+      "target": "stage-2-podgotovka-k-raschetu",
+      "kind": "process"
+    },
+    {
+      "id": "ov-stage-2-podgotovka-k-raschetu--stage-3-raschet-i-analiz",
+      "source": "stage-2-podgotovka-k-raschetu",
+      "target": "stage-3-raschet-i-analiz",
+      "kind": "process"
+    },
+    {
+      "id": "ov-stage-3-raschet-i-analiz--stage-4-ocenka-effektov",
+      "source": "stage-3-raschet-i-analiz",
+      "target": "stage-4-ocenka-effektov",
+      "kind": "process"
+    },
+    {
+      "id": "ov-ERP--stage-1-poluchenie-dannyh",
+      "source": "ERP",
+      "target": "stage-1-poluchenie-dannyh",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-DP--stage-2-podgotovka-k-raschetu",
+      "source": "DP",
+      "target": "stage-2-podgotovka-k-raschetu",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-ERP--stage-2-podgotovka-k-raschetu",
+      "source": "ERP",
+      "target": "stage-2-podgotovka-k-raschetu",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-stage-3-raschet-i-analiz--INPLAN",
+      "source": "stage-3-raschet-i-analiz",
+      "target": "INPLAN",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-stage-3-raschet-i-analiz--PS",
+      "source": "stage-3-raschet-i-analiz",
+      "target": "PS",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-stage-3-raschet-i-analiz--MRP",
+      "source": "stage-3-raschet-i-analiz",
+      "target": "MRP",
+      "kind": "integration"
+    }
+  ]
+}

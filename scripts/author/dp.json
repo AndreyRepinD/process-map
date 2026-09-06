@@ -1,0 +1,227 @@
+{
+  "_note": "authoring source владельца для карты DP (паста §5). Из этого файла scripts/author/dp.py генерирует «In.Plan DP process <дата>.pptx» в профиле single-slide и сверяет таблицы STEP_DESCRIPTIONS/STAGE_KEY_OUTPUTS импортёра. CONTENT_FROZEN с 06.09.2026: label, порядок этапов и шагов, входы/выходы, keyOutputs, рёбра и description меняются только новым решением владельца.",
+  "id": "dp",
+  "title": "Процесс планирования спроса",
+  "moduleLabel": "Модуль DP",
+  "stages": [
+    {
+      "number": 1,
+      "title": "Подготовка истории",
+      "keyOutputs": ["Сопоставимая история"],
+      "steps": [
+        {
+          "key": "podgotovka-sopostavimoy-istorii",
+          "label": "Подготовка сопоставимой истории",
+          "inputs": [
+            "OOS, выбросы, промо, ML-очистка",
+            "Перенос истории при смене схемы",
+            "Замена SKU через DFU",
+            "Исключения планеру"
+          ],
+          "description": "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, промо, ML-очистка. Перенос истории при смене схемы, замена SKU через DFU, исключения планеру.\n\nBPMN: DP-020 — Очистка данных"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "in",
+          "label": "История продаж и заказы из ERP / DWH",
+          "attachTo": "podgotovka-sopostavimoy-istorii",
+          "expectSystems": ["ERP"]
+        }
+      ]
+    },
+    {
+      "number": 2,
+      "title": "Расчёт прогноза",
+      "keyOutputs": ["Базовый прогноз с чемпионом по серии", "Промо-объёмы"],
+      "steps": [
+        {
+          "key": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "label": "Сегментация/кластеризация и настройка методов",
+          "inputs": [
+            "ABC/XYZ, непрерывность, тренд",
+            "ML-кластеризация, сезонность",
+            "Привязка методов и параметров к сегменту"
+          ],
+          "description": "Сегментация и кластеризация номенклатуры: ABC/XYZ, непрерывность, тренд, ML-кластеризация, сезонность. Привязка методов и параметров прогнозирования к сегменту.\n\nBPMN: DP-040 — Управление сегментами (семействами)"
+        },
+        {
+          "key": "assortiment-metody-i-chempion",
+          "label": "Ассортимент: методы и чемпион",
+          "inputs": [
+            "Статистика, ансамбли, ML",
+            "Backtest, чемпион для серии",
+            "Референс, коэффициент, даты действия"
+          ],
+          "description": "Расчёт прогноза по ассортименту: статистика, ансамбли, ML. Выбор чемпиона для серии по backtest. Референс, коэффициент, даты действия.\n\nBPMN: DP-060 — Прогнозирование базовой линии"
+        },
+        {
+          "key": "novinki-pohozhie-tovary",
+          "label": "Новинки: похожие товары",
+          "description": "Прогноз новинок по похожим товарам.\n\nBPMN: DP-070-020 — Планирование новинки"
+        },
+        {
+          "key": "promo-light-prognoz-promo-obemov-opcionalno",
+          "label": "Промо light: прогноз промо-объёмов (опционально)",
+          "inputs": [
+            "Календарь акций и механик",
+            "Промо-объёмы по промо-эффектам из истории",
+            "Промо-план из TPM/NRM"
+          ],
+          "description": "Прогноз промо-объёмов: календарь акций и механик; промо-объёмы по промо-эффектам из истории или промо-план из TPM/NRM.\n\n«Опционально» означает, что шаг может быть пропущен по содержанию: если промо нет, базовый прогноз проходит этап без изменений. Из потока шаг при этом не выпадает — он единственный выход этапа 2.\n\nBPMN: DP-070-050 — Анализ промо-плана"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "in",
+          "label": "Промо-план из TPM/NRM",
+          "attachTo": "promo-light-prognoz-promo-obemov-opcionalno",
+          "expectSystems": []
+        }
+      ]
+    },
+    {
+      "number": 3,
+      "title": "Sell-In по модели канала",
+      "keyOutputs": ["Прогноз Sell-In по каналам"],
+      "steps": [
+        {
+          "key": "pryamye-kanaly-pryamoy-prognoz-sell-in",
+          "label": "Прямые каналы: прямой прогноз Sell-In",
+          "description": "Прямой прогноз Sell-In для прямых каналов сбыта."
+        },
+        {
+          "key": "sell-out-balans-sell-in",
+          "label": "Sell-Out → баланс → Sell-In",
+          "inputs": [
+            "Остатки, транзит, открытые заказы, целевой запас",
+            "Прогнозный остаток и дни покрытия"
+          ],
+          "description": "Пересчёт Sell-Out в Sell-In через материальный баланс: остатки, транзит, открытые заказы, целевой запас; прогнозный остаток и дни покрытия.\n\nBPMN: DP-070-070 — Demand Propagation. Автоматизированный расчет Sell-In дистрибутора"
+        }
+      ],
+      "externals": []
+    },
+    {
+      "number": 4,
+      "title": "Обогащение и согласование",
+      "keyOutputs": ["Согласованный план спроса Sell-In"],
+      "steps": [
+        {
+          "key": "building-blocks-i-korrektirovki",
+          "label": "Building Blocks и корректировки",
+          "inputs": [
+            "Объёмные, процентные, замещающие блоки",
+            "Распределение вниз, пересчёт вверх",
+            "Версии, аудит"
+          ],
+          "description": "Обогащение прогноза блоками Building Blocks: объёмные, процентные, замещающие. Распределение вниз и пересчёт вверх, версии и аудит правок.\n\nBPMN: DP-070 — Обогащение прогноза"
+        },
+        {
+          "key": "demand-review-meeting",
+          "label": "Demand Review Meeting",
+          "inputs": [
+            "Консенсус в объёме и в деньгах",
+            "Согласование исключений",
+            "Согласованный план спроса Sell-In"
+          ],
+          "description": "Согласование прогноза на Demand Review Meeting: консенсус в объёме и в деньгах, согласование исключений, согласованный план спроса Sell-In.\n\nBPMN: DP-080-010 — Анализ скорректированного прогноза по итогам DRM"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "in",
+          "label": "Категорийный менеджмент: проверка Building Blocks",
+          "attachTo": "building-blocks-i-korrektirovki",
+          "expectSystems": []
+        },
+        {
+          "direction": "in",
+          "label": "Коммерческие финансы: консенсус-прогноз в деньгах",
+          "attachTo": "demand-review-meeting",
+          "expectSystems": []
+        }
+      ]
+    },
+    {
+      "number": 5,
+      "title": "Публикация и контроль точности",
+      "keyOutputs": ["Опубликованный план спроса в SNP и MEIO", "KPI точности прогноза"],
+      "steps": [
+        {
+          "key": "publikaciya-i-analiz-tochnosti",
+          "label": "Публикация и анализ точности",
+          "inputs": [
+            "DFU → SKU, публикация с лагом",
+            "Передача плана в SNP и MEIO",
+            "FA, MAPE, BIAS, алерты",
+            "Разрыв с планом SNP → решение"
+          ],
+          "description": "Дезагрегация DFU → SKU и публикация плана с лагом, передача плана в SNP и MEIO. Контроль точности: FA, MAPE, BIAS, алерты. Разрыв с планом SNP выносится на решение.\n\nBPMN: DP-080-030 — Дезагрегация DFU->SKU и публикация прогноза"
+        }
+      ],
+      "externals": [
+        {
+          "direction": "in",
+          "label": "Получение ограниченного прогноза из модуля SNP",
+          "attachTo": "publikaciya-i-analiz-tochnosti",
+          "expectSystems": ["INPLAN"],
+          "note": "Ограниченный план считается в SNP и не заменяет опубликованный план спроса."
+        },
+        {
+          "direction": "out",
+          "label": "Передача неограниченного плана спроса в SNP и MEIO",
+          "attachFrom": "publikaciya-i-analiz-tochnosti",
+          "expectSystems": ["INPLAN", "IO"]
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "from": "podgotovka-sopostavimoy-istorii",
+      "to": "segmentaciya-klasterizaciya-i-nastroyka-metodov"
+    },
+    {
+      "from": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+      "to": "assortiment-metody-i-chempion"
+    },
+    {
+      "from": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+      "to": "novinki-pohozhie-tovary"
+    },
+    {
+      "from": "assortiment-metody-i-chempion",
+      "to": "promo-light-prognoz-promo-obemov-opcionalno"
+    },
+    {
+      "from": "novinki-pohozhie-tovary",
+      "to": "promo-light-prognoz-promo-obemov-opcionalno"
+    },
+    {
+      "from": "promo-light-prognoz-promo-obemov-opcionalno",
+      "to": "pryamye-kanaly-pryamoy-prognoz-sell-in"
+    },
+    {
+      "from": "promo-light-prognoz-promo-obemov-opcionalno",
+      "to": "sell-out-balans-sell-in"
+    },
+    {
+      "from": "pryamye-kanaly-pryamoy-prognoz-sell-in",
+      "to": "building-blocks-i-korrektirovki"
+    },
+    {
+      "from": "sell-out-balans-sell-in",
+      "to": "building-blocks-i-korrektirovki"
+    },
+    {
+      "from": "building-blocks-i-korrektirovki",
+      "to": "demand-review-meeting"
+    },
+    {
+      "from": "demand-review-meeting",
+      "to": "publikaciya-i-analiz-tochnosti"
+    }
+  ],
+  "ownerDecisionEdges": []
+}

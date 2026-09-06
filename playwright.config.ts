@@ -37,12 +37,14 @@ export default defineConfig({
   projects: [
     { name: 'snp', use: { baseURL: 'http://localhost:5173' } },
     { name: 'mrp', testDir: './e2e/maps', use: { baseURL: 'http://localhost:5174' } },
+    { name: 'dp', testDir: './e2e/maps', use: { baseURL: 'http://localhost:5175' } },
+    { name: 'meio', testDir: './e2e/maps', use: { baseURL: 'http://localhost:5176' } },
   ],
 
   // Сервер поднимает сам Playwright, отдельного шага в CI быть НЕ должно:
   // reuseExistingServer в CI равен false, и на занятом порту прогон упадёт
   // с «is already used».
-  // Порт второй карты закреплён только здесь и в скрипте dev:mrp: в CI
+  // Порты карт закреплены только здесь и в скриптах dev:<карта>: в CI
   // reuseExistingServer=false, и занятый порт уронит прогон.
   webServer: [
     {
@@ -53,6 +55,16 @@ export default defineConfig({
     {
       command: 'npm run dev:mrp',
       url: 'http://localhost:5174',
+      reuseExistingServer: !isCI,
+    },
+    {
+      command: 'npm run dev:dp',
+      url: 'http://localhost:5175',
+      reuseExistingServer: !isCI,
+    },
+    {
+      command: 'npm run dev:meio',
+      url: 'http://localhost:5176',
       reuseExistingServer: !isCI,
     },
   ],
