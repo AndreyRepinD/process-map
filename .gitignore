@@ -10,3 +10,6 @@ test-results/
 # Python
 __pycache__/
 *.py[cod]
+
+# Виртуальное окружение Python для scripts/import-pptx.py (README «Данные»).
+.venv/

@@ -322,10 +322,33 @@ http://host/process-map/     ->  http://host/process-map/assets/index-CTQNOulP.j
   «Выбор карты на сборке». Единственная точка выбора — `scripts/mapTarget.ts`;
   `src/data/loader.ts` импортирует данные через алиас `@map` и не знает, какая
   это карта. Тот же набор карт разбирают команды данных: `npm run data -- --map snp`.
-- `npm run build` собирает **обе** карты в один `dist/`: SNP в корень, MRP в
-  подкаталог `mrp/`. Порядок в скрипте обязателен — сборка карты по умолчанию
-  чистит `dist` целиком. Локально вторую карту показывает `npm run dev:mrp`
-  (порт 5174).
+- `npm run build` собирает **все четыре** карты в один `dist/`: SNP в корень,
+  MRP в подкаталог `mrp/`, DP в `dp/`, MEIO в `meio/`. Порядок в скрипте
+  обязателен — сборка карты по умолчанию чистит `dist` целиком. Локально карты
+  показывают `npm run dev:mrp` (порт 5174), `npm run dev:dp` (5175),
+  `npm run dev:meio` (5176).
+- Раздача: `https://<host>/process-map/` (SNP), `.../process-map/mrp/`,
+  `.../process-map/dp/`, `.../process-map/meio/`. Слэш на конце обязателен для
+  каждого подкаталога — без него относительные пути к ассетам разрешаются
+  относительно родителя, и страница подтягивает бандл чужой карты.
+- Карты `dp` и `meio` собираются со **сгенерированного** слайда:
+  `scripts/author/<map>.json` (содержание владельца, заморожено) →
+  `python scripts/author/<map>.py` → `In.Plan <MAP> process <дата>.pptx` →
+  `npm run data -- --map <map>`. Правится JSON, а не pptx и не process.json.
+  Сверка этих карт с BPMN-моделью — `docs/reconciliation/dp-meio-bpmn.md`.
+
+### Что нужно установить для `npm run data`
+
+Импортёру нужен Python с `python-pptx` и `lxml` — в `package.json` их нет и быть
+не может, это другой пакетный менеджер:
+
+```bash
+python3 -m venv .venv && .venv/bin/pip install python-pptx lxml
+PYTHON=.venv/bin/python npm run data -- --map snp
+```
+
+Переменная `PYTHON` нужна не только для venv: `scripts/data.ts` пробует `python`
+и `py`, а на macOS с Homebrew в PATH обычно только `python3`.
 
 ### `npm run data` — единственный правильный способ пересобрать данные
 
