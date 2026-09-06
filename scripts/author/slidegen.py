@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import json
 import re
+import zipfile
 from pathlib import Path
 
 from pptx import Presentation
@@ -160,6 +161,34 @@ def _connect(slide, src, dst) -> None:
     ln.append(ln.makeelement(qn("a:tailEnd"), {"type": "triangle"}))
 
 
+# Дата в записях zip-архива pptx. Фиксированная, а не текущая.
+#
+# ЗАЧЕМ. pptx — это zip, и python-pptx проставляет записям ВРЕМЯ СОХРАНЕНИЯ.
+# Содержание при этом побайтово одинаково (проверено: у двух прогонов совпали
+# все 38 записей архива, разошлись только метки времени), но сам файл каждый раз
+# другой — то есть после каждого прогона конвейера git видит правку слайда,
+# которой по смыслу нет. Требование проекта «два прогона дают побайтово
+# одинаковый файл» относится и к нему, а не только к process.json.
+#
+# 1980-01-01 — нижняя граница формата zip, обычная договорённость
+# воспроизводимых сборок.
+ZIP_EPOCH = (1980, 1, 1, 0, 0, 0)
+
+
+def _freeze_zip(path: Path) -> None:
+    """Перепаковывает архив с фиксированной датой, сохраняя порядок и сжатие."""
+    with zipfile.ZipFile(path) as source:
+        items = [(info, source.read(info.filename)) for info in source.infolist()]
+    with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as target:
+        for info, payload in items:
+            frozen = zipfile.ZipInfo(info.filename, date_time=ZIP_EPOCH)
+            frozen.compress_type = info.compress_type
+            frozen.external_attr = info.external_attr
+            frozen.internal_attr = info.internal_attr
+            frozen.create_system = info.create_system
+            target.writestr(frozen, payload)
+
+
 def build(author_path: Path, out_path: Path) -> dict:
     doc = json.loads(author_path.read_text(encoding="utf-8"))
     stages = doc["stages"]
@@ -247,6 +276,7 @@ def build(author_path: Path, out_path: Path) -> dict:
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     prs.save(str(out_path))
+    _freeze_zip(out_path)
     return {
         "stages": len(stages),
         "steps": sum(len(s["steps"]) for s in stages),
