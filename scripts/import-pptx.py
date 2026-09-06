@@ -194,6 +194,16 @@ class MapSpec:
     # 'overview+details' слайды заданы устройством презентации: обзор — второй,
     # детализация — с третьего по шестой.
     slide_index: int | None
+    # Сколько контейнеров-этапов ждать на слайде (профиль single-slide).
+    #
+    # БЫЛО КОНСТАНТОЙ STAGE_COUNT = 4 с комментарием «ограничение zod-схемы:
+    # number ∈ {1,2,3,4}». Комментарий устарел задачей process-map-70e.4:
+    # StageSchema.number стал z.number().int().min(1), а проверка «ровно четыре»
+    # переехала в tests/<map>/content.test.ts. Импортёр остался единственным
+    # местом, где четвёрка ещё жёсткая, — и молча не давал собрать карту с
+    # пятью этапами. Мёртвая константа врёт тише, чем падает, поэтому число
+    # переехало в реестр, к своей карте.
+    stages_expected: int
     map_id: str
     title: str
     module_label: str
@@ -210,6 +220,7 @@ MAPS: dict[str, MapSpec] = {
         profile="overview+details",
         slides=6,
         slide_index=None,
+        stages_expected=4,
         map_id=MAP_ID,
         title=MAP_TITLE,
         module_label=MAP_MODULE_LABEL,
@@ -224,6 +235,7 @@ MAPS: dict[str, MapSpec] = {
         profile="single-slide",
         slides=38,
         slide_index=7,  # слайд 8 «MRP процесс»
+        stages_expected=4,
         map_id=MAP_ID_MRP,
         title=MAP_TITLE_MRP,
         module_label=MAP_MODULE_LABEL_MRP,
@@ -259,7 +271,7 @@ KEY_OUTPUT_BOTTOM_OFFSET = 700_000
 DECOR_ARROW_MAX_WIDTH = 400_000      # мелкие стрелки-коннекторы между боксами обзора
 
 MAX_KEY_OUTPUTS = 4                  # ограничение zod-схемы
-STAGE_COUNT = 4                      # ограничение zod-схемы: number ∈ {1,2,3,4}
+STAGE_COUNT = 4                      # число слайдов детализации у профиля overview+details
 
 # Заливка плашек-артефактов (входы и выход процесса) в профиле «одиночный слайд».
 # В презентации SNP входы нарисованы надписями, здесь — автофигурами, и без
@@ -1910,9 +1922,9 @@ def build_single_slide_map(
         [s for s in shapes if is_container(s)],
         key=lambda s: (round(s.box.top / 1_000_000), s.box.left),
     )
-    if len(containers) != STAGE_COUNT:
+    if len(containers) != spec.stages_expected:
         raise SystemExit(
-            f"слайд {slide_no}: ожидалось {STAGE_COUNT} контейнеров-этапов, "
+            f"слайд {slide_no}: ожидалось {spec.stages_expected} контейнеров-этапов, "
             f"найдено {len(containers)}"
         )
 
