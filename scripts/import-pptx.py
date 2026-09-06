@@ -640,6 +640,9 @@ class SlideReport:
     # Рёбра, у которых хотя бы один конец разрешён явной привязкой коннектора,
     # а не геометрией (process-map-3wh.16).
     cxn_edges: list[str] = field(default_factory=list)
+    # Описания шагов и ключевые выходы этапов, проставленные по таблицам
+    # владельца: на слайде их нет (STEP_DESCRIPTIONS / STAGE_KEY_OUTPUTS).
+    owner_step_text: list[str] = field(default_factory=list)
 
 
 # --------------------------------------------------------------------------------------
@@ -1839,6 +1842,34 @@ def choose_key_outputs(
 
 
 # --------------------------------------------------------------------------------------
+# ОПИСАНИЯ ШАГОВ И КЛЮЧЕВЫЕ ВЫХОДЫ ЭТАПОВ — ИХ НЕТ НА СЛАЙДЕ
+# --------------------------------------------------------------------------------------
+#
+# ПЯТАЯ И ШЕСТАЯ ТАБЛИЦЫ РЕШЕНИЙ ВЛАДЕЛЬЦА, рядом с OWNER_DECISION_EDGES,
+# STAGE_INPUT_ENRICHMENT, STAGE_GROUP_SPLIT и OWNER_DECISION_EXTERNAL_IO.
+# Читать преамбулу к OWNER_DECISION_EDGES: правила те же.
+#
+# ПОЧЕМУ НЕ СО СЛАЙДА. Замерено на раскладке карты DP: этап 2 несёт четыре шага,
+# и прозаические блоки описаний требуют 8,4 млн EMU по высоте при 6,0 млн
+# доступных в контейнере. То есть описания на слайд физически не помещаются, а
+# профиль single-slide по определению читает ровно один слайд. Ключевые выходы
+# в этом профиле выводятся только из плашек-выходов (см. сборку этапов ниже),
+# поэтому у этапа без выходной плашки их не было бы вовсе.
+#
+# ИСТОЧНИК ПРАВДЫ — scripts/author/<map>.json (authoring source владельца,
+# CONTENT_FROZEN). Таблицы ниже — его отражение в импортёре; расхождение ловит
+# scripts/author/<map>.py и падает. Импортёр JSON НЕ читает: внешний конфиг в
+# конвейере данных — отдельное решение, а тесты уже разбирают ИСХОДНИК этого
+# файла регулярками.
+#
+# Карты snp и mrp здесь НЕ ПЕРЕЧИСЛЕНЫ намеренно: их содержание снято с
+# презентаций и меняться не должно.
+STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {}
+
+STAGE_KEY_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {}
+
+
+# --------------------------------------------------------------------------------------
 # Сборка документа
 # --------------------------------------------------------------------------------------
 
@@ -2215,12 +2246,59 @@ def build_single_slide_map(
 
     report.edges = sum(len(items) for items in stage_edges.values())
 
+    # 7c. Описания шагов и ключевые выходы этапов — таблицы решений владельца
+    #     (STEP_DESCRIPTIONS / STAGE_KEY_OUTPUTS): на слайде их нет.
+    #
+    #     ЗДЕСЬ, А НЕ ПОСЛЕ СБОРКИ: serialize_node раскладывает ключи узла в
+    #     порядке zod-схемы (NODE_KEY_ORDER), и дописанный в готовый словарь
+    #     description оказался бы последним ключом. Тогда первый прогон и второй
+    #     дают разные файлы, потому что перенос ручных полей прогоняет узел через
+    #     reorder_keys. Сторож — повторный npm run data без диффа.
+    #     ФАЗА 2, А НЕ ОБЕ: в первой фазе IdFactory только считает коллизии и
+    #     выдаёт временные id вида «base~1», поэтому сверка таблицы с узлами там
+    #     заведомо не сойдётся. collisions is None — признак первой фазы.
+    descriptions = STEP_DESCRIPTIONS.get(spec.key, {}) if collisions is not None else {}
+    key_outputs_table = STAGE_KEY_OUTPUTS.get(spec.key)
+    if descriptions:
+        known = {d.node_id for d in drafts}
+        for node_id in sorted(descriptions):
+            if node_id not in known:
+                raise SystemExit(
+                    f"STEP_DESCRIPTIONS[{spec.key}]: узла «{node_id}» на слайде больше "
+                    f"нет — слайд или authoring source изменились. Импорт остановлен, "
+                    f"чтобы решение владельца не потерялось молча."
+                )
+        for draft in drafts:
+            if draft.node_type == "data":
+                continue
+            text = descriptions.get(draft.node_id)
+            if text is None:
+                raise SystemExit(
+                    f"STEP_DESCRIPTIONS[{spec.key}]: у шага «{draft.node_id}» нет "
+                    f"описания, а содержание карты заморожено. Добавьте его в "
+                    f"scripts/author/{spec.key}.json и в таблицу импортёра."
+                )
+            draft.description_parts.append(text)
+            report.owner_step_text.append(f"описание шага «{draft.node_id}»")
+
     # 8. Сборка этапов.
     stages: list[dict] = []
     for meta in stage_meta:
         stage_id = meta["id"]
         members = [d for d in drafts if stage_of_node.get(d.node_id) == stage_id]
-        key_outputs = [d.label for d in members if d.direction == "out"][:MAX_KEY_OUTPUTS]
+        if key_outputs_table is None:
+            key_outputs = [d.label for d in members if d.direction == "out"][:MAX_KEY_OUTPUTS]
+        else:
+            declared = key_outputs_table.get(stage_id)
+            if declared is None:
+                raise SystemExit(
+                    f"STAGE_KEY_OUTPUTS[{spec.key}]: у этапа «{stage_id}» ключевые "
+                    f"выходы не объявлены, а содержание карты заморожено."
+                )
+            key_outputs = list(declared)
+            report.owner_step_text.append(
+                f"ключевые выходы этапа «{stage_id}»: {len(declared)}"
+            )
         stages.append(
             {
                 "id": stage_id,
@@ -2865,6 +2943,21 @@ def print_report(
             print(f"    · {item}")
     else:
         print("  привязок в презентации нет — все связи выведены геометрически")
+
+    # Описания шагов и ключевые выходы, пришедшие не со слайда (STEP_DESCRIPTIONS,
+    # STAGE_KEY_OUTPUTS). Печатается тем же блоком, что и прочие решения владельца.
+    step_text = [item for report in reports for item in report.owner_step_text]
+    print("\n" + "=" * 78)
+    print("ОПИСАНИЯ ШАГОВ И КЛЮЧЕВЫЕ ВЫХОДЫ — ИХ НЕТ НА СЛАЙДЕ")
+    print("=" * 78)
+    if step_text:
+        print(f"  {len(step_text)} записей взято из таблиц владельца в этом файле.")
+        print("  Источник правды — scripts/author/<map>.json (CONTENT_FROZEN);")
+        print("  расхождение таблицы с ним ловит scripts/author/<map>.py.")
+        for item in step_text:
+            print(f"    · {item}")
+    else:
+        print("  таблицы для этой карты пусты — содержание целиком со слайда")
 
     # Узлы, ставшие интеграциями не по заливке, а по коду системы (7v1).
     promoted = [item for report in reports for item in report.promoted_integrations]
