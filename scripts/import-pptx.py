@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "569628e643e628208a10564f7357f1906997b9b389f838193e3065da8ff4ad02"
+MAP_DATA_FINGERPRINT_DP = "6baf5a09ccbfd30760bc4f71f5d450cfcf6153d6878cd46d19beb35f558049d5"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "d8952a4fecf8c0f0073ea47aa972afa5ec9c356f6ff000ddb56f07c6ebb357dc"
+MAP_DATA_FINGERPRINT_MEIO = "201616f64d8bd2e4f20197d033211213fe87379c97589b34b17202f16c434288"
 
 
 @dataclass(frozen=True)
@@ -2042,6 +2042,121 @@ STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
     },
 }
 
+# Выходы шага и его группа внутри этапа — те же правила, что у STEP_DESCRIPTIONS.
+#
+# ПОЧЕМУ НЕ СО СЛАЙДА. Выход шага в профиле single-slide прочитать неоткуда:
+# подпись под шагом уже занята перечнем ИСХОДНЫХ данных (решение
+# process-map-3wh.1), а второй подписи под тем же шагом геометрия не даёт —
+# окно CAPTION_MAX_GAP одно. Группа тем более: контейнер СТАЛ этапом, вложенный
+# контейнер уже́ CONTAINER_MIN_WIDTH и импортёром за контейнер не считается.
+STEP_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
+    "dp": {
+        "podgotovka-sopostavimoy-istorii": (
+            "Сопоставимая история",
+            "Список исключений планера",
+        ),
+        "segmentaciya-klasterizaciya-i-nastroyka-metodov": (
+            "Сегменты ABC/XYZ",
+            "Привязка методов и параметров к сегменту",
+        ),
+        "assortiment-metody-i-chempion": (
+            "Базовый прогноз по ассортименту",
+            "Чемпион для серии",
+        ),
+        "novinki-pohozhie-tovary": (
+            "Прогноз новинок по аналогам",
+        ),
+        "promo-light-prognoz-promo-obemov-opcionalno": (
+            "Промо-объёмы",
+        ),
+        "pryamye-kanaly-pryamoy-prognoz-sell-in": (
+            "Прогноз Sell-In прямых каналов",
+        ),
+        "sell-out-balans-sell-in": (
+            "Прогноз Sell-In дистрибуции",
+            "Прогнозный остаток и дни покрытия у клиента",
+        ),
+        "building-blocks-i-korrektirovki": (
+            "Обогащённый прогноз с блоками",
+            "Версии и аудит правок",
+        ),
+        "demand-review-meeting": (
+            "Согласованный план спроса Sell-In",
+            "Перечень согласованных исключений",
+        ),
+        "publikaciya-plana-sprosa": (
+            "Опубликованный план спроса на SKU",
+            "Версия и дата фиксации плана",
+        ),
+        "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu": (
+            "Решение по разрыву",
+            "Приоритизация клиентов и SKU",
+        ),
+        "kontrol-tochnosti-i-fva": (
+            "KPI точности: FA, MAPE, BIAS, WAPE",
+            "FVA по слоям",
+            "Алерты точности",
+        ),
+    },
+    "meio": {
+        "podgotovka-dannyh": (
+            "Модель данных для расчёта",
+        ),
+        "nastroyka-parametrov-dlya-rascheta-urovney-zapasov": (
+            "Настроенные параметры расчёта",
+        ),
+        "segmentaciya": (
+            "Сегментация по пяти признакам",
+        ),
+        "raschet-rekomendaciy-po-urovnyam-zapasov": (
+            "Рекомендованные уровни запасов",
+            "Точка заказа",
+            "Рекомендованный уровень сервиса",
+        ),
+        "analiz-poluchennyh-znacheniy": (
+            "Три сценария",
+            "Скорректированные значения",
+        ),
+        "ocenka-effektov": (
+            "Комплексная оценка эффектов",
+            "Рекомендации для бизнеса",
+        ),
+    },
+}
+
+# Группы этапа: подпись группы -> шаги, которые в неё входят. Порядок групп в
+# кортеже — порядок их появления на экране этапа.
+STAGE_GROUPS: dict[str, dict[str, tuple[tuple[str, tuple[str, ...]], ...]]] = {
+    "dp": {
+        "stage-2-raschet-prognoza": (
+            ("Базовый прогноз", ("segmentaciya-klasterizaciya-i-nastroyka-metodov", "assortiment-metody-i-chempion",)),
+            ("Новинки и промо", ("novinki-pohozhie-tovary", "promo-light-prognoz-promo-obemov-opcionalno",)),
+        ),
+        "stage-3-sell-in-po-modeli-kanala": (
+            ("Прямой канал", ("pryamye-kanaly-pryamoy-prognoz-sell-in",)),
+            ("Через дистрибутора", ("sell-out-balans-sell-in",)),
+        ),
+        "stage-4-obogaschenie-i-soglasovanie": (
+            ("Обогащение", ("building-blocks-i-korrektirovki",)),
+            ("Согласование", ("demand-review-meeting",)),
+        ),
+        "stage-5-publikaciya-i-kontrol-tochnosti": (
+            ("Публикация", ("publikaciya-plana-sprosa",)),
+            ("Сверка и контроль", ("sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu", "kontrol-tochnosti-i-fva",)),
+        ),
+    },
+    "meio": {
+        "stage-2-podgotovka-k-raschetu": (
+            ("Параметры расчёта", ("nastroyka-parametrov-dlya-rascheta-urovney-zapasov",)),
+            ("Сегментация", ("segmentaciya",)),
+        ),
+        "stage-3-raschet-i-analiz": (
+            ("Расчёт", ("raschet-rekomendaciy-po-urovnyam-zapasov",)),
+            ("Анализ", ("analiz-poluchennyh-znacheniy",)),
+        ),
+    },
+}
+
 STAGE_KEY_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "dp": {
         "stage-1-podgotovka-istorii": (
@@ -2511,6 +2626,35 @@ def build_single_slide_map(
             draft.description_parts.append(text)
             report.owner_step_text.append(f"описание шага «{draft.node_id}»")
 
+    outputs_table = STEP_OUTPUTS.get(spec.key, {}) if collisions is not None else {}
+    for draft in drafts:
+        declared_outputs = outputs_table.get(draft.node_id)
+        if declared_outputs is not None:
+            draft.outputs.extend(declared_outputs)
+            report.owner_step_text.append(f"выходы шага «{draft.node_id}»: {len(declared_outputs)}")
+
+    # Группа шага проставляется ДО сериализации: serialize_node пишет ключ group
+    # в порядке схемы, и дописанный позже он уехал бы в конец узла.
+    groups_table = STAGE_GROUPS.get(spec.key, {}) if collisions is not None else {}
+    group_of_stage: dict[str, list[dict]] = {}
+    for stage_key, declared_groups in groups_table.items():
+        known_here = {d.node_id for d in drafts if stage_of_node.get(d.node_id) == stage_key}
+        bucket: list[dict] = []
+        for label, members in declared_groups:
+            group_id = slugify(label)
+            missing = [n for n in members if n not in known_here]
+            if missing:
+                raise SystemExit(
+                    f"STAGE_GROUPS[{spec.key}]: группа «{label}» этапа «{stage_key}» называет "
+                    f"узлы, которых на этом этапе нет: {', '.join(missing)}. Слайд или "
+                    f"authoring source изменились."
+                )
+            bucket.append({"id": group_id, "label": label})
+            for node_id in members:
+                by_id[node_id].group = group_id
+            report.owner_step_text.append(f"группа «{label}» этапа «{stage_key}»: {len(members)}")
+        group_of_stage[stage_key] = bucket
+
     # 8. Сборка этапов.
     stages: list[dict] = []
     for meta in stage_meta:
@@ -2540,7 +2684,7 @@ def build_single_slide_map(
                 # типов предупреждений формирует этап»; переносить эту семантику
                 # на шаг «Анализ предупреждений», который планировщик выполняет
                 # сам, значило бы соврать. Поле необязательное (SPEC §3).
-                "groups": [],
+                "groups": group_of_stage.get(stage_id, []),
                 "nodes": [
                     serialize_node(d)
                     for d in sorted(members, key=lambda d: (d.box.top, d.box.left, d.node_id))

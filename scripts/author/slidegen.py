@@ -348,7 +348,55 @@ def verify(author_path: Path) -> list[str]:
         elif list(declared) != stage["keyOutputs"]:
             problems.append(f"STAGE_KEY_OUTPUTS[{key}]: список «{stage_id}» разошёлся с JSON")
 
+    # Выходы шага — та же сверка, что у описаний.
+    step_outputs = imp.STEP_OUTPUTS.get(key, {})
+    for stage in doc["stages"]:
+        for step in stage["steps"]:
+            node_id = imp.slugify(step["label"])
+            want = step.get("outputs") or []
+            got = list(step_outputs.get(node_id, ()))
+            if want != got:
+                problems.append(f"STEP_OUTPUTS[{key}]: выходы «{node_id}» разошлись с JSON")
+
+    # Группы: подпись и состав.
+    stage_groups = imp.STAGE_GROUPS.get(key, {})
+    for stage in doc["stages"]:
+        short = re.split(r"\s/|/\s|\s\+\s", stage["title"])[0].strip()
+        stage_id = imp.slugify(f"stage-{stage['number']}-{short}")
+        want_groups: dict[str, list[str]] = {}
+        for step in stage["steps"]:
+            if step.get("group"):
+                want_groups.setdefault(step["group"], []).append(imp.slugify(step["label"]))
+        got_groups = {label: list(members) for label, members in stage_groups.get(stage_id, ())}
+        if want_groups != got_groups:
+            problems.append(f"STAGE_GROUPS[{key}]: группы этапа «{stage_id}» разошлись с JSON")
+
+    # Ответственные живут в process.json: импортёру отдавать поле owner
+    # запрещено самопроверкой serialize_node, оно переносится механизмом
+    # сохранения ручных полей. Сверяем с картой, а не с таблицей.
+    runtime = ROOT_JSON(key)
+    if runtime is not None:
+        by_id = {n["id"]: n for stage in runtime["stages"] for n in stage["nodes"]}
+        for stage in doc["stages"]:
+            for step in stage["steps"]:
+                node_id = imp.slugify(step["label"])
+                want_owner = step.get("owner")
+                got_owner = by_id.get(node_id, {}).get("owner")
+                if want_owner != got_owner:
+                    problems.append(
+                        f"owner «{node_id}»: в карте {got_owner!r}, в authoring source "
+                        f"{want_owner!r}. Поле ручное — проставьте в src/data/{key}/process.json"
+                    )
+
     return problems
+
+
+def ROOT_JSON(key: str):
+    """src/data/<map>/process.json, если он уже собран."""
+    path = Path(__file__).resolve().parent.parent.parent / "src" / "data" / key / "process.json"
+    if not path.exists():
+        return None
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def main(map_key: str, slide_title: str, dated: str) -> int:

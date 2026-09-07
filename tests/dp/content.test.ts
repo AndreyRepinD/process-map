@@ -220,8 +220,7 @@ describe('карта DP: содержание', () => {
     ).not.toContain('BPMN:');
   });
 
-  it('маркеры слайда ушли в inputs узлов, а не в outputs', () => {
-    expect(nodes.filter((node) => node.outputs !== undefined)).toEqual([]);
+  it('маркеры слайда ушли в inputs узлов', () => {
     expect(nodes.flatMap((node) => node.inputs ?? []).filter((line) => line.endsWith(':'))).toEqual(
       [],
     );
@@ -234,11 +233,69 @@ describe('карта DP: содержание', () => {
     ]);
   });
 
-  it('warningsCount не проставлен, группы пусты', () => {
+  it('группы внутри этапов: 0 + 2 + 2 + 2 + 2', () => {
+    // Решение владельца от 07.09.2026. Этап с одним шагом группы не получает —
+    // рамка вокруг единственной карточки ничего не сообщает.
+    expect(map.stages.map((stage) => stage.groups.map((group) => group.label))).toEqual([
+      [],
+      ['Базовый прогноз', 'Новинки и промо'],
+      ['Прямой канал', 'Через дистрибутора'],
+      ['Обогащение', 'Согласование'],
+      ['Публикация', 'Сверка и контроль'],
+    ]);
+  });
+
+  it('каждый шаг сгруппированного этапа лежит в своей группе', () => {
+    for (const stage of map.stages) {
+      const ids = new Set(stage.groups.map((group) => group.id));
+      for (const node of stage.nodes) {
+        if (node.type === 'data') {
+          expect(node.group, `плашка «${node.id}» не должна быть в группе`).toBeUndefined();
+          continue;
+        }
+        if (ids.size === 0) {
+          expect(node.group, `этап ${stage.number} без групп`).toBeUndefined();
+        } else {
+          expect(ids, `шаг «${node.id}»`).toContain(node.group);
+        }
+      }
+    }
+  });
+
+  it('у каждого шага есть выходы и ответственный', () => {
+    // Панель узла рисует секции «Выходы» и «Ответственный» только при наличии
+    // данных. До 07.09.2026 обе были пусты у всех узлов обеих карт.
+    for (const step of steps) {
+      expect(step.outputs, `шаг «${step.id}» без выходов`).toBeTruthy();
+      expect(step.outputs?.length, `шаг «${step.id}»`).toBeGreaterThan(0);
+      expect(step.owner, `шаг «${step.id}» без ответственного`).toBeTruthy();
+    }
+    expect(steps.filter((step) => step.outputs !== undefined)).toHaveLength(12);
+    expect(steps.filter((step) => step.owner !== undefined)).toHaveLength(12);
+
+    // Дословно, из согласованного authoring source.
+    expect(nodes.find((node) => node.id === 'kontrol-tochnosti-i-fva')?.outputs).toEqual([
+      'KPI точности: FA, MAPE, BIAS, WAPE',
+      'FVA по слоям',
+      'Алерты точности',
+    ]);
+    expect(nodes.find((node) => node.id === 'demand-review-meeting')?.owner).toBe(
+      'Руководитель планирования спроса',
+    );
+  });
+
+  it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
+    // serialize_node запрещено отдавать owner (самопроверка импортёра:
+    // ключи узла обязаны лежать в IMPORTER_NODE_FIELDS, а owner из них исключён
+    // как переносимое поле). Значит ответственные живут в этом файле и
+    // восстанавливаются carry_over_manual_fields по id при каждом npm run data.
+    // Тест сторожит, что их не стёрли очередной перегенерацией.
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(12);
+  });
+
+  it('warningsCount не проставлен', () => {
     for (const stage of map.stages) {
       expect(stage.warningsCount, `этап ${stage.number}`).toBeUndefined();
-      expect(stage.groups, `этап ${stage.number}`).toEqual([]);
-      expect(stage.nodes.every((node) => node.group === undefined)).toBe(true);
     }
   });
 });

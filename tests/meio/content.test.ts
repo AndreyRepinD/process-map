@@ -210,11 +210,46 @@ describe('карта MEIO: содержание', () => {
     expect(steps.find((step) => step.label === 'Сегментация')?.description).not.toContain('BPMN:');
   });
 
-  it('warningsCount не проставлен, группы пусты', () => {
+  it('группы внутри этапов: 0 + 2 + 2 + 0', () => {
+    // Этапы 1 и 4 несут по одному шагу — группа вокруг единственной карточки
+    // ничего не сообщает и не заводится (решение владельца от 07.09.2026).
+    expect(map.stages.map((stage) => stage.groups.map((group) => group.label))).toEqual([
+      [],
+      ['Параметры расчёта', 'Сегментация'],
+      ['Расчёт', 'Анализ'],
+      [],
+    ]);
+  });
+
+  it('у каждого шага есть выходы и ответственный', () => {
+    for (const step of steps) {
+      expect(step.outputs, `шаг «${step.id}» без выходов`).toBeTruthy();
+      expect(step.owner, `шаг «${step.id}» без ответственного`).toBeTruthy();
+    }
+    expect(steps.filter((step) => step.outputs !== undefined)).toHaveLength(6);
+    expect(steps.filter((step) => step.owner !== undefined)).toHaveLength(6);
+
+    expect(
+      nodes.find((node) => node.id === 'raschet-rekomendaciy-po-urovnyam-zapasov')?.outputs,
+    ).toEqual([
+      'Рекомендованные уровни запасов',
+      'Точка заказа',
+      'Рекомендованный уровень сервиса',
+    ]);
+    expect(nodes.find((node) => node.id === 'ocenka-effektov')?.owner).toBe(
+      'Планер запасов совместно с финансами',
+    );
+  });
+
+  it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
+    // Импортёру запрещено отдавать owner (самопроверка serialize_node), поэтому
+    // поле живёт в этом файле и восстанавливается carry_over_manual_fields.
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(6);
+  });
+
+  it('warningsCount не проставлен', () => {
     for (const stage of map.stages) {
       expect(stage.warningsCount, `этап ${stage.number}`).toBeUndefined();
-      expect(stage.groups, `этап ${stage.number}`).toEqual([]);
-      expect(stage.nodes.every((node) => node.group === undefined)).toBe(true);
     }
   });
 });
