@@ -490,14 +490,27 @@ export function buildStageGraph(stage: Stage, showIntegrations = true): StageGra
   // его же используют scripts/layout.ts и счётчик в Breadcrumbs, поэтому
   // колонки на экране не могут разойтись с числами в шапке.
   const split = splitStageDataNodes(stage);
+  // Колонкой обводятся ТОЛЬКО несвязанные карточки — те же, что и в раскладке
+  // (src/layout/stageLayout.ts::wiredDataNodes, решение владельца 07.09.2026).
+  // Связанная карточка стоит рядом со своим шагом, и рамка «Входы» вокруг
+  // разбросанных по полотну карточек охватила бы весь этап целиком, объявив
+  // входом в том числе шаги.
+  const linked = new Set(stage.edges.flatMap((edge) => [edge.source, edge.target]));
+  const withoutEdges = (nodes: ProcessNode[]): ProcessNode[] =>
+    nodes.filter((node) => !linked.has(node.id));
   const columnOrigin = new Map<'in' | 'out', Box>();
   const columns: { direction: 'in' | 'out'; id: string; title: string; nodes: ProcessNode[] }[] = [
-    { direction: 'in', id: COLUMN_IN_ID, title: ru.stageDetail.inputsColumn, nodes: split.inputs },
+    {
+      direction: 'in',
+      id: COLUMN_IN_ID,
+      title: ru.stageDetail.inputsColumn,
+      nodes: withoutEdges(split.inputs),
+    },
     {
       direction: 'out',
       id: COLUMN_OUT_ID,
       title: ru.stageDetail.outputsColumn,
-      nodes: split.outputs,
+      nodes: withoutEdges(split.outputs),
     },
   ];
 

@@ -23,7 +23,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 264
           },
           "slidePosition": {
             "x": 0,
@@ -37,7 +37,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 88
           },
           "slidePosition": {
             "x": 0,
@@ -51,7 +51,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 288
+            "y": 176
           },
           "slidePosition": {
             "x": 0,
@@ -66,7 +66,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 0
           },
           "slidePosition": {
             "x": 10,
@@ -93,8 +93,8 @@
             "DP Проверка данных на консистентность"
           ],
           "position": {
-            "x": 296,
-            "y": 146
+            "x": 232,
+            "y": 134
           },
           "slidePosition": {
             "x": 204,
@@ -108,8 +108,8 @@
           "direction": "in",
           "system": "INPLAN",
           "position": {
-            "x": 0,
-            "y": 216
+            "x": 291,
+            "y": 226
           },
           "slidePosition": {
             "x": 10,
@@ -134,8 +134,8 @@
           ],
           "owner": "Планер спроса",
           "position": {
-            "x": 646,
-            "y": 146
+            "x": 582,
+            "y": 220
           },
           "slidePosition": {
             "x": 204,
@@ -148,8 +148,8 @@
           "label": "Отчёт качества данных",
           "direction": "out",
           "position": {
-            "x": 1060,
-            "y": 108
+            "x": 641,
+            "y": 124
           },
           "slidePosition": {
             "x": 431,
@@ -162,8 +162,8 @@
           "label": "Сопоставимая история",
           "direction": "out",
           "position": {
-            "x": 1060,
-            "y": 180
+            "x": 932,
+            "y": 218
           },
           "slidePosition": {
             "x": 431,
@@ -270,7 +270,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 176
           },
           "slidePosition": {
             "x": 183,
@@ -284,7 +284,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 0
           },
           "slidePosition": {
             "x": 183,
@@ -298,7 +298,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 88
           },
           "slidePosition": {
             "x": 183,
@@ -326,7 +326,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 52
+            "y": 90
           },
           "slidePosition": {
             "x": 420,
@@ -339,8 +339,8 @@
           "label": "Промо-план из TPM/NRM",
           "direction": "in",
           "position": {
-            "x": 0,
-            "y": 216
+            "x": 769,
+            "y": 252
           },
           "slidePosition": {
             "x": 10,
@@ -370,7 +370,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 44
+            "y": 20
           },
           "slidePosition": {
             "x": 420,
@@ -389,7 +389,7 @@
           "owner": "Планер спроса совместно с категорийным менеджментом",
           "position": {
             "x": 710,
-            "y": 176
+            "y": 364
           },
           "slidePosition": {
             "x": 420,
@@ -413,7 +413,7 @@
           "owner": "Планер спроса совместно с трейд-маркетингом",
           "position": {
             "x": 1124,
-            "y": 168
+            "y": 356
           },
           "slidePosition": {
             "x": 420,
@@ -426,8 +426,8 @@
           "label": "Базовый прогноз с чемпионом по серии",
           "direction": "out",
           "position": {
-            "x": 1538,
-            "y": 72
+            "x": 1183,
+            "y": 9
           },
           "slidePosition": {
             "x": 648,
@@ -441,7 +441,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 144
+            "y": 354
           },
           "slidePosition": {
             "x": 648,
@@ -555,7 +555,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 88
           },
           "slidePosition": {
             "x": 399,
@@ -574,7 +574,7 @@
           "owner": "Планер канала",
           "position": {
             "x": 296,
-            "y": 52
+            "y": 46
           },
           "slidePosition": {
             "x": 636,
@@ -598,7 +598,7 @@
           "owner": "Планер канала совместно с КАМ",
           "position": {
             "x": 296,
-            "y": 168
+            "y": 227
           },
           "slidePosition": {
             "x": 636,
@@ -613,7 +613,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 269
           },
           "slidePosition": {
             "x": 10,
@@ -627,7 +627,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 216
+            "y": 181
           },
           "slidePosition": {
             "x": 10,
@@ -641,7 +641,7 @@
           "direction": "out",
           "position": {
             "x": 710,
-            "y": 72
+            "y": 181
           },
           "slidePosition": {
             "x": 864,
@@ -655,7 +655,7 @@
           "direction": "out",
           "position": {
             "x": 710,
-            "y": 144
+            "y": 269
           },
           "slidePosition": {
             "x": 864,
@@ -737,7 +737,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 176
           },
           "slidePosition": {
             "x": 615,
@@ -751,7 +751,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 0
           },
           "slidePosition": {
             "x": 615,
@@ -776,7 +776,7 @@
           "owner": "Категорийный менеджмент",
           "position": {
             "x": 296,
-            "y": 110
+            "y": 90
           },
           "slidePosition": {
             "x": 852,
@@ -801,7 +801,7 @@
           "owner": "Руководитель планирования спроса",
           "position": {
             "x": 710,
-            "y": 110
+            "y": 168
           },
           "slidePosition": {
             "x": 852,
@@ -815,7 +815,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 88
           },
           "slidePosition": {
             "x": 10,
@@ -828,8 +828,8 @@
           "label": "Коммерческие финансы: консенсус-прогноз в деньгах",
           "direction": "in",
           "position": {
-            "x": 0,
-            "y": 216
+            "x": 355,
+            "y": 244
           },
           "slidePosition": {
             "x": 10,
@@ -843,7 +843,7 @@
           "direction": "out",
           "position": {
             "x": 1124,
-            "y": 108
+            "y": 166
           },
           "slidePosition": {
             "x": 1080,
@@ -921,7 +921,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 316
           },
           "slidePosition": {
             "x": 831,
@@ -935,7 +935,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 93
           },
           "slidePosition": {
             "x": 831,
@@ -964,7 +964,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 146
+            "y": 196
           },
           "slidePosition": {
             "x": 1069,
@@ -990,7 +990,7 @@
           "owner": "Руководитель планирования спроса",
           "position": {
             "x": 710,
-            "y": 104
+            "y": 35
           },
           "slidePosition": {
             "x": 1069,
@@ -1021,7 +1021,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 188
+            "y": 145
           },
           "slidePosition": {
             "x": 1069,
@@ -1047,7 +1047,7 @@
           "owner": "Планер спроса",
           "position": {
             "x": 1124,
-            "y": 188
+            "y": 11
           },
           "slidePosition": {
             "x": 1069,
@@ -1061,8 +1061,8 @@
           "direction": "in",
           "system": "INPLAN",
           "position": {
-            "x": 0,
-            "y": 216
+            "x": 355,
+            "y": 0
           },
           "slidePosition": {
             "x": 10,
@@ -1076,8 +1076,8 @@
           "direction": "out",
           "system": "INPLAN",
           "position": {
-            "x": 1538,
-            "y": 288
+            "x": 769,
+            "y": 333
           },
           "slidePosition": {
             "x": 1069,
@@ -1090,8 +1090,8 @@
           "label": "Опубликованный план спроса в SNP и MEIO",
           "direction": "out",
           "position": {
-            "x": 1538,
-            "y": 0
+            "x": 769,
+            "y": 245
           },
           "slidePosition": {
             "x": 1297,
@@ -1104,8 +1104,8 @@
           "label": "Решение по разрыву с планом SNP",
           "direction": "out",
           "position": {
-            "x": 1538,
-            "y": 72
+            "x": 1183,
+            "y": 245
           },
           "slidePosition": {
             "x": 1297,
@@ -1118,8 +1118,8 @@
           "label": "KPI точности и FVA",
           "direction": "out",
           "position": {
-            "x": 1538,
-            "y": 144
+            "x": 1183,
+            "y": 333
           },
           "slidePosition": {
             "x": 1297,
@@ -1133,7 +1133,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 216
+            "y": 9
           },
           "slidePosition": {
             "x": 1297,

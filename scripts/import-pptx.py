@@ -162,7 +162,7 @@ MAP_ID_MRP = "mrp"
 MAP_TITLE_MRP = "Процесс планирования потребности в материалах"
 MAP_MODULE_LABEL_MRP = "Модуль MRP"
 MAP_UPDATED_AT_MRP = "2026-09-01"
-MAP_DATA_FINGERPRINT_MRP = "394e6ee9b381b0fd01eda89ffc7391993810474ae7c0cdee669023bf429fc9cd"
+MAP_DATA_FINGERPRINT_MRP = "3424993eb21acb89d2b7803a93e4d42926a7bc3464d78c5b12de1ef517c39cff"
 
 # --- карты DP и MEIO ---------------------------------------------------------
 # Собираются с одиночного слайда, СГЕНЕРИРОВАННОГО из authoring source владельца
@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "05dbc1ea67b0775c4d3001e33f6d9f5dba25afbb58626473a44aeaa8e0a1c99c"
+MAP_DATA_FINGERPRINT_DP = "349871a0effeee1f547e4c0dfd58626dc21057ecfea5686fbe7a473ea5c6bc6c"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "06a18ec92bb83bcabee15e6406b931a4c64a504c61086e0ba2e2352ad9ba09c5"
+MAP_DATA_FINGERPRINT_MEIO = "a938e78e3345d9ffb8e9743b3ed26d451872bb5aee7f26fd4893534520cb545c"
 
 
 @dataclass(frozen=True)
