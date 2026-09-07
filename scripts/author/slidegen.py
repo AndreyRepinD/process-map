@@ -388,7 +388,59 @@ def verify(author_path: Path) -> list[str]:
                         f"{want_owner!r}. Поле ручное — проставьте в src/data/{key}/process.json"
                     )
 
+                # Алгоритмы Менеджера процессов — такое же ручное поле, с той
+                # же причиной: на слайде их нет, потому что слайд рисует процесс,
+                # а не привязку к конкретному стенду In.Plan. Хранятся ТОЛЬКО
+                # имена: адреса на отдельный алгоритм платформа не даёт
+                # (проверено 07.09.2026), он у всех один.
+                want_algorithms = step.get("algorithms")
+                got_algorithms = by_id.get(node_id, {}).get("algorithms")
+                if want_algorithms != got_algorithms:
+                    problems.append(
+                        f"algorithms «{node_id}»: в карте {got_algorithms!r}, в authoring "
+                        f"source {want_algorithms!r}. Поле ручное — проставьте в "
+                        f"src/data/{key}/process.json"
+                    )
+                # Каждое имя обязано существовать в реестре стенда, иначе
+                # привязка указывает в никуда: src/data/algorithms.ts —
+                # единственный источник, и расхождение ловится здесь, а не
+                # глазами при следующем чтении карты.
+                for name in want_algorithms or ():
+                    if name not in known_algorithms(key):
+                        problems.append(
+                            f"algorithms «{node_id}»: имени {name!r} нет в реестре модуля "
+                            f"(src/data/algorithms.ts). Опечатка или новый алгоритм "
+                            f"платформы — во втором случае дополните реестр."
+                        )
+
     return problems
+
+
+def known_algorithms(key: str) -> set[str]:
+    """Имена алгоритмов модуля из src/data/algorithms.ts.
+
+    ЧИТАЕТСЯ ИЗ TS-ФАЙЛА, А НЕ ДУБЛИРУЕТСЯ СПИСКОМ ЗДЕСЬ. Второй экземпляр
+    реестра разошёлся бы с первым при первом же пополнении — и разошёлся бы
+    молча, потому что обе копии остались бы синтаксически верными. Разбор
+    намеренно грубый (регулярка по строковым литералам блока): формат файла
+    задан здесь же, в репозитории, и меняется вместе с этой функцией.
+    """
+    path = Path(__file__).resolve().parent.parent.parent / "src" / "data" / "algorithms.ts"
+    text = path.read_text(encoding="utf-8")
+    const = {"meio": "MEIO_ALGORITHMS", "dp": "DP_ALGORITHMS"}.get(key)
+    if const is None:
+        return set()
+    match = re.search(
+        rf"export const {const}: readonly string\[\] = \[(.*?)\] as const;",
+        text,
+        re.S,
+    )
+    if match is None:
+        raise SystemExit(
+            f"В src/data/algorithms.ts не найден блок {const}. "
+            f"Формат файла изменился — поправьте known_algorithms()."
+        )
+    return set(re.findall(r"'([^']+)'", match.group(1)))
 
 
 def ROOT_JSON(key: str):
