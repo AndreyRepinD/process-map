@@ -82,10 +82,11 @@
           "id": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
           "type": "step",
           "label": "Настройка параметров для расчёта уровней запасов",
-          "description": "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и волатильность, затраты на хранение, минимальный размер партии и кратность, срок годности и политика FEFO.\n\nНеопределённость спроса модуль считает САМ по истории прогноза и факта; отдельного входа «ошибка прогноза из DP» не заводится — решение владельца от 07.09.2026.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
+          "description": "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и волатильность, затраты на хранение, минимальный размер партии и кратность, срок годности и политика FEFO.\n\nБаза неопределённости — ПАРАМЕТР НАСТРОЙКИ, а не жёсткое правило: модуль умеет считать разброс сам по собственной истории прогноза и факта, а может принять готовую ошибку прогноза (FA, BIAS, σ) по горизонту из DP. Выбор делается по сегментам: страховой запас защищает от ошибки прогноза за время выполнения, и там, где прогноз смещён, собственный разброс отгрузок занижает потребность в защите.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
           "inputs": [
             "Плановые лидтаймы и отклонения",
             "Квоты",
+            "База неопределённости: расчёт в модуле или ошибка прогноза из DP",
             "Спрос и волатильность",
             "Затраты на хранение",
             "Минимальный размер партии и кратность",
@@ -94,7 +95,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 74
+            "y": 110
           },
           "slidePosition": {
             "x": 474,
@@ -113,7 +114,22 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 274
+            "y": 231
+          }
+        },
+        {
+          "id": "parametry-cepochki-iz-erp",
+          "type": "data",
+          "label": "Параметры цепочки из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 359
           }
         },
         {
@@ -130,26 +146,11 @@
           ],
           "position": {
             "x": 646,
-            "y": 74
+            "y": 110
           },
           "slidePosition": {
             "x": 474,
-            "y": 342
-          }
-        },
-        {
-          "id": "parametry-cepochki-iz-erp",
-          "type": "data",
-          "label": "Параметры цепочки из ERP",
-          "direction": "in",
-          "system": "ERP",
-          "position": {
-            "x": 0,
-            "y": 72
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 444
+            "y": 377
           }
         },
         {
@@ -161,6 +162,21 @@
           "position": {
             "x": 0,
             "y": 144
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 487
+          }
+        },
+        {
+          "id": "oshibka-prognoza-po-gorizontu-iz-dp",
+          "type": "data",
+          "label": "Ошибка прогноза по горизонту из DP",
+          "direction": "in",
+          "system": "DP",
+          "position": {
+            "x": 0,
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
@@ -188,6 +204,12 @@
           "kind": "process"
         },
         {
+          "id": "e-oshibka-prognoza-po-gorizontu-iz-dp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "oshibka-prognoza-po-gorizontu-iz-dp",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
           "id": "e-nastroyka-parametrov-dlya-rascheta-urovney-zapasov--segmentaciya",
           "source": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
           "target": "segmentaciya",
@@ -210,6 +232,12 @@
         {
           "system": "ERP",
           "label": "Сроки годности и требования сетей к остаточному сроку из ERP",
+          "stage": 2,
+          "direction": "in"
+        },
+        {
+          "system": "DP",
+          "label": "Ошибка прогноза по горизонту из DP",
           "stage": 2,
           "direction": "in"
         }

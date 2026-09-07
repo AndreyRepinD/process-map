@@ -32,6 +32,7 @@ const INPUTS = [
   'Спрос и волатильность из DP',
   'Параметры цепочки из ERP',
   'Сроки годности и требования сетей к остаточному сроку из ERP',
+  'Ошибка прогноза по горизонту из DP',
 ];
 
 const OUTPUTS = ['Уровни запасов в SNP/PS и MRP', 'Оценка эффектов и рекомендации'];
@@ -59,8 +60,8 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('четыре входа и два выхода, каждый при своём этапе', () => {
-    expect(data).toHaveLength(6);
+  it('пять входов и два выхода, каждый при своём этапе', () => {
+    expect(data).toHaveLength(7);
     expect(labels(data.filter((node) => node.direction === 'in'))).toEqual([...INPUTS].sort());
     expect(labels(data.filter((node) => node.direction === 'out'))).toEqual([...OUTPUTS].sort());
 
@@ -70,12 +71,13 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Спрос и волатильность из DP')).toBe(2);
     expect(stageOf('Параметры цепочки из ERP')).toBe(2);
     expect(stageOf('Сроки годности и требования сетей к остаточному сроку из ERP')).toBe(2);
+    expect(stageOf('Ошибка прогноза по горизонту из DP')).toBe(2);
     expect(stageOf('Уровни запасов в SNP/PS и MRP')).toBe(3);
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(4);
   });
 
-  it('рёбра внутри этапов: 1 + 4 + 2 + 1', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([1, 4, 2, 1]);
+  it('рёбра внутри этапов: 1 + 5 + 2 + 1', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([1, 5, 2, 1]);
   });
 
   it('обзорные рёбра — линейный поток 1 → 2 → 3 → 4 без обратного', () => {
@@ -105,22 +107,27 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('внешние системы входов: ERP на этапе 1, DP и дважды ERP на этапе 2', () => {
+  it('внешние системы входов: ERP на этапе 1, по два DP и ERP на этапе 2', () => {
     expect(map.stages[0]?.inputs.map((io) => io.system)).toEqual(['ERP']);
-    expect(map.stages[1]?.inputs.map((io) => io.system)).toEqual(['DP', 'ERP', 'ERP']);
+    expect(map.stages[1]?.inputs.map((io) => io.system)).toEqual(['DP', 'ERP', 'ERP', 'DP']);
   });
 
   it('две плашки одной системы у этапа дают ОДИН свимлейн на обзоре', () => {
-    // У этапа 2 два входа из ERP — параметры цепочки и сроки годности. Свимлейн
-    // на обзоре один на систему, поэтому связь «ERP → этап 2» тоже одна.
+    // У этапа 2 по два входа из ERP (параметры цепочки, сроки годности) и из DP
+    // (спрос с волатильностью, ошибка прогноза). Свимлейн на обзоре один на
+    // систему, поэтому связей «ERP → этап 2» и «DP → этап 2» тоже по одной.
+    //
     // До дедупликации оба ребра получали дословно один id (ov-ERP--stage-2-...)
     // и check_unique_ids роняла импорт. Дефект был латентным: у карт, где на
-    // этапе разные системы, он не проявлялся.
+    // этапе все входы из разных систем, он не проявлялся.
     const integrations = map.overviewEdges.filter((edge) => edge.kind === 'integration');
     expect(new Set(integrations.map((edge) => edge.id)).size).toBe(integrations.length);
-    expect(
-      integrations.filter((edge) => edge.source === 'ERP' && edge.target === map.stages[1]?.id),
-    ).toHaveLength(1);
+    for (const system of ['ERP', 'DP']) {
+      expect(
+        integrations.filter((edge) => edge.source === system && edge.target === map.stages[1]?.id),
+        `свимлейн ${system} → этап 2`,
+      ).toHaveLength(1);
+    }
   });
 
   it('«Оценка эффектов и рекомендации» внешней системой НЕ стала', () => {
@@ -166,17 +173,24 @@ describe('карта MEIO: содержание', () => {
     expect(calc?.inputs).toContain('Стоимость списаний и уценки');
   });
 
-  it('ошибка прогноза считается в модуле, отдельного входа из DP нет', () => {
-    // Решение владельца от 07.09.2026: панель предлагала завести вход
-    // «распределение ошибки прогноза из DP», владелец оставил расчёт внутри
-    // модуля. Сторож против тихого возврата к обсуждённому и отклонённому.
-    expect(map.stages.flatMap((stage) => stage.inputs).map((io) => io.label)).not.toContain(
-      'Распределение ошибки прогноза по горизонту из DP',
-    );
+  it('база неопределённости — параметр настройки: расчёт в модуле ИЛИ ошибка из DP', () => {
+    // Уточнение владельца от 07.09.2026: сначала было решено считать разброс
+    // только внутри модуля, затем — что готовую ошибку прогноза можно получать
+    // и из DP. Оба источника допустимы, выбор делается по сегментам, поэтому на
+    // карте это параметр настройки, а не жёсткое правило.
     const setup = steps.find(
       (step) => step.label === 'Настройка параметров для расчёта уровней запасов',
     );
-    expect(setup?.description).toContain('модуль считает САМ');
+    expect(setup?.inputs).toContain(
+      'База неопределённости: расчёт в модуле или ошибка прогноза из DP',
+    );
+    expect(setup?.description).toContain('ПАРАМЕТР НАСТРОЙКИ');
+    expect(setup?.description).toContain('собственной истории прогноза и факта');
+
+    // Второй источник виден на карте отдельной плашкой, а не только словами.
+    expect(
+      map.stages[1]?.inputs.filter((io) => io.label === 'Ошибка прогноза по горизонту из DP'),
+    ).toHaveLength(1);
   });
 
   it('у каждого шага есть описание; сноска про сценарии — в описании, не в подписи', () => {
