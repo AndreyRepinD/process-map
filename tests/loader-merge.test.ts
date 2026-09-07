@@ -6,6 +6,9 @@ import {
   mergeOverrides,
   parseOverrides,
   readStoredOverrides,
+  addNode,
+  patchNodeContent,
+  removeNode,
   removeNodeOverride,
   resetOverrides,
   safeParseOverrides,
@@ -315,5 +318,126 @@ describe('устойчивость localStorage', () => {
 
     expect(localStorage.getItem(OVERRIDES_KEY)).toBeNull();
     expect(readStoredOverrides()).toEqual({});
+  });
+});
+
+// ─────────────── правки содержания (решение владельца 07.09.2026) ───────────────
+
+describe('mergeOverrides — правки содержания узла', () => {
+  const firstNodeId = (map: ProcessMap): string => {
+    const id = map.stages[0]?.nodes[0]?.id;
+    expect(id, 'в фикстуре нет ни одного узла').toBeTruthy();
+    return id as string;
+  };
+
+  it('подпись заменяется, остальные поля не трогаются', () => {
+    const map = buildSampleProcessMap();
+    const id = firstNodeId(map);
+    const before = map.stages[0]?.nodes[0];
+    const merged = mergeOverrides(map, { [id]: { label: 'Новая подпись' } });
+    const after = merged.stages[0]?.nodes[0];
+    expect(after?.label).toBe('Новая подпись');
+    expect(after?.type).toBe(before?.type);
+    expect(after?.position).toEqual(before?.position);
+  });
+
+  it('null очищает поле, а отсутствие ключа оставляет как было', () => {
+    const map = buildSampleProcessMap();
+    const id = firstNodeId(map);
+    const withText = mergeOverrides(map, { [id]: { description: 'Текст' } });
+    expect(withText.stages[0]?.nodes[0]?.description).toBe('Текст');
+
+    // null — «очистили явно»: ключа в узле остаться не должно вовсе.
+    const cleared = mergeOverrides(withText, { [id]: { description: null } });
+    expect(cleared.stages[0]?.nodes[0]).not.toHaveProperty('description');
+
+    // Пустая запись ничего не меняет.
+    expect(mergeOverrides(withText, { [id]: {} }).stages[0]?.nodes[0]?.description).toBe('Текст');
+  });
+
+  it('входы и выходы заменяются списком целиком', () => {
+    const map = buildSampleProcessMap();
+    const id = firstNodeId(map);
+    const merged = mergeOverrides(map, { [id]: { inputs: ['A', 'B'], outputs: ['C'] } });
+    expect(merged.stages[0]?.nodes[0]?.inputs).toEqual(['A', 'B']);
+    expect(merged.stages[0]?.nodes[0]?.outputs).toEqual(['C']);
+  });
+});
+
+describe('mergeOverrides — удаление узла', () => {
+  it('узел исчезает, а рёбра, которые на нём висели, выбрасываются', () => {
+    const map = buildSampleProcessMap();
+    const stage = map.stages[0];
+    expect(stage).toBeTruthy();
+    const doomed = stage?.edges[0]?.source;
+    expect(doomed, 'в фикстуре нет рёбер — тест не о чем').toBeTruthy();
+
+    const merged = mergeOverrides(map, { [doomed as string]: { removed: true } });
+    const ids = merged.stages.flatMap((s) => s.nodes.map((n) => n.id));
+    expect(ids).not.toContain(doomed);
+    // Ребро в никуда — это стрелка из угла полотна и непроходимый
+    // validateIntegrity при экспорте, поэтому оно обязано исчезнуть вместе с узлом.
+    for (const s of merged.stages) {
+      for (const edge of s.edges) {
+        expect(edge.source).not.toBe(doomed);
+        expect(edge.target).not.toBe(doomed);
+      }
+    }
+  });
+});
+
+describe('mergeOverrides — добавленный узел', () => {
+  it('появляется в своём этапе с подписью и направлением', () => {
+    const map = buildSampleProcessMap();
+    const merged = mergeOverrides(map, {
+      'added-x': { added: { stage: 1, type: 'data', direction: 'out' }, label: 'Новый выход' },
+    });
+    const node = merged.stages[0]?.nodes.find((n) => n.id === 'added-x');
+    expect(node?.label).toBe('Новый выход');
+    expect(node?.direction).toBe('out');
+    expect(node?.type).toBe('data');
+    // Координаты синтезируются: их неоткуда взять, layout.ts считает на сборке.
+    expect(node?.position).toBeTruthy();
+    expect(node?.slidePosition).toBeTruthy();
+  });
+
+  it('в чужой этап не попадает и правки содержания к нему применяются', () => {
+    const map = buildSampleProcessMap();
+    const merged = mergeOverrides(map, {
+      'added-y': {
+        added: { stage: 2, type: 'step' },
+        label: 'Шаг',
+        description: 'Пояснение',
+        outputs: ['Результат'],
+      },
+    });
+    expect(merged.stages[0]?.nodes.some((n) => n.id === 'added-y')).toBe(false);
+    const node = merged.stages.find((s) => s.number === 2)?.nodes.find((n) => n.id === 'added-y');
+    expect(node?.description).toBe('Пояснение');
+    expect(node?.outputs).toEqual(['Результат']);
+  });
+});
+
+describe('запись правок в хранилище', () => {
+  it('правка ссылки НЕ стирает правку содержания того же узла', () => {
+    // Регрессия по построению: до правок содержания setNodeOverride заменял
+    // запись целиком (`{ [id]: { screen } }`), и первая же правка ссылки унесла
+    // бы подпись и описание молча.
+    patchNodeContent('n1', { label: 'Подпись', description: 'Текст' });
+    setNodeOverride('n1', { title: 'Экран', url: 'https://example.test' });
+    const stored = readStoredOverrides();
+    expect(stored['n1']?.label).toBe('Подпись');
+    expect(stored['n1']?.description).toBe('Текст');
+    expect(stored['n1']?.screen?.url).toBe('https://example.test');
+  });
+
+  it('добавленный узел удаляется записью целиком, а узел карты — признаком', () => {
+    const id = addNode({ stage: 1, type: 'step' }, 'Черновик');
+    expect(readStoredOverrides()[id]?.added).toBeTruthy();
+    removeNode(id);
+    expect(readStoredOverrides()[id]).toBeUndefined();
+
+    removeNode('n2');
+    expect(readStoredOverrides()['n2']?.removed).toBe(true);
   });
 });

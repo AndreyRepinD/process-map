@@ -31,7 +31,15 @@
 // в файле игнорируются молча. Файл при этом остаётся валидным и импорт не
 // падает.
 import { parseOverrides, parseProcessMap } from '../data/loader';
-import { ProcessMapSchema, type Overrides, type ProcessMap, type ScreenLink } from '../data/schema';
+import {
+  ProcessMapSchema,
+  type AddedNode,
+  type OverrideEntry,
+  type Overrides,
+  type ProcessMap,
+  type ProcessNode,
+  type ScreenLink,
+} from '../data/schema';
 
 /**
  * Имя скачиваемого файла: `process.<id карты>.json` (SPEC §4.4).
@@ -85,28 +93,93 @@ function screensEqual(a: ScreenLink | undefined, b: ScreenLink | undefined): boo
  * Узлы, которых нет в базе, игнорируются: overrides адресуются по id узла
  * базовой карты, а добавление узлов v1 не поддерживает.
  */
+/** Совпадают ли два списка построчно. undefined и пустой список — разное. */
+function listsEqual(a: readonly string[] | undefined, b: readonly string[] | undefined): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return a.length === b.length && a.every((item, index) => item === b[index]);
+}
+
 export function deriveOverrides(base: ProcessMap, imported: ProcessMap): Overrides {
-  const importedScreens = new Map<string, ScreenLink | undefined>();
+  const importedNodes = new Map<string, ProcessNode>();
+  const importedStageOf = new Map<string, number>();
   for (const stage of imported.stages) {
     for (const node of stage.nodes) {
-      importedScreens.set(node.id, node.screen);
+      importedNodes.set(node.id, node);
+      importedStageOf.set(node.id, stage.number);
     }
   }
 
   const overrides: Overrides = {};
+  const seen = new Set<string>();
   for (const stage of base.stages) {
     for (const node of stage.nodes) {
-      if (!importedScreens.has(node.id)) {
+      seen.add(node.id);
+      const next = importedNodes.get(node.id);
+      if (next === undefined) {
+        // Узла нет в файле — значит его убрали правкой. Отличается от «файл
+        // про этот узел ничего не говорит»: файл экспортируется целиком.
+        overrides[node.id] = { removed: true };
         continue;
       }
-      const next = importedScreens.get(node.id);
-      if (screensEqual(node.screen, next)) {
-        continue;
+      const entry: OverrideEntry = {};
+      if (!screensEqual(node.screen, next.screen)) {
+        // undefined здесь означает «в базе ссылка была, в файле её нет», то есть
+        // явное удаление — null, а не отсутствие записи.
+        entry.screen = next.screen ?? null;
       }
-      // next === undefined здесь означает «в базе ссылка была, в файле её нет»,
-      // то есть явное удаление — null, а не отсутствие записи.
-      overrides[node.id] = { screen: next ?? null };
+      if (node.label !== next.label) {
+        entry.label = next.label;
+      }
+      if (node.description !== next.description) {
+        entry.description = next.description ?? null;
+      }
+      if (node.owner !== next.owner) {
+        entry.owner = next.owner ?? null;
+      }
+      if (!listsEqual(node.inputs, next.inputs)) {
+        entry.inputs = next.inputs ?? null;
+      }
+      if (!listsEqual(node.outputs, next.outputs)) {
+        entry.outputs = next.outputs ?? null;
+      }
+      if (Object.keys(entry).length > 0) {
+        overrides[node.id] = entry;
+      }
     }
+  }
+
+  // Узлы, которых в базовой карте нет вовсе: их создали правкой. Восстанавливаем
+  // и признак added — без него узел не попал бы обратно на карту при импорте.
+  for (const [id, node] of importedNodes) {
+    if (seen.has(id)) {
+      continue;
+    }
+    const added: AddedNode = { stage: importedStageOf.get(id) ?? 1, type: node.type };
+    if (node.direction !== undefined) {
+      added.direction = node.direction;
+    }
+    if (node.group !== undefined) {
+      added.group = node.group;
+    }
+    const entry: OverrideEntry = { added, label: node.label };
+    if (node.description !== undefined) {
+      entry.description = node.description;
+    }
+    if (node.owner !== undefined) {
+      entry.owner = node.owner;
+    }
+    if (node.inputs !== undefined) {
+      entry.inputs = node.inputs;
+    }
+    if (node.outputs !== undefined) {
+      entry.outputs = node.outputs;
+    }
+    if (node.screen !== undefined) {
+      entry.screen = node.screen;
+    }
+    overrides[id] = entry;
   }
   return overrides;
 }
@@ -130,6 +203,16 @@ export function parseImportedOverrides(text: string, base: ProcessMap): Override
 
   const parsed = ProcessMapSchema.safeParse(raw);
   if (!parsed.success) {
+    return null;
+  }
+
+  // ФАЙЛ ДОЛЖЕН БЫТЬ ОТ ЭТОЙ ЖЕ КАРТЫ. Раньше проверки не было и она была не
+  // нужна: узлы с незнакомыми id просто игнорировались, и файл карты SNP,
+  // загруженный в MEIO, давал пустой результат. С правками содержания
+  // незнакомый узел означает «его создали правкой», и тот же чужой файл влил бы
+  // в карту все свои узлы разом. Поэтому карта теперь сверяется по id — тому
+  // самому, ради которого ProcessMap.id и заведён (schema.ts).
+  if (parsed.data.id !== base.id) {
     return null;
   }
 

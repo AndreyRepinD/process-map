@@ -24,6 +24,8 @@ import {
   OverridesSchema,
   overridesStorageKey,
   ProcessMapSchema,
+  type AddedNode,
+  type OverrideEntry,
   type Overrides,
   type ProcessMap,
   type ProcessNode,
@@ -74,20 +76,84 @@ export function safeParseOverrides(raw: unknown): Overrides {
  * создаёт ключ, которого не было во входных данных, поэтому undefined
  * однозначно означает «не трогали».
  */
-function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode {
-  const entry = overrides[node.id];
-  if (entry === undefined || entry.screen === undefined) {
+/**
+ * Накладывает правку на одно поле узла по общему правилу трёх состояний:
+ * ключа нет — не трогали; null — очистили явно; значение — заменили.
+ */
+function patchField<K extends keyof ProcessNode>(
+  node: ProcessNode,
+  key: K,
+  value: ProcessNode[K] | null | undefined,
+): ProcessNode {
+  if (value === undefined) {
     return node;
   }
-  if (entry.screen === null) {
-    if (node.screen === undefined) {
+  if (value === null) {
+    if (node[key] === undefined) {
       return node;
     }
     const stripped: ProcessNode = { ...node };
-    delete stripped.screen;
+    delete stripped[key];
     return stripped;
   }
-  return { ...node, screen: entry.screen };
+  return { ...node, [key]: value };
+}
+
+function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode {
+  const entry = overrides[node.id];
+  if (entry === undefined) {
+    return node;
+  }
+  let next = patchField(node, 'screen', entry.screen);
+  // label без null: подпись — обязательное поле схемы, «очистить» её нельзя,
+  // а безымянная карточка на полотне была бы хуже неправленой.
+  next = patchField(next, 'label', entry.label);
+  next = patchField(next, 'description', entry.description);
+  next = patchField(next, 'inputs', entry.inputs);
+  next = patchField(next, 'outputs', entry.outputs);
+  next = patchField(next, 'owner', entry.owner);
+  return next;
+}
+
+/**
+ * Узлы, созданные правкой, — их нет в process.json.
+ *
+ * КООРДИНАТЫ СИНТЕЗИРУЮТСЯ ЗДЕСЬ, а не приходят из правки: position считает
+ * scripts/layout.ts на сборке, и у нового узла его взяться неоткуда. Кладём под
+ * последний узел своей колонки — так карточка попадает туда, где её ждут
+ * (входы слева, выходы справа, шаги в потоке), и не наезжает на соседа.
+ */
+function addedNodesFor(stage: Stage, overrides: Overrides): ProcessNode[] {
+  const created: ProcessNode[] = [];
+  for (const [id, entry] of Object.entries(overrides)) {
+    const added = entry.added;
+    if (added === undefined || added.stage !== stage.number || entry.removed === true) {
+      continue;
+    }
+    const sameColumn = stage.nodes.filter((node) =>
+      added.type === 'data' ? node.direction === added.direction : node.type !== 'data',
+    );
+    const anchor = sameColumn.at(-1) ?? stage.nodes.at(-1);
+    const position = {
+      x: anchor?.position.x ?? 0,
+      y: (anchor?.position.y ?? 0) + 88,
+    };
+    const node: ProcessNode = {
+      id,
+      type: added.type,
+      label: entry.label ?? id,
+      position,
+      slidePosition: { ...position },
+    };
+    if (added.direction !== undefined) {
+      node.direction = added.direction;
+    }
+    if (added.group !== undefined) {
+      node.group = added.group;
+    }
+    created.push(applyNodeOverride(node, overrides));
+  }
+  return created;
 }
 
 /**
@@ -102,9 +168,24 @@ export function mergeOverrides(map: ProcessMap, overrides: Overrides): ProcessMa
   }
   const stages: Stage[] = map.stages.map((stage) => ({
     ...stage,
-    nodes: stage.nodes.map((node) => applyNodeOverride(node, overrides)),
+    nodes: [
+      ...stage.nodes
+        .filter((node) => overrides[node.id]?.removed !== true)
+        .map((node) => applyNodeOverride(node, overrides)),
+      ...addedNodesFor(stage, overrides),
+    ],
   }));
-  return { ...map, stages };
+  // Рёбра, повисшие на скрытых узлах, выбрасываются: React Flow на ребро в
+  // никуда рисует стрелку из угла полотна, а validateIntegrity такой документ
+  // и вовсе не пропустит при экспорте.
+  const alive = new Set(stages.flatMap((stage) => stage.nodes.map((node) => node.id)));
+  return {
+    ...map,
+    stages: stages.map((stage) => ({
+      ...stage,
+      edges: stage.edges.filter((edge) => alive.has(edge.source) && alive.has(edge.target)),
+    })),
+  };
 }
 
 // ─────────────────────────── работа с localStorage ───────────────────────────
@@ -198,7 +279,67 @@ export function writeStoredOverrides(overrides: Overrides): boolean {
  * merge, не перечитывая хранилище (и работать даже если запись не удалась).
  */
 export function setNodeOverride(nodeId: string, screen: ScreenLink | null): Overrides {
-  const next: Overrides = { ...readStoredOverrides(), [nodeId]: { screen } };
+  // СЛИЯНИЕ, А НЕ ЗАМЕНА ЗАПИСИ. До правок содержания в записи жило одно поле,
+  // и `{ [nodeId]: { screen } }` было верно. Теперь там же лежат подпись,
+  // описание, входы, выходы и признак добавленного узла — замена стирала бы их
+  // при первой же правке ссылки, молча и без следа.
+  const current = readStoredOverrides();
+  const next: Overrides = { ...current, [nodeId]: { ...current[nodeId], screen } };
+  writeStoredOverrides(next);
+  return next;
+}
+
+/** Поля содержания узла: подпись, описание, входы, выходы, ответственный. */
+export type NodeContentPatch = Pick<
+  OverrideEntry,
+  'label' | 'description' | 'inputs' | 'outputs' | 'owner'
+>;
+
+/** Записывает правку содержания узла поверх уже имеющейся записи. */
+export function patchNodeContent(nodeId: string, patch: NodeContentPatch): Overrides {
+  const current = readStoredOverrides();
+  const next: Overrides = { ...current, [nodeId]: { ...current[nodeId], ...patch } };
+  writeStoredOverrides(next);
+  return next;
+}
+
+/**
+ * Идентификатор узла, созданного правкой.
+ *
+ * НЕ slug ОТ ПОДПИСИ, в отличие от импортёра. Транслитерация там живёт в
+ * python-таблице scripts/import-pptx.py, и второй её экземпляр в браузере
+ * разошёлся бы с первым при первой же правке таблицы — а id уходят в deep-link
+ * и в ключи overrides, где расхождение стоит потерянных ссылок. Префикс `added-`
+ * делает происхождение узла видимым в экспортированном JSON без сверки с базой.
+ */
+export function newNodeId(): string {
+  return `added-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** Создаёт узел, которого нет в process.json. Возвращает его id. */
+export function addNode(draft: AddedNode, label: string): string {
+  const id = newNodeId();
+  const current = readStoredOverrides();
+  writeStoredOverrides({ ...current, [id]: { added: draft, label } });
+  return id;
+}
+
+/**
+ * Убирает узел с карты.
+ *
+ * Для СОЗДАННОГО правкой узла запись удаляется целиком — иначе в overrides
+ * копился бы мусор из добавленных и тут же убранных карточек. Для узла из
+ * process.json ставится признак `removed`: самого узла в хранилище нет, и
+ * «отсутствие записи» означало бы «показывать как есть».
+ */
+export function removeNode(nodeId: string): Overrides {
+  const current = readStoredOverrides();
+  const next: Overrides = { ...current };
+  if (current[nodeId]?.added !== undefined) {
+    delete next[nodeId];
+  } else {
+    next[nodeId] = { ...current[nodeId], removed: true };
+  }
   writeStoredOverrides(next);
   return next;
 }

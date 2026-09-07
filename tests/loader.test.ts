@@ -319,7 +319,10 @@ describe('импорт: непригодные файлы', () => {
     expect(parseImportedOverrides(JSON.stringify({ [nodeId]: { screen: LINK } }), base)).toBeNull();
   });
 
-  it('узлы, которых нет в базовой карте, игнорируются', () => {
+  it('узел, которого нет в базовой карте, считается ДОБАВЛЕННЫМ правкой', () => {
+    // Контракт изменён решением владельца от 07.09.2026: правки содержания
+    // умеют создавать узлы, и незнакомый id в файле СВОЕЙ карты означает
+    // «его добавили», а не «мусор». До этого такие узлы игнорировались.
     const base = loadBaseProcessMap();
     const alien = JSON.parse(serializeProcessMap(base)) as ProcessMap;
     const stage = alien.stages[0];
@@ -332,15 +335,34 @@ describe('импорт: непригодные файлы', () => {
       position: { x: 0, y: 0 },
     });
 
-    expect(parseImportedOverrides(JSON.stringify(alien), base)).toEqual({});
+    const overrides = parseImportedOverrides(JSON.stringify(alien), base);
+    expect(overrides?.['node-kotorogo-net-v-baze']?.added?.stage).toBe(stage?.number);
+    expect(overrides?.['node-kotorogo-net-v-baze']?.label).toBe('Чужой узел');
+  });
+
+  it('файл ДРУГОЙ карты отвергается целиком', () => {
+    // Сторож против дыры, которую открыло предыдущее правило: раз незнакомый
+    // узел теперь добавляется, файл чужой карты влил бы в текущую все свои узлы
+    // разом. Карты различаются по ProcessMap.id — ради этого он и заведён.
+    const base = loadBaseProcessMap();
+    const foreign = { ...(JSON.parse(serializeProcessMap(base)) as ProcessMap), id: 'chuzhaya' };
+
+    expect(parseImportedOverrides(JSON.stringify(foreign), base)).toBeNull();
   });
 });
 
 describe('deriveOverrides', () => {
-  it('узел, отсутствующий в импортируемом файле, не считается удалением ссылки', () => {
+  it('узел, вырезанный из файла, считается УДАЛЁННЫМ, а не потерявшим ссылку', () => {
+    // Контракт изменён решением владельца от 07.09.2026 вместе с правками
+    // содержания. Раньше вырезанный узел не порождал ничего: удалять узлы было
+    // нечем, и «его нет в файле» могло означать только неполный файл. Теперь
+    // экспорт всегда отдаёт карту ЦЕЛИКОМ, поэтому отсутствие узла — это
+    // осознанное удаление.
+    //
+    // Важно, что это НЕ `screen: null`: разница между «удалили ссылку» и
+    // «удалили узел» — та самая, которую сторожил прежний тест, и она осталась.
     const nodeId = firstNodeId(loadBaseProcessMap());
     const base = baseWithScreen(nodeId, LINK);
-    // Файл, из которого узел вырезан целиком (а не только его screen).
     const trimmed: ProcessMap = {
       ...base,
       stages: base.stages.map((stage) => ({
@@ -349,7 +371,9 @@ describe('deriveOverrides', () => {
       })),
     };
 
-    expect(deriveOverrides(base, trimmed)).toEqual({});
+    const derived = deriveOverrides(base, trimmed);
+    expect(derived[nodeId]).toEqual({ removed: true });
+    expect(derived[nodeId]).not.toHaveProperty('screen');
   });
 });
 
