@@ -59,7 +59,18 @@ function DrawerHarness({ nodeId }: { nodeId: string }) {
   return <NodeDrawer nodes={stage?.nodes ?? []} />;
 }
 
-function openFormInDrawer(nodeId: string, action: string = ru.drawer.screenAdd) {
+/**
+ * Доступные имена действий секции «Экран в системе».
+ *
+ * ПОЧЕМУ НЕ ПРОСТО «Добавить». На панели две секции с привязкой (экран и
+ * алгоритмы), видимая подпись действия у них одна и та же, различает их только
+ * доступное имя с названием секции (ru.drawer.linkActionAria). Тесты этого
+ * файла — про ссылку на ЭКРАН, поэтому адресуются именно к его кнопкам.
+ */
+const SCREEN_ADD = ru.drawer.linkActionAria(ru.drawer.screenAdd, ru.drawer.screenSection);
+const SCREEN_EDIT = ru.drawer.linkActionAria(ru.drawer.screenEdit, ru.drawer.screenSection);
+
+function openFormInDrawer(nodeId: string, action: string = SCREEN_ADD) {
   useProcessStore.getState().setMode('edit');
   useProcessStore.getState().selectNode(nodeId);
   const result = render(<DrawerHarness nodeId={nodeId} />);
@@ -92,7 +103,7 @@ describe('ScreenLinkSection: открытие формы', () => {
   it('в режиме просмотра формы нет и открыть её нечем', () => {
     renderSection(nodeById(NODE_ID));
 
-    expect(screen.queryByRole('button', { name: ru.drawer.screenAdd })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: SCREEN_ADD })).not.toBeInTheDocument();
     expect(screen.queryByLabelText(ru.screenLinkForm.titleLabel)).not.toBeInTheDocument();
   });
 
@@ -100,7 +111,7 @@ describe('ScreenLinkSection: открытие формы', () => {
     useProcessStore.getState().setMode('edit');
     renderSection(nodeById(NODE_ID));
 
-    fireEvent.click(screen.getByRole('button', { name: ru.drawer.screenAdd }));
+    fireEvent.click(screen.getByRole('button', { name: SCREEN_ADD }));
 
     expect(screen.getByLabelText(ru.screenLinkForm.titleLabel)).toHaveValue('');
     expect(screen.getByLabelText(ru.screenLinkForm.urlLabel)).toHaveValue('');
@@ -115,7 +126,7 @@ describe('ScreenLinkSection: открытие формы', () => {
     useProcessStore.getState().setMode('edit');
     renderSection({ ...nodeById(NODE_ID), screen: screenLink });
 
-    fireEvent.click(screen.getByRole('button', { name: ru.drawer.screenEdit }));
+    fireEvent.click(screen.getByRole('button', { name: SCREEN_EDIT }));
 
     expect(screen.getByLabelText(ru.screenLinkForm.titleLabel)).toHaveValue(screenLink.title);
     expect(screen.getByLabelText(ru.screenLinkForm.urlLabel)).toHaveValue(screenLink.url);
@@ -125,7 +136,7 @@ describe('ScreenLinkSection: открытие формы', () => {
   it('выход из режима редактора закрывает открытую форму', () => {
     useProcessStore.getState().setMode('edit');
     renderSection(nodeById(NODE_ID));
-    fireEvent.click(screen.getByRole('button', { name: ru.drawer.screenAdd }));
+    fireEvent.click(screen.getByRole('button', { name: SCREEN_ADD }));
     expect(screen.getByLabelText(ru.screenLinkForm.titleLabel)).toBeInTheDocument();
 
     act(() => {
@@ -263,7 +274,7 @@ describe('ScreenLinkForm: запись overrides', () => {
     expect(screen.getByText(ru.drawer.screenEmpty)).toBeInTheDocument();
 
     // Повторное открытие формы даёт исходные (пустые) значения, а не набранные.
-    fireEvent.click(screen.getByRole('button', { name: ru.drawer.screenAdd }));
+    fireEvent.click(screen.getByRole('button', { name: SCREEN_ADD }));
     expect(screen.getByLabelText(ru.screenLinkForm.titleLabel)).toHaveValue('');
   });
 
@@ -272,7 +283,7 @@ describe('ScreenLinkForm: запись overrides', () => {
     setNodeOverride(NODE_ID, { title: 'Объёмный план', url: 'https://example.com/plan' });
     refreshProcessMap();
 
-    openFormInDrawer(NODE_ID, ru.drawer.screenEdit);
+    openFormInDrawer(NODE_ID, SCREEN_EDIT);
     fireEvent.click(screen.getByRole('button', { name: ru.screenLinkForm.remove }));
 
     // Ключевое различие трёх состояний override: запись ОСТАЁТСЯ и содержит
@@ -290,7 +301,7 @@ describe('ScreenLinkForm: запись overrides', () => {
     setNodeOverride(NODE_ID, { title: 'Старое', url: 'https://example.com/old' });
     refreshProcessMap();
 
-    openFormInDrawer(NODE_ID, ru.drawer.screenEdit);
+    openFormInDrawer(NODE_ID, SCREEN_EDIT);
     typeInto(ru.screenLinkForm.titleLabel, 'Новое');
     typeInto(ru.screenLinkForm.urlLabel, 'https://example.com/new');
     save();

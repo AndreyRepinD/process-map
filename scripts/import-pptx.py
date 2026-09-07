@@ -60,7 +60,7 @@ dagre). Порядок обязателен и обратного не имее�
 против блока выходов этапа на слайде обзора). Из КООРДИНАТ оно не выводится:
 блоки выходов этапов 1 и 2 нарисованы левее середины области шагов.
 
-РУЧНЫЕ ПОЛЯ (`screen`, `owner`) ПЕРЕЖИВАЮТ ПЕРЕГЕНЕРАЦИЮ
+РУЧНЫЕ ПОЛЯ (`screen`, `owner`, `algorithms`) ПЕРЕЖИВАЮТ ПЕРЕГЕНЕРАЦИЮ
 ---------------------------------------------------------
 Ссылок на экраны In.Plan в презентации нет: их проставляет человек в редакторе,
 и ради них карта вообще встроена в вики. Скрипт собирает документ из презентации
@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "821efa64527f3ec27aeaa5e35a3d2212c303291a6bff244c3957feeeac4b4a71"
+MAP_DATA_FINGERPRINT_DP = "05dbc1ea67b0775c4d3001e33f6d9f5dba25afbb58626473a44aeaa8e0a1c99c"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "9f35d1a6cd4e0948d66e82e873d130ced612f4b254b4ea625b3a497e34ca3ab4"
+MAP_DATA_FINGERPRINT_MEIO = "9bda6cdb286d4285fe438a38009c053636c4a98cce6c6d2942d6fa26bb0abbdd"
 
 
 @dataclass(frozen=True)
@@ -355,6 +355,7 @@ NODE_KEY_ORDER = (
     "system",
     "owner",
     "screen",
+    "algorithms",
     "position",
     "slidePosition",
 )
@@ -374,9 +375,16 @@ STAGE_KEY_ORDER = (
 )
 
 # Поля модели, которых В ПРЕЗЕНТАЦИИ НЕТ: их заполняет человек (редактор ссылок —
-# SPEC §4.4, `owner` — правкой файла). Импортёр их не создаёт, значит обязан
-# переносить из предыдущего process.json, иначе перегенерация их стирает.
-PRESERVED_NODE_FIELDS = ("owner", "screen")
+# SPEC §4.4, `owner` и `algorithm` — правкой файла). Импортёр их не создаёт,
+# значит обязан переносить из предыдущего process.json, иначе перегенерация их
+# стирает.
+#
+# `algorithms` — имена алгоритмов Менеджера процессов In.Plan, которыми считается
+# шаг (реестр снят со стенда 07.09.2026, см. src/data/algorithms.ts). На слайде
+# их нет и быть не может: слайд рисует процесс, а не привязку к конкретному
+# стенду. Заявляются в authoring source (`steps[].algorithms`), сверяются
+# slidegen.verify.
+PRESERVED_NODE_FIELDS = ("owner", "screen", "algorithms")
 PRESERVED_STAGE_FIELDS = ("screen",)
 
 # Остальное импортёр строит сам из презентации.

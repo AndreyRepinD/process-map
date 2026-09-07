@@ -56,6 +56,12 @@ export function ScreenLinkSection({ node }: ScreenLinkSectionProps) {
             <button
               type="button"
               className={styles.add}
+              /* Доступное имя с названием секции: секций-ссылок на панели две
+                 («Экран в системе» и «Алгоритмы в платформе»), видимая подпись
+                 действия у обеих одинаковая. Глазу их различает заголовок
+                 сверху, скринридеру — ничто: он читал бы подряд две кнопки
+                 «Добавить». */
+              aria-label={ru.drawer.linkActionAria(ru.drawer.screenAdd, ru.drawer.screenSection)}
               onClick={() => {
                 setEditing(true);
               }}
@@ -79,6 +85,12 @@ export function ScreenLinkSection({ node }: ScreenLinkSectionProps) {
             <button
               type="button"
               className={styles.add}
+              /* Доступное имя с названием секции: секций-ссылок на панели две
+                 («Экран в системе» и «Алгоритмы в платформе»), видимая подпись
+                 действия у обеих одинаковая. Глазу их различает заголовок
+                 сверху, скринридеру — ничто: он читал бы подряд две кнопки
+                 «Добавить». */
+              aria-label={ru.drawer.linkActionAria(ru.drawer.screenEdit, ru.drawer.screenSection)}
               onClick={() => {
                 setEditing(true);
               }}

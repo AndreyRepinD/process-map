@@ -74,3 +74,38 @@ test('переход на уровень 2 и возврат кнопкой «Н
     expectationsFor(testInfo.project.name).stageCount,
   );
 });
+
+test('привязка блока к алгоритмам платформы видна в панели узла', async ({ page }, testInfo) => {
+  // ЗАЧЕМ ЭТО В E2E, А НЕ В ЮНИТАХ. Юнит-прогон идёт против карты SNP, у
+  // которой реестра алгоритмов нет, поэтому секция там не рендерится вовсе — то
+  // есть связка «id карты → её реестр → секция панели» в юнитах не проверяется
+  // ни разу. Здесь прогон идёт против каждой карты своим проектом Playwright, и
+  // это единственное место, где видно, что на DP и MEIO секция действительно
+  // появляется, а на SNP и MRP её действительно нет.
+  const expected = expectationsFor(testInfo.project.name).algorithmNode;
+  const section = page.getByRole('heading', { name: 'Алгоритмы в платформе' });
+
+  if (expected === null) {
+    // Карта без реестра: секции нет ни на одном узле. Берём первый попавшийся
+    // шаг первого этапа — если бы секция протекла, она протекла бы и сюда.
+    await page.goto('/?stage=1');
+    await page.waitForSelector('.react-flow__node-step');
+    await page.locator('.react-flow__node-step button').first().click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await expect(section).toHaveCount(0);
+    return;
+  }
+
+  await page.goto(`/?stage=${String(expected.stage)}&node=${expected.node}`);
+  const drawer = page.getByRole('dialog');
+  await expect(drawer).toBeVisible();
+  await expect(section).toBeVisible();
+  // Имя алгоритма — то, что владелец увидит в «Менеджере процессов»; опечатка
+  // в нём делает привязку бесполезной, поэтому сверяется дословно.
+  await expect(drawer.getByText(expected.algorithm, { exact: true })).toBeVisible();
+  // Оговорка про отсутствие диплинка: у всех узлов переход один и тот же, и без
+  // неё это читается как ошибка привязки.
+  await expect(
+    drawer.getByText('Адреса на отдельный алгоритм платформа не даёт — открывается экран целиком'),
+  ).toBeVisible();
+});

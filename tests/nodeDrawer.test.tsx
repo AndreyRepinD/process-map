@@ -7,10 +7,20 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { NodeDrawer, descriptionParagraphs } from '../src/components/NodeDrawer';
-import { loadBaseProcessMap } from '../src/data/loader';
+import { algorithmsForMap } from '../src/data/algorithms';
+import { loadBaseProcessMap, LOADED_MAP_ID } from '../src/data/loader';
 import type { ProcessNode } from '../src/data/schema';
 import { ru } from '../src/i18n/ru';
 import { createInitialState, useProcessStore } from '../src/store/useProcessStore';
+
+/**
+ * Есть ли у карты, против которой идёт прогон, реестр алгоритмов платформы.
+ *
+ * Прогон гоняется против РАЗНЫХ карт (переменная сборки MAP), а секция
+ * «Алгоритмы в платформе» показывается только там, где реестр непуст: у snp и
+ * mrp алгоритмов In.Plan не снято, и подсказывать им чужие имена нельзя.
+ */
+const HAS_ALGORITHM_REGISTRY = algorithmsForMap(LOADED_MAP_ID).length > 0;
 
 const map = loadBaseProcessMap();
 
@@ -134,8 +144,14 @@ describe('NodeDrawer', () => {
     };
     openDrawer([full], full.id);
 
+    // Секция «Алгоритмы в платформе» стоит сразу за экраном — обе отвечают на
+    // вопрос «куда в платформе ведёт этот блок». Но её НЕТ у карты без реестра
+    // алгоритмов (snp, mrp): предлагать планировщику SNP имена MEIO значило бы
+    // подсказать заведомо неверную привязку. Поэтому ожидание зависит от карты,
+    // против которой идёт прогон, а не зашито списком.
     expect(sectionTitles(screen.getByRole('dialog'))).toEqual([
       ru.drawer.screenSection,
+      ...(HAS_ALGORITHM_REGISTRY ? [ru.drawer.algorithmSection] : []),
       ru.drawer.inputs,
       ru.drawer.outputs,
       ru.drawer.system,
@@ -193,7 +209,24 @@ describe('NodeDrawer', () => {
     useProcessStore.getState().setMode('edit');
     openDrawer([node], node.id);
 
-    expect(screen.getByRole('button', { name: ru.drawer.screenAdd })).toBeInTheDocument();
+    // ПО ДОСТУПНОМУ ИМЕНИ С НАЗВАНИЕМ СЕКЦИИ, а не по видимому «Добавить»:
+    // секций-ссылок на панели две (экран и алгоритм), видимая подпись у них
+    // одинаковая, и getByRole по ней падал бы на «найдено две» — ровно то, что
+    // услышал бы и скринридер, если бы доступные имена не различались.
+    expect(
+      screen.getByRole('button', {
+        name: ru.drawer.linkActionAria(ru.drawer.screenAdd, ru.drawer.screenSection),
+      }),
+    ).toBeInTheDocument();
+    // Вторая такая кнопка есть только там, где есть секция алгоритмов.
+    const algorithmAdd = screen.queryByRole('button', {
+      name: ru.drawer.linkActionAria(ru.drawer.screenAdd, ru.drawer.algorithmSection),
+    });
+    if (HAS_ALGORITHM_REGISTRY) {
+      expect(algorithmAdd).toBeInTheDocument();
+    } else {
+      expect(algorithmAdd).not.toBeInTheDocument();
+    }
   });
 
   it('со ссылкой: заголовок и url в одной строке, кнопка модуля активна', () => {

@@ -17,6 +17,19 @@ export interface MapExpectations {
   /** Сколько карточек этапов на обзоре. */
   stageCount: number;
   /**
+   * Узел с привязкой к алгоритмам Менеджера процессов и одно из его имён.
+   *
+   * `null` — у карты нет реестра алгоритмов (snp, mrp): их в платформе не
+   * снимали, и секция «Алгоритмы в платформе» на такой карте не показывается
+   * вовсе. Это не «пока не заполнено», а осознанное состояние — подсказать
+   * планировщику SNP имена MEIO значило бы предложить неверную привязку.
+   *
+   * ЗАЧЕМ ЗДЕСЬ, А НЕ ИЗ src/data/algorithms.ts: e2e намеренно ничего из src/
+   * не импортируют — проверка «что видит пользователь» не должна брать
+   * ожидаемое значение оттуда же, откуда его берёт приложение.
+   */
+  algorithmNode: { stage: number; node: string; algorithm: string } | null;
+  /**
    * Текст бейджа в шапке целиком: «4 этапа», «5 этапов».
    *
    * ПОЧЕМУ СТРОКОЙ, А НЕ ФОРМУЛОЙ ОТ stageCount. Множественное число считает
@@ -34,12 +47,14 @@ export const MAP_EXPECTATIONS: Record<string, MapExpectations> = {
     pageTitle: 'E2E-процесс планирования поставок',
     stageCount: 4,
     stageBadge: '4 этапа',
+    algorithmNode: null,
   },
   mrp: {
     moduleLabel: 'Модуль MRP',
     pageTitle: 'Процесс планирования потребности в материалах',
     stageCount: 4,
     stageBadge: '4 этапа',
+    algorithmNode: null,
   },
   dp: {
     moduleLabel: 'Модуль DP',
@@ -48,12 +63,22 @@ export const MAP_EXPECTATIONS: Record<string, MapExpectations> = {
     // их сеткой 4+1 (MAX_STAGE_COLUMNS в overviewGraph.ts), а не одним рядом.
     stageCount: 5,
     stageBadge: '5 этапов',
+    algorithmNode: {
+      stage: 1,
+      node: 'proverka-kachestva-dannyh',
+      algorithm: 'DP Проверка данных на консистентность',
+    },
   },
   meio: {
     moduleLabel: 'Модуль MEIO',
     pageTitle: 'Процесс мультиэшелонной оптимизации запасов',
     stageCount: 4,
     stageBadge: '4 этапа',
+    algorithmNode: {
+      stage: 1,
+      node: 'proverka-cepochki-na-svyazannost',
+      algorithm: 'MEIO проверка цепочки на целостность',
+    },
   },
 };
 
