@@ -97,9 +97,18 @@ describe('карта DP: содержание', () => {
     }
   });
 
-  it('восемь входов и двенадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(20);
-    expect(labels(data.filter((node) => node.direction === 'in'))).toEqual([...INPUTS].sort());
+  it('двадцать входов и двенадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(32);
+    // INPUTS — плашки слайда, называющие внешние системы. Кроме них в колонке
+    // входов стоят карточки входных данных этапа (STAGE_INPUT_CARDS): они
+    // систему не называют и ExternalIO не создают.
+    for (const label of INPUTS) {
+      expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
+    }
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(20);
+    expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
+      'Справочник DFU и маппинг SKU',
+    );
     // Выходов больше, чем плашек на слайде: к единственной плашке-передаче
     // добавились карточки-результаты, порождённые из keyOutputs этапов
     // (решение владельца от 07.09.2026, приём карты SNP).

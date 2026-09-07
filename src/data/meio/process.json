@@ -329,6 +329,76 @@
       ],
       "nodes": [
         {
+          "id": "validirovannye-dannye-dlya-rascheta",
+          "type": "data",
+          "label": "Валидированные данные для расчёта",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 237,
+            "y": 103
+          }
+        },
+        {
+          "id": "planovye-lidtaymy-i-otkloneniya",
+          "type": "data",
+          "label": "Плановые лидтаймы и отклонения",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 237,
+            "y": 155
+          }
+        },
+        {
+          "id": "kvoty-i-prioritety-istochnikov",
+          "type": "data",
+          "label": "Квоты и приоритеты источников",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 237,
+            "y": 208
+          }
+        },
+        {
+          "id": "zatraty-na-hranenie",
+          "type": "data",
+          "label": "Затраты на хранение",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 288
+          },
+          "slidePosition": {
+            "x": 237,
+            "y": 260
+          }
+        },
+        {
+          "id": "minimalnaya-partiya-i-kratnost",
+          "type": "data",
+          "label": "Минимальная партия и кратность",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 360
+          },
+          "slidePosition": {
+            "x": 237,
+            "y": 313
+          }
+        },
+        {
           "id": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
           "type": "step",
           "label": "Настройка параметров для расчёта уровней запасов",
@@ -350,7 +420,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 110
+            "y": 290
           },
           "slidePosition": {
             "x": 474,
@@ -365,7 +435,7 @@
           "system": "DP",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
@@ -380,7 +450,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 432
           },
           "slidePosition": {
             "x": 10,
@@ -406,7 +476,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 710,
-            "y": 110
+            "y": 290
           },
           "slidePosition": {
             "x": 474,
@@ -421,7 +491,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 504
           },
           "slidePosition": {
             "x": 10,
@@ -436,7 +506,7 @@
           "system": "DP",
           "position": {
             "x": 0,
-            "y": 216
+            "y": 576
           },
           "slidePosition": {
             "x": 10,
@@ -444,13 +514,13 @@
           }
         },
         {
-          "id": "nastroennye-parametry-rascheta",
+          "id": "nastroennye-parametry-rascheta-1-900200",
           "type": "data",
           "label": "Настроенные параметры расчёта",
           "direction": "out",
           "position": {
             "x": 1124,
-            "y": 72
+            "y": 252
           },
           "slidePosition": {
             "x": 756,
@@ -458,13 +528,13 @@
           }
         },
         {
-          "id": "segmentaciya-po-pyati-priznakam",
+          "id": "segmentaciya-po-pyati-priznakam-1-900201",
           "type": "data",
           "label": "Сегментация по пяти признакам",
           "direction": "out",
           "position": {
             "x": 1124,
-            "y": 144
+            "y": 324
           },
           "slidePosition": {
             "x": 756,
@@ -554,6 +624,48 @@
       ],
       "nodes": [
         {
+          "id": "nastroennye-parametry-rascheta-1-800300",
+          "type": "data",
+          "label": "Настроенные параметры расчёта",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 36
+          },
+          "slidePosition": {
+            "x": 507,
+            "y": 103
+          }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam-1-800301",
+          "type": "data",
+          "label": "Сегментация по пяти признакам",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 108
+          },
+          "slidePosition": {
+            "x": 507,
+            "y": 155
+          }
+        },
+        {
+          "id": "ogranicheniya-optimizacii-moschnosti-byudzhet-srok-godnosti",
+          "type": "data",
+          "label": "Ограничения оптимизации: мощности, бюджет, срок годности",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 180
+          },
+          "slidePosition": {
+            "x": 507,
+            "y": 208
+          }
+        },
+        {
           "id": "raschet-rekomendaciy-po-urovnyam-zapasov",
           "type": "step",
           "label": "Расчёт рекомендаций по уровням запасов",
@@ -575,7 +687,7 @@
           ],
           "owner": "Планер запасов",
           "position": {
-            "x": 0,
+            "x": 296,
             "y": 110
           },
           "slidePosition": {
@@ -606,7 +718,7 @@
           ],
           "owner": "Планер запасов",
           "position": {
-            "x": 414,
+            "x": 710,
             "y": 110
           },
           "slidePosition": {
@@ -632,7 +744,7 @@
           ],
           "owner": "Планер запасов",
           "position": {
-            "x": 828,
+            "x": 1124,
             "y": 110
           },
           "slidePosition": {
@@ -647,7 +759,7 @@
           "direction": "out",
           "system": "INPLAN",
           "position": {
-            "x": 1242,
+            "x": 1538,
             "y": 216
           },
           "slidePosition": {
@@ -661,7 +773,7 @@
           "label": "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
           "direction": "out",
           "position": {
-            "x": 1242,
+            "x": 1538,
             "y": 0
           },
           "slidePosition": {
@@ -675,7 +787,7 @@
           "label": "Три сценария",
           "direction": "out",
           "position": {
-            "x": 1242,
+            "x": 1538,
             "y": 72
           },
           "slidePosition": {
@@ -689,7 +801,7 @@
           "label": "Перечень предупреждений расчёта",
           "direction": "out",
           "position": {
-            "x": 1242,
+            "x": 1538,
             "y": 144
           },
           "slidePosition": {

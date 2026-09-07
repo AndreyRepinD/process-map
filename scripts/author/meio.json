@@ -137,6 +137,13 @@
           "attachTo": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
           "expectSystems": ["DP"]
         }
+      ],
+      "inputCards": [
+        "Валидированные данные для расчёта",
+        "Плановые лидтаймы и отклонения",
+        "Квоты и приоритеты источников",
+        "Затраты на хранение",
+        "Минимальная партия и кратность"
       ]
     },
     {
@@ -213,6 +220,11 @@
           "attachFrom": "raschet-rekomendaciy-po-urovnyam-zapasov",
           "expectSystems": ["INPLAN", "PS", "MRP"]
         }
+      ],
+      "inputCards": [
+        "Настроенные параметры расчёта",
+        "Сегментация по пяти признакам",
+        "Ограничения оптимизации: мощности, бюджет, срок годности"
       ]
     },
     {

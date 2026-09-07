@@ -50,6 +50,11 @@
           "attachTo": "podgotovka-sopostavimoy-istorii",
           "expectSystems": ["INPLAN", "PS"]
         }
+      ],
+      "inputCards": [
+        "Справочник DFU и маппинг SKU",
+        "Календарь OOS и дефицитов",
+        "Календарь промо прошлых периодов"
       ]
     },
     {
@@ -112,6 +117,11 @@
           "attachTo": "promo-light-prognoz-promo-obemov-opcionalno",
           "expectSystems": []
         }
+      ],
+      "inputCards": [
+        "Сопоставимая история",
+        "Календарь акций и механик",
+        "Профиль подобия для новинок"
       ]
     },
     {
@@ -153,7 +163,8 @@
           "attachTo": "sell-out-balans-sell-in",
           "expectSystems": []
         }
-      ]
+      ],
+      "inputCards": ["Базовый прогноз с промо-объёмами", "Модель канала по клиентам"]
     },
     {
       "number": 4,
@@ -200,7 +211,8 @@
           "attachTo": "demand-review-meeting",
           "expectSystems": []
         }
-      ]
+      ],
+      "inputCards": ["Прогноз Sell-In по каналам", "Библиотека Building Blocks и версии"]
     },
     {
       "number": 5,
@@ -282,7 +294,8 @@
           "attachFrom": "publikaciya-plana-sprosa",
           "expectSystems": ["INPLAN", "IO"]
         }
-      ]
+      ],
+      "inputCards": ["Согласованный план спроса Sell-In", "Пороги точности и правила алертов"]
     }
   ],
   "edges": [

@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "3bbfe56043bd3d627fa86b325ed69c1c588e39d58a8b1d4018d5c12f03ec2f3e"
+MAP_DATA_FINGERPRINT_DP = "bfdc5d7cde187ec408b336aa4a59e5fa922745cd4a1e5475b1abde593fc9eb95"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "d641a1aebf7ac3652b7ff7152aab387ef261b79200d2d1f3a3f196171ff93588"
+MAP_DATA_FINGERPRINT_MEIO = "fdb132d28cecdbb2faa0241b2f56fdf11325b1316d4b93a0d0b0a4289129508e"
 
 
 @dataclass(frozen=True)
@@ -2130,6 +2130,28 @@ STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
 # плашки. Поэтому ExternalIO они НЕ создают.
 STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
     "dp": {
+        "stage-1-podgotovka-istorii": (
+            "Справочник DFU и маппинг SKU",
+            "Календарь OOS и дефицитов",
+            "Календарь промо прошлых периодов",
+        ),
+        "stage-2-raschet-prognoza": (
+            "Сопоставимая история",
+            "Календарь акций и механик",
+            "Профиль подобия для новинок",
+        ),
+        "stage-3-sell-in-po-modeli-kanala": (
+            "Базовый прогноз с промо-объёмами",
+            "Модель канала по клиентам",
+        ),
+        "stage-4-obogaschenie-i-soglasovanie": (
+            "Прогноз Sell-In по каналам",
+            "Библиотека Building Blocks и версии",
+        ),
+        "stage-5-publikaciya-i-kontrol-tochnosti": (
+            "Согласованный план спроса Sell-In",
+            "Пороги точности и правила алертов",
+        ),
     },
     "meio": {
         "stage-1-poluchenie-dannyh": (
@@ -2141,6 +2163,18 @@ STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
             "Календари пополнения и производственные календари",
             "Мощности хранения по температурным режимам",
             "Незакрытый спрос и списания за период",
+        ),
+        "stage-2-podgotovka-k-raschetu": (
+            "Валидированные данные для расчёта",
+            "Плановые лидтаймы и отклонения",
+            "Квоты и приоритеты источников",
+            "Затраты на хранение",
+            "Минимальная партия и кратность",
+        ),
+        "stage-3-raschet-i-analiz": (
+            "Настроенные параметры расчёта",
+            "Сегментация по пяти признакам",
+            "Ограничения оптимизации: мощности, бюджет, срок годности",
         ),
     },
 }

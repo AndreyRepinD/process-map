@@ -64,8 +64,8 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('тринадцать входов и одиннадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(24);
+  it('двадцать один вход и одиннадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(32);
     for (const label of INPUTS) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
@@ -75,7 +75,7 @@ describe('карта MEIO: содержание', () => {
     for (const label of OUTPUTS) {
       expect(labels(data.filter((node) => node.direction === 'out'))).toContain(label);
     }
-    expect(data.filter((node) => node.direction === 'in')).toHaveLength(13);
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(21);
     expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
       'Мощности хранения по температурным режимам',
     );

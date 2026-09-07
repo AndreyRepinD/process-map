@@ -17,6 +17,48 @@
       "groups": [],
       "nodes": [
         {
+          "id": "spravochnik-dfu-i-mapping-sku",
+          "type": "data",
+          "label": "Справочник DFU и маппинг SKU",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 103
+          }
+        },
+        {
+          "id": "kalendar-oos-i-deficitov",
+          "type": "data",
+          "label": "Календарь OOS и дефицитов",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 155
+          }
+        },
+        {
+          "id": "kalendar-promo-proshlyh-periodov",
+          "type": "data",
+          "label": "Календарь промо прошлых периодов",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 288
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 208
+          }
+        },
+        {
           "id": "istoriya-prodazh-i-zakazy-iz-erp-dwh",
           "type": "data",
           "label": "История продаж и заказы из ERP / DWH",
@@ -24,7 +66,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 72
           },
           "slidePosition": {
             "x": 10,
@@ -49,7 +91,7 @@
           "owner": "Планер спроса совместно с владельцем данных (MDM)",
           "position": {
             "x": 296,
-            "y": 38
+            "y": 146
           },
           "slidePosition": {
             "x": 204,
@@ -64,7 +106,7 @@
           "system": "INPLAN",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
@@ -90,7 +132,7 @@
           "owner": "Планер спроса",
           "position": {
             "x": 646,
-            "y": 38
+            "y": 146
           },
           "slidePosition": {
             "x": 204,
@@ -104,7 +146,7 @@
           "direction": "out",
           "position": {
             "x": 1060,
-            "y": 0
+            "y": 108
           },
           "slidePosition": {
             "x": 431,
@@ -112,13 +154,13 @@
           }
         },
         {
-          "id": "sopostavimaya-istoriya",
+          "id": "sopostavimaya-istoriya-1-900101",
           "type": "data",
           "label": "Сопоставимая история",
           "direction": "out",
           "position": {
             "x": 1060,
-            "y": 72
+            "y": 180
           },
           "slidePosition": {
             "x": 431,
@@ -189,6 +231,48 @@
       ],
       "nodes": [
         {
+          "id": "sopostavimaya-istoriya-1-800200",
+          "type": "data",
+          "label": "Сопоставимая история",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 103
+          }
+        },
+        {
+          "id": "kalendar-akciy-i-mehanik",
+          "type": "data",
+          "label": "Календарь акций и механик",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 155
+          }
+        },
+        {
+          "id": "profil-podobiya-dlya-novinok",
+          "type": "data",
+          "label": "Профиль подобия для новинок",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 208
+          }
+        },
+        {
           "id": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
           "type": "step",
           "label": "Сегментация/кластеризация и настройка методов",
@@ -206,7 +290,7 @@
           "owner": "Методолог планирования спроса",
           "position": {
             "x": 296,
-            "y": 8
+            "y": 52
           },
           "slidePosition": {
             "x": 420,
@@ -220,7 +304,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 64
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
@@ -245,7 +329,7 @@
           "owner": "Планер спроса",
           "position": {
             "x": 710,
-            "y": 0
+            "y": 44
           },
           "slidePosition": {
             "x": 420,
@@ -264,7 +348,7 @@
           "owner": "Планер спроса совместно с категорийным менеджментом",
           "position": {
             "x": 710,
-            "y": 132
+            "y": 176
           },
           "slidePosition": {
             "x": 420,
@@ -288,7 +372,7 @@
           "owner": "Планер спроса совместно с трейд-маркетингом",
           "position": {
             "x": 1124,
-            "y": 124
+            "y": 168
           },
           "slidePosition": {
             "x": 420,
@@ -302,7 +386,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 28
+            "y": 72
           },
           "slidePosition": {
             "x": 648,
@@ -316,7 +400,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 100
+            "y": 144
           },
           "slidePosition": {
             "x": 648,
@@ -380,6 +464,34 @@
       ],
       "nodes": [
         {
+          "id": "bazovyy-prognoz-s-promo-obemami",
+          "type": "data",
+          "label": "Базовый прогноз с промо-объёмами",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 103
+          }
+        },
+        {
+          "id": "model-kanala-po-klientam",
+          "type": "data",
+          "label": "Модель канала по клиентам",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 155
+          }
+        },
+        {
           "id": "pryamye-kanaly-pryamoy-prognoz-sell-in",
           "type": "step",
           "label": "Прямые каналы: прямой прогноз Sell-In",
@@ -391,7 +503,7 @@
           "owner": "Планер канала",
           "position": {
             "x": 296,
-            "y": 0
+            "y": 52
           },
           "slidePosition": {
             "x": 636,
@@ -415,7 +527,7 @@
           "owner": "Планер канала совместно с КАМ",
           "position": {
             "x": 296,
-            "y": 116
+            "y": 168
           },
           "slidePosition": {
             "x": 636,
@@ -430,7 +542,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 20
+            "y": 144
           },
           "slidePosition": {
             "x": 10,
@@ -444,7 +556,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 92
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
@@ -452,13 +564,13 @@
           }
         },
         {
-          "id": "prognoz-sell-in-po-kanalam",
+          "id": "prognoz-sell-in-po-kanalam-1-900300",
           "type": "data",
           "label": "Прогноз Sell-In по каналам",
           "direction": "out",
           "position": {
             "x": 710,
-            "y": 20
+            "y": 72
           },
           "slidePosition": {
             "x": 864,
@@ -472,7 +584,7 @@
           "direction": "out",
           "position": {
             "x": 710,
-            "y": 92
+            "y": 144
           },
           "slidePosition": {
             "x": 864,
@@ -524,6 +636,34 @@
       ],
       "nodes": [
         {
+          "id": "prognoz-sell-in-po-kanalam-1-800400",
+          "type": "data",
+          "label": "Прогноз Sell-In по каналам",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 615,
+            "y": 103
+          }
+        },
+        {
+          "id": "biblioteka-building-blocks-i-versii",
+          "type": "data",
+          "label": "Библиотека Building Blocks и версии",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 615,
+            "y": 155
+          }
+        },
+        {
           "id": "building-blocks-i-korrektirovki",
           "type": "step",
           "label": "Building Blocks и корректировки",
@@ -541,7 +681,7 @@
           "owner": "Категорийный менеджмент",
           "position": {
             "x": 296,
-            "y": 38
+            "y": 110
           },
           "slidePosition": {
             "x": 852,
@@ -566,7 +706,7 @@
           "owner": "Руководитель планирования спроса",
           "position": {
             "x": 710,
-            "y": 38
+            "y": 110
           },
           "slidePosition": {
             "x": 852,
@@ -580,7 +720,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 144
           },
           "slidePosition": {
             "x": 10,
@@ -594,7 +734,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
@@ -602,13 +742,13 @@
           }
         },
         {
-          "id": "soglasovannyy-plan-sprosa-sell-in",
+          "id": "soglasovannyy-plan-sprosa-sell-in-1-900400",
           "type": "data",
           "label": "Согласованный план спроса Sell-In",
           "direction": "out",
           "position": {
             "x": 1124,
-            "y": 36
+            "y": 108
           },
           "slidePosition": {
             "x": 1080,
@@ -661,6 +801,34 @@
         }
       ],
       "nodes": [
+        {
+          "id": "soglasovannyy-plan-sprosa-sell-in-1-800500",
+          "type": "data",
+          "label": "Согласованный план спроса Sell-In",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 103
+          }
+        },
+        {
+          "id": "porogi-tochnosti-i-pravila-alertov",
+          "type": "data",
+          "label": "Пороги точности и правила алертов",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 155
+          }
+        },
         {
           "id": "publikaciya-plana-sprosa",
           "type": "step",
@@ -773,7 +941,7 @@
           "system": "INPLAN",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 216
           },
           "slidePosition": {
             "x": 10,
