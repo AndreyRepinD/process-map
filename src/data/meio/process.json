@@ -387,12 +387,17 @@
       "shortTitle": "Подготовка к расчёту",
       "keyOutputs": [
         "Настроенные параметры расчёта",
+        "Скорректированный CV",
         "Сегментация по пяти признакам"
       ],
       "groups": [
         {
           "id": "parametry-rascheta",
           "label": "Параметры расчёта"
+        },
+        {
+          "id": "raschet-variabelnosti",
+          "label": "Расчёт вариабельности"
         },
         {
           "id": "segmentaciya",
@@ -471,16 +476,14 @@
           }
         },
         {
-          "id": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "nastroyka-parametrov-rascheta",
           "type": "step",
-          "label": "Настройка параметров для расчёта уровней запасов",
-          "description": "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и волатильность, затраты на хранение, минимальный размер партии и кратность, срок годности и политика FEFO.\n\nБаза неопределённости — ПАРАМЕТР НАСТРОЙКИ, а не жёсткое правило: модуль умеет считать разброс сам по собственной истории прогноза и факта, а может принять готовую ошибку прогноза (FA, BIAS, σ) по горизонту из DP. Выбор делается по сегментам: страховой запас защищает от ошибки прогноза за время выполнения, и там, где прогноз смещён, собственный разброс отгрузок занижает потребность в защите.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
+          "label": "Настройка параметров расчёта",
+          "description": "Параметры, которые задаются, а не считаются: плановые лидтаймы и отклонения, квоты и приоритеты источников, затраты на хранение, минимальный размер партии и кратность, срок годности и политика FEFO.\n\nОтделено от расчёта вариабельности намеренно. Здесь — то, что приходит из справочников и решений владельца; в следующих шагах — то, что модуль выводит из истории. Смешанные в одном блоке, они выглядят одинаково настраиваемыми, хотя менять лидтайм и менять способ расчёта CV — разные по цене действия.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
           "group": "parametry-rascheta",
           "inputs": [
             "Плановые лидтаймы и отклонения",
-            "Квоты",
-            "База неопределённости: расчёт в модуле или ошибка прогноза из DP",
-            "Спрос и волатильность",
+            "Квоты и приоритеты источников",
             "Затраты на хранение",
             "Минимальный размер партии и кратность",
             "Срок годности и остаточный срок при приёмке",
@@ -490,15 +493,9 @@
             "Настроенные параметры расчёта"
           ],
           "owner": "Планер запасов",
-          "algorithms": [
-            "MEIO Расчет CV",
-            "MEIO Расчет CV длительности поставок",
-            "MEIO Расчет CV длительности производства",
-            "MEIO Усреднитель"
-          ],
           "position": {
             "x": 296,
-            "y": 290
+            "y": 282
           },
           "slidePosition": {
             "x": 474,
@@ -521,11 +518,38 @@
           }
         },
         {
-          "id": "parametry-cepochki-iz-erp",
+          "id": "raschet-volatilnosti-sprosa",
+          "type": "step",
+          "label": "Расчёт волатильности спроса",
+          "description": "Коэффициент вариации спроса по связке продукт-локация: насколько разбросано потребление вокруг своего среднего.\n\nБаза неопределённости — ПАРАМЕТР НАСТРОЙКИ, а не жёсткое правило: модуль умеет считать разброс сам по собственной истории, а может принять готовую ошибку прогноза (FA, BIAS, σ) по горизонту из DP. Выбор делается по сегментам: страховой запас защищает от ошибки прогноза за время выполнения, и там, где прогноз смещён, собственный разброс отгрузок занижает потребность в защите.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "История отгрузок за период",
+            "Незакрытый спрос и списания",
+            "База неопределённости: расчёт в модуле или ошибка прогноза из DP"
+          ],
+          "outputs": [
+            "CV спроса"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Расчет CV"
+          ],
+          "position": {
+            "x": 710,
+            "y": 374
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 324
+          }
+        },
+        {
+          "id": "oshibka-prognoza-po-gorizontu-iz-dp",
           "type": "data",
-          "label": "Параметры цепочки из ERP",
+          "label": "Ошибка прогноза по горизонту из DP",
           "direction": "in",
-          "system": "ERP",
+          "system": "DP",
           "position": {
             "x": 0,
             "y": 432
@@ -533,6 +557,140 @@
           "slidePosition": {
             "x": 10,
             "y": 359
+          }
+        },
+        {
+          "id": "raschet-cv-dlitelnosti-postavok",
+          "type": "step",
+          "label": "Расчёт CV длительности поставок",
+          "description": "Разброс фактической длительности поставки вокруг плановой — по каждой дуге сети.\n\nСчитается отдельно от разброса спроса, потому что защищает от другого: страховой запас покрывает неопределённость за ВРЕМЯ ВЫПОЛНЕНИЯ, и нестабильный лидтайм удлиняет период риска даже при идеально ровном спросе.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "Плановые и фактические длительности поставок",
+            "Отклонения по дугам сети"
+          ],
+          "outputs": [
+            "CV длительности поставок"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Расчет CV длительности поставок"
+          ],
+          "position": {
+            "x": 710,
+            "y": 206
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 486
+          }
+        },
+        {
+          "id": "parametry-cepochki-iz-erp",
+          "type": "data",
+          "label": "Параметры цепочки из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 504
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 487
+          }
+        },
+        {
+          "id": "sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp",
+          "type": "data",
+          "label": "Сроки годности и требования сетей к остаточному сроку из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 576
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 615
+          }
+        },
+        {
+          "id": "raschet-cv-dlitelnosti-proizvodstva",
+          "type": "step",
+          "label": "Расчёт CV длительности производства",
+          "description": "Разброс длительности собственного производства — отдельно от закупочных поставок.\n\nДля узлов, которые пополняются своим переделом, источник неопределённости не поставщик, а собственный цех: срыв убоя или обвалки сдвигает пополнение так же, как задержка внешней поставки, но управляется другими людьми и другими решениями.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "Плановые и фактические длительности производства",
+            "Отклонения по производственным заказам"
+          ],
+          "outputs": [
+            "CV длительности производства"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Расчет CV длительности производства"
+          ],
+          "position": {
+            "x": 710,
+            "y": 290
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 630
+          }
+        },
+        {
+          "id": "korrektirovka-cv",
+          "type": "step",
+          "label": "Корректировка CV",
+          "description": "Сведение трёх посчитанных коэффициентов вариации к тому набору, с которым пойдёт оптимизация, и экспертная правка там, где история не отражает будущее.\n\nШаг ручной: алгоритма в платформе у него нет. Он нужен, потому что посчитанный по истории CV врёт в двух известных случаях — новинка без истории и позиция, у которой режим поставки только что изменился. Без явного шага правка всё равно происходит, но невидимо и без следа.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "CV спроса",
+            "CV длительности поставок",
+            "CV длительности производства",
+            "Экспертная правка по сегментам"
+          ],
+          "outputs": [
+            "Скорректированный CV"
+          ],
+          "owner": "Планер запасов",
+          "position": {
+            "x": 1124,
+            "y": 290
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 774
+          }
+        },
+        {
+          "id": "abc-klassifikaciya",
+          "type": "step",
+          "label": "ABC-классификация",
+          "description": "Разнесение номенклатуры по классам A, B и C — по вкладу в оборот и объём.\n\nВынесено отдельным шагом, потому что это отдельный алгоритм платформы и отдельное решение о порогах: класс определяет, какой уровень сервиса позиция вообще заслуживает, и меняется он не тогда же, когда остальные признаки сегментации.",
+          "group": "segmentaciya",
+          "inputs": [
+            "Вклад в оборот",
+            "Вклад в объём",
+            "Пороги классов"
+          ],
+          "outputs": [
+            "Классы ABC"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO ABC - Классификация"
+          ],
+          "position": {
+            "x": 1538,
+            "y": 290
+          },
+          "slidePosition": {
+            "x": 474,
+            "y": 936
           }
         },
         {
@@ -553,46 +711,15 @@
           ],
           "owner": "Планер запасов",
           "algorithms": [
-            "MEIO ABC - Классификация",
             "MEIO Сегментация"
           ],
           "position": {
-            "x": 710,
+            "x": 1952,
             "y": 290
           },
           "slidePosition": {
             "x": 474,
-            "y": 377
-          }
-        },
-        {
-          "id": "sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp",
-          "type": "data",
-          "label": "Сроки годности и требования сетей к остаточному сроку из ERP",
-          "direction": "in",
-          "system": "ERP",
-          "position": {
-            "x": 0,
-            "y": 504
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 487
-          }
-        },
-        {
-          "id": "oshibka-prognoza-po-gorizontu-iz-dp",
-          "type": "data",
-          "label": "Ошибка прогноза по горизонту из DP",
-          "direction": "in",
-          "system": "DP",
-          "position": {
-            "x": 0,
-            "y": 576
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 615
+            "y": 1081
           }
         },
         {
@@ -601,8 +728,8 @@
           "label": "Настроенные параметры расчёта",
           "direction": "out",
           "position": {
-            "x": 1124,
-            "y": 252
+            "x": 2366,
+            "y": 216
           },
           "slidePosition": {
             "x": 756,
@@ -610,91 +737,153 @@
           }
         },
         {
-          "id": "segmentaciya-po-pyati-priznakam-1-900201",
+          "id": "skorrektirovannyy-cv-1-900201",
           "type": "data",
-          "label": "Сегментация по пяти признакам",
+          "label": "Скорректированный CV",
           "direction": "out",
           "position": {
-            "x": 1124,
-            "y": 324
+            "x": 2366,
+            "y": 288
           },
           "slidePosition": {
             "x": 756,
             "y": 176
           }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam-1-900202",
+          "type": "data",
+          "label": "Сегментация по пяти признакам",
+          "direction": "out",
+          "position": {
+            "x": 2366,
+            "y": 360
+          },
+          "slidePosition": {
+            "x": 756,
+            "y": 250
+          }
         }
       ],
       "edges": [
         {
-          "id": "e-spros-i-volatilnost-iz-dp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
-          "source": "spros-i-volatilnost-iz-dp",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
-          "kind": "process"
-        },
-        {
-          "id": "e-parametry-cepochki-iz-erp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-parametry-cepochki-iz-erp--nastroyka-parametrov-rascheta",
           "source": "parametry-cepochki-iz-erp",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp--nastroyka-parametrov-rascheta",
           "source": "sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-oshibka-prognoza-po-gorizontu-iz-dp--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-nastroyka-parametrov-rascheta--raschet-volatilnosti-sprosa",
+          "source": "nastroyka-parametrov-rascheta",
+          "target": "raschet-volatilnosti-sprosa",
+          "kind": "process"
+        },
+        {
+          "id": "e-nastroyka-parametrov-rascheta--raschet-cv-dlitelnosti-postavok",
+          "source": "nastroyka-parametrov-rascheta",
+          "target": "raschet-cv-dlitelnosti-postavok",
+          "kind": "process"
+        },
+        {
+          "id": "e-nastroyka-parametrov-rascheta--raschet-cv-dlitelnosti-proizvodstva",
+          "source": "nastroyka-parametrov-rascheta",
+          "target": "raschet-cv-dlitelnosti-proizvodstva",
+          "kind": "process"
+        },
+        {
+          "id": "e-spros-i-volatilnost-iz-dp--raschet-volatilnosti-sprosa",
+          "source": "spros-i-volatilnost-iz-dp",
+          "target": "raschet-volatilnosti-sprosa",
+          "kind": "process"
+        },
+        {
+          "id": "e-oshibka-prognoza-po-gorizontu-iz-dp--raschet-volatilnosti-sprosa",
           "source": "oshibka-prognoza-po-gorizontu-iz-dp",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "raschet-volatilnosti-sprosa",
           "kind": "process"
         },
         {
-          "id": "e-nastroyka-parametrov-dlya-rascheta-urovney-zapasov--segmentaciya",
-          "source": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-raschet-volatilnosti-sprosa--korrektirovka-cv",
+          "source": "raschet-volatilnosti-sprosa",
+          "target": "korrektirovka-cv",
+          "kind": "process"
+        },
+        {
+          "id": "e-raschet-cv-dlitelnosti-postavok--korrektirovka-cv",
+          "source": "raschet-cv-dlitelnosti-postavok",
+          "target": "korrektirovka-cv",
+          "kind": "process"
+        },
+        {
+          "id": "e-raschet-cv-dlitelnosti-proizvodstva--korrektirovka-cv",
+          "source": "raschet-cv-dlitelnosti-proizvodstva",
+          "target": "korrektirovka-cv",
+          "kind": "process"
+        },
+        {
+          "id": "e-korrektirovka-cv--abc-klassifikaciya",
+          "source": "korrektirovka-cv",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-abc-klassifikaciya--segmentaciya",
+          "source": "abc-klassifikaciya",
           "target": "segmentaciya",
           "kind": "process"
         },
         {
-          "id": "e-validirovannye-dannye-dlya-rascheta--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-validirovannye-dannye-dlya-rascheta--nastroyka-parametrov-rascheta",
           "source": "validirovannye-dannye-dlya-rascheta",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-planovye-lidtaymy-i-otkloneniya--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-planovye-lidtaymy-i-otkloneniya--nastroyka-parametrov-rascheta",
           "source": "planovye-lidtaymy-i-otkloneniya",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-kvoty-i-prioritety-istochnikov--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-kvoty-i-prioritety-istochnikov--nastroyka-parametrov-rascheta",
           "source": "kvoty-i-prioritety-istochnikov",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-zatraty-na-hranenie--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-zatraty-na-hranenie--nastroyka-parametrov-rascheta",
           "source": "zatraty-na-hranenie",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-minimalnaya-partiya-i-kratnost--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-minimalnaya-partiya-i-kratnost--nastroyka-parametrov-rascheta",
           "source": "minimalnaya-partiya-i-kratnost",
-          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroyka-parametrov-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-nastroyka-parametrov-dlya-rascheta-urovney-zapasov--nastroennye-parametry-rascheta-1-900200",
-          "source": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "id": "e-nastroyka-parametrov-rascheta--nastroennye-parametry-rascheta-1-900200",
+          "source": "nastroyka-parametrov-rascheta",
           "target": "nastroennye-parametry-rascheta-1-900200",
           "kind": "process"
         },
         {
-          "id": "e-segmentaciya--segmentaciya-po-pyati-priznakam-1-900201",
+          "id": "e-korrektirovka-cv--skorrektirovannyy-cv-1-900201",
+          "source": "korrektirovka-cv",
+          "target": "skorrektirovannyy-cv-1-900201",
+          "kind": "process"
+        },
+        {
+          "id": "e-segmentaciya--segmentaciya-po-pyati-priznakam-1-900202",
           "source": "segmentaciya",
-          "target": "segmentaciya-po-pyati-priznakam-1-900201",
+          "target": "segmentaciya-po-pyati-priznakam-1-900202",
           "kind": "process"
         }
       ],
@@ -702,6 +891,12 @@
         {
           "system": "DP",
           "label": "Спрос и волатильность из DP",
+          "stage": 2,
+          "direction": "in"
+        },
+        {
+          "system": "DP",
+          "label": "Ошибка прогноза по горизонту из DP",
           "stage": 2,
           "direction": "in"
         },
@@ -716,12 +911,6 @@
           "label": "Сроки годности и требования сетей к остаточному сроку из ERP",
           "stage": 2,
           "direction": "in"
-        },
-        {
-          "system": "DP",
-          "label": "Ошибка прогноза по горизонту из DP",
-          "stage": 2,
-          "direction": "in"
         }
       ],
       "outputs": []
@@ -732,7 +921,7 @@
       "title": "Расчёт и анализ",
       "shortTitle": "Расчёт и анализ",
       "keyOutputs": [
-        "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
+        "Рекомендованные уровни запасов по эшелонам",
         "Три сценария",
         "Перечень предупреждений расчёта"
       ],
@@ -754,7 +943,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 36
+            "y": 0
           },
           "slidePosition": {
             "x": 507,
@@ -762,17 +951,31 @@
           }
         },
         {
-          "id": "segmentaciya-po-pyati-priznakam-1-800301",
+          "id": "skorrektirovannyy-cv-1-800301",
+          "type": "data",
+          "label": "Скорректированный CV",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 507,
+            "y": 155
+          }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam-1-800302",
           "type": "data",
           "label": "Сегментация по пяти признакам",
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 108
+            "y": 144
           },
           "slidePosition": {
             "x": 507,
-            "y": 155
+            "y": 208
           }
         },
         {
@@ -782,39 +985,30 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 180
+            "y": 216
           },
           "slidePosition": {
             "x": 507,
-            "y": 208
+            "y": 260
           }
         },
         {
-          "id": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "id": "opredelenie-strategii-mts-mto",
           "type": "step",
-          "label": "Расчёт рекомендаций по уровням запасов",
-          "description": "Оптимизационный расчёт уровней запасов по параметрам и ограничениям: страховой, целевой и циклический запас, точка заказа, рекомендованный уровень сервиса.\n\nСрок годности — жёсткое ограничение, а не пожелание: целевое покрытие, превышающее остаточный срок охлаждённой продукции, превращается не в излишек, а в списание. Поэтому покрытие ограничено остаточным сроком с учётом требований сетей к приёмке, а стоимость списаний и уценки входит в целевую функцию наравне с хранением.\n\nBPMN: IO-020 — Расчет рекомендаций по уровням запасов (IO)",
+          "label": "Определение стратегии MTS-MTO",
+          "description": "Решение, держать позицию на складе (MTS) или производить под заказ (MTO).\n\nЭто развилка ДО расчёта уровней: у позиции MTO целевого запаса нет вовсе, и считать для неё страховой запас бессмысленно. Для скоропорта развилка тем более содержательна — то, что нельзя хранить, обязано быть MTO независимо от объёма.",
           "group": "raschet",
           "inputs": [
-            "Параметры оптимизации",
-            "Ограничения",
-            "Страховой, целевой, циклический запас",
-            "Точка заказа",
-            "Рекомендованный уровень сервиса",
-            "Ограничение: покрытие ≤ остаточного срока годности",
-            "Стоимость списаний и уценки"
+            "Сегментация по пяти признакам",
+            "Длительность цикла против срока ожидания клиента",
+            "Срок годности позиции"
           ],
           "outputs": [
-            "Рекомендованные уровни запасов",
-            "Точка заказа",
-            "Рекомендованный уровень сервиса"
+            "Стратегия MTS или MTO по позиции"
           ],
           "owner": "Планер запасов",
           "algorithms": [
-            "MEIO Выбор политики пополнения",
-            "MEIO Мультиэшелональный оптимизатор",
-            "MEIO Определение стратегии MTS-MTO",
-            "MEIO Оптимизатор (изолированный)"
+            "MEIO Определение стратегии MTS-MTO"
           ],
           "position": {
             "x": 296,
@@ -826,9 +1020,95 @@
           }
         },
         {
-          "id": "analiz-poluchennyh-znacheniy",
+          "id": "vybor-politiki-popolneniya",
           "type": "step",
-          "label": "Анализ полученных значений",
+          "label": "Выбор политики пополнения",
+          "description": "Выбор правила пополнения под сегмент: точка заказа, периодический пересмотр, фиксированная партия или их сочетание.\n\nПолитика задаёт, ЧТО именно считать дальше: у точки заказа и у периодического пересмотра разные формулы страхового запаса и разные периоды риска.",
+          "group": "raschet",
+          "inputs": [
+            "Стратегия MTS или MTO по позиции",
+            "Сегментация по пяти признакам",
+            "Календари пополнения",
+            "Минимальный размер партии и кратность"
+          ],
+          "outputs": [
+            "Политика пополнения по позиции"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Выбор политики пополнения"
+          ],
+          "position": {
+            "x": 710,
+            "y": 110
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 271
+          }
+        },
+        {
+          "id": "multieshelonnaya-optimizaciya",
+          "type": "step",
+          "label": "Мультиэшелонная оптимизация",
+          "description": "Основной расчёт: оптимизационное распределение запаса по эшелонам сети в разрезе продукт-локация-период. Страховой, целевой и циклический запас, точка заказа, рекомендованный уровень сервиса.\n\nМультиэшелонность означает, что уровни считаются НЕ по узлам поодиночке: запас в центральном узле и запас в филиале защищают от одной и той же неопределённости, и оптимум по сети дешевле суммы локальных оптимумов.\n\nСрок годности — жёсткое ограничение, а не пожелание: целевое покрытие, превышающее остаточный срок охлаждённой продукции, превращается не в излишек, а в списание. Поэтому покрытие ограничено остаточным сроком с учётом требований сетей к приёмке, а стоимость списаний и уценки входит в целевую функцию наравне с хранением.\n\nBPMN: IO-020 — Расчет рекомендаций по уровням запасов (IO)",
+          "group": "raschet",
+          "inputs": [
+            "Настроенные параметры расчёта",
+            "Скорректированный CV",
+            "Политика пополнения по позиции",
+            "Ограничения: мощности, бюджет, срок годности"
+          ],
+          "outputs": [
+            "Рекомендованные уровни запасов по эшелонам",
+            "Точка заказа",
+            "Рекомендованный уровень сервиса"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Мультиэшелональный оптимизатор",
+            "MEIO Усреднитель"
+          ],
+          "position": {
+            "x": 1124,
+            "y": 152
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 433
+          }
+        },
+        {
+          "id": "izolirovannaya-optimizaciya",
+          "type": "step",
+          "label": "Изолированная оптимизация",
+          "description": "Тот же расчёт, но по каждому узлу отдельно, без распространения неопределённости по сети.\n\nНужен как база сравнения: разница между изолированным и мультиэшелонным расчётом и есть измеренный эффект от учёта сети. Без неё выигрыш мультиэшелонности остаётся утверждением, а не числом.",
+          "group": "raschet",
+          "inputs": [
+            "Настроенные параметры расчёта",
+            "Скорректированный CV",
+            "Политика пополнения по позиции"
+          ],
+          "outputs": [
+            "Уровни запасов по узлам без учёта сети"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Оптимизатор (изолированный)"
+          ],
+          "position": {
+            "x": 1124,
+            "y": 60
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 612
+          }
+        },
+        {
+          "id": "scenarnoe-modelirovanie",
+          "type": "step",
+          "label": "Сценарное моделирование",
           "description": "Сценарное моделирование и интерпретация полученных значений. Каждый сценарий — это воспроизводимый прогон с изменённым входом и вопросом, на который он отвечает.\n\nБаза (as is) — текущие политики и параметры, точка отсчёта для сравнения. Пересчёт по фильтрам — тот же расчёт на подмножестве: склад, канал, категория, сегмент; показывает, где эффект концентрируется и стоит ли катить на всю сеть. Сервис 98% по федеральным сетям — поднять целевой уровень там, где он контрактный, оставив остальным текущий: сколько запаса стоит обязательство и штрафы за его срыв. Учащённое пополнение охлаждённой продукции — частота с недельной на две в неделю: меньше циклического запаса и списаний против роста логистики. Сокращение лидтайма и его разброса — сколько страхового запаса высвобождает стабильность поставки, а не её скорость. Ограничение по мощностям холода — целевые уровни при фактической ёмкости по температурным режимам: что делать, если оптимум физически не помещается. Бюджет запаса −15% — фиксируем оборотный капитал и смотрим, чем платит сервис. Сезонный пик май–сентябрь — заблаговременный буфер по профильным отрубам под рост спроса.\n\nПеречень — МЕНЮ, а не план прогона: за цикл считаются три сценария, выбранные под задачу, и сравниваются с базой. Числовые пороги (98%, −15%) — предмет решения владельца, а не свойство модуля. Варианты будут уточнены по ходу проекта (сноска слайда).\n\nBPMN: IO-030 — Расчет альтернативного сценария с новыми входными данными",
           "group": "analiz",
           "inputs": [
@@ -843,21 +1123,47 @@
           ],
           "outputs": [
             "Три сценария",
-            "Скорректированные значения",
-            "Сравнение сценариев по эффектам"
+            "Скорректированные значения"
           ],
           "owner": "Планер запасов",
           "algorithms": [
-            "MEIO Копирование версий",
-            "MEIO отчет сравнение со страховыми запасам"
+            "MEIO Копирование версий"
           ],
           "position": {
-            "x": 710,
-            "y": 110
+            "x": 1538,
+            "y": 152
           },
           "slidePosition": {
             "x": 744,
-            "y": 342
+            "y": 757
+          }
+        },
+        {
+          "id": "sravnenie-so-strahovymi-zapasami",
+          "type": "step",
+          "label": "Сравнение со страховыми запасами",
+          "description": "Сопоставление рассчитанного с тем, что действует сейчас, и сценариев между собой.\n\nОтдельный шаг, потому что отвечает на другой вопрос, чем сам расчёт: не «сколько запаса оптимально», а «насколько это отличается от текущего и стоит ли переход». Здесь же видна разница мультиэшелонного и изолированного расчёта.",
+          "group": "analiz",
+          "inputs": [
+            "Рекомендованные уровни запасов по эшелонам",
+            "Действующие страховые запасы",
+            "Уровни запасов по узлам без учёта сети"
+          ],
+          "outputs": [
+            "Сравнение сценариев по эффектам",
+            "Отклонения от действующих нормативов"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO отчет сравнение со страховыми запасам"
+          ],
+          "position": {
+            "x": 1952,
+            "y": 68
+          },
+          "slidePosition": {
+            "x": 744,
+            "y": 1042
           }
         },
         {
@@ -878,12 +1184,12 @@
           ],
           "owner": "Планер запасов",
           "position": {
-            "x": 1124,
-            "y": 110
+            "x": 1952,
+            "y": 160
           },
           "slidePosition": {
             "x": 744,
-            "y": 627
+            "y": 1204
           }
         },
         {
@@ -893,21 +1199,21 @@
           "direction": "out",
           "system": "INPLAN",
           "position": {
-            "x": 1538,
+            "x": 2366,
             "y": 216
           },
           "slidePosition": {
             "x": 744,
-            "y": 859
+            "y": 1436
           }
         },
         {
-          "id": "optimizacionnyy-raschet-raspredeleniya-zapasov-po-eshelonam-v-razreze",
+          "id": "rekomendovannye-urovni-zapasov-po-eshelonam-1-900300",
           "type": "data",
-          "label": "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
+          "label": "Рекомендованные уровни запасов по эшелонам",
           "direction": "out",
           "position": {
-            "x": 1538,
+            "x": 2366,
             "y": 0
           },
           "slidePosition": {
@@ -916,12 +1222,12 @@
           }
         },
         {
-          "id": "tri-scenariya",
+          "id": "tri-scenariya-1-900301",
           "type": "data",
           "label": "Три сценария",
           "direction": "out",
           "position": {
-            "x": 1538,
+            "x": 2366,
             "y": 72
           },
           "slidePosition": {
@@ -935,7 +1241,7 @@
           "label": "Перечень предупреждений расчёта",
           "direction": "out",
           "position": {
-            "x": 1538,
+            "x": 2366,
             "y": 144
           },
           "slidePosition": {
@@ -946,51 +1252,87 @@
       ],
       "edges": [
         {
-          "id": "e-raschet-rekomendaciy-po-urovnyam-zapasov--analiz-poluchennyh-znacheniy",
-          "source": "raschet-rekomendaciy-po-urovnyam-zapasov",
-          "target": "analiz-poluchennyh-znacheniy",
+          "id": "e-opredelenie-strategii-mts-mto--vybor-politiki-popolneniya",
+          "source": "opredelenie-strategii-mts-mto",
+          "target": "vybor-politiki-popolneniya",
           "kind": "process"
         },
         {
-          "id": "e-raschet-rekomendaciy-po-urovnyam-zapasov--urovni-zapasov-v-snp-ps-i-mrp",
-          "source": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "id": "e-vybor-politiki-popolneniya--multieshelonnaya-optimizaciya",
+          "source": "vybor-politiki-popolneniya",
+          "target": "multieshelonnaya-optimizaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-vybor-politiki-popolneniya--izolirovannaya-optimizaciya",
+          "source": "vybor-politiki-popolneniya",
+          "target": "izolirovannaya-optimizaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-multieshelonnaya-optimizaciya--scenarnoe-modelirovanie",
+          "source": "multieshelonnaya-optimizaciya",
+          "target": "scenarnoe-modelirovanie",
+          "kind": "process"
+        },
+        {
+          "id": "e-multieshelonnaya-optimizaciya--urovni-zapasov-v-snp-ps-i-mrp",
+          "source": "multieshelonnaya-optimizaciya",
           "target": "urovni-zapasov-v-snp-ps-i-mrp",
           "kind": "process"
         },
         {
-          "id": "e-analiz-poluchennyh-znacheniy--analiz-preduprezhdeniy-rascheta",
-          "source": "analiz-poluchennyh-znacheniy",
+          "id": "e-izolirovannaya-optimizaciya--sravnenie-so-strahovymi-zapasami",
+          "source": "izolirovannaya-optimizaciya",
+          "target": "sravnenie-so-strahovymi-zapasami",
+          "kind": "process"
+        },
+        {
+          "id": "e-scenarnoe-modelirovanie--sravnenie-so-strahovymi-zapasami",
+          "source": "scenarnoe-modelirovanie",
+          "target": "sravnenie-so-strahovymi-zapasami",
+          "kind": "process"
+        },
+        {
+          "id": "e-scenarnoe-modelirovanie--analiz-preduprezhdeniy-rascheta",
+          "source": "scenarnoe-modelirovanie",
           "target": "analiz-preduprezhdeniy-rascheta",
           "kind": "process"
         },
         {
-          "id": "e-nastroennye-parametry-rascheta-1-800300--raschet-rekomendaciy-po-urovnyam-zapasov",
+          "id": "e-nastroennye-parametry-rascheta-1-800300--opredelenie-strategii-mts-mto",
           "source": "nastroennye-parametry-rascheta-1-800300",
-          "target": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "target": "opredelenie-strategii-mts-mto",
           "kind": "process"
         },
         {
-          "id": "e-segmentaciya-po-pyati-priznakam-1-800301--raschet-rekomendaciy-po-urovnyam-zapasov",
-          "source": "segmentaciya-po-pyati-priznakam-1-800301",
-          "target": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "id": "e-skorrektirovannyy-cv-1-800301--opredelenie-strategii-mts-mto",
+          "source": "skorrektirovannyy-cv-1-800301",
+          "target": "opredelenie-strategii-mts-mto",
           "kind": "process"
         },
         {
-          "id": "e-ogranicheniya-optimizacii-moschnosti-byudzhet-srok-godnosti--raschet-rekomendaciy-po-urovnyam-zapasov",
+          "id": "e-segmentaciya-po-pyati-priznakam-1-800302--opredelenie-strategii-mts-mto",
+          "source": "segmentaciya-po-pyati-priznakam-1-800302",
+          "target": "opredelenie-strategii-mts-mto",
+          "kind": "process"
+        },
+        {
+          "id": "e-ogranicheniya-optimizacii-moschnosti-byudzhet-srok-godnosti--opredelenie-strategii-mts-mto",
           "source": "ogranicheniya-optimizacii-moschnosti-byudzhet-srok-godnosti",
-          "target": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "target": "opredelenie-strategii-mts-mto",
           "kind": "process"
         },
         {
-          "id": "e-raschet-rekomendaciy-po-urovnyam-zapasov--optimizacionnyy-raschet-raspredeleniya-zapasov-po-eshelonam-v-razreze",
-          "source": "raschet-rekomendaciy-po-urovnyam-zapasov",
-          "target": "optimizacionnyy-raschet-raspredeleniya-zapasov-po-eshelonam-v-razreze",
+          "id": "e-multieshelonnaya-optimizaciya--rekomendovannye-urovni-zapasov-po-eshelonam-1-900300",
+          "source": "multieshelonnaya-optimizaciya",
+          "target": "rekomendovannye-urovni-zapasov-po-eshelonam-1-900300",
           "kind": "process"
         },
         {
-          "id": "e-analiz-poluchennyh-znacheniy--tri-scenariya",
-          "source": "analiz-poluchennyh-znacheniy",
-          "target": "tri-scenariya",
+          "id": "e-scenarnoe-modelirovanie--tri-scenariya-1-900301",
+          "source": "scenarnoe-modelirovanie",
+          "target": "tri-scenariya-1-900301",
           "kind": "process"
         },
         {
@@ -1030,33 +1372,161 @@
       "keyOutputs": [
         "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев"
       ],
-      "groups": [],
+      "groups": [
+        {
+          "id": "otchety",
+          "label": "Отчёты"
+        },
+        {
+          "id": "itog",
+          "label": "Итог"
+        }
+      ],
       "nodes": [
+        {
+          "id": "tri-scenariya-1-800400",
+          "type": "data",
+          "label": "Три сценария",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 10
+          },
+          "slidePosition": {
+            "x": 777,
+            "y": 103
+          }
+        },
+        {
+          "id": "rekomendovannye-urovni-zapasov-po-eshelonam-1-800401",
+          "type": "data",
+          "label": "Рекомендованные уровни запасов по эшелонам",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 82
+          },
+          "slidePosition": {
+            "x": 777,
+            "y": 155
+          }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam-1-800402",
+          "type": "data",
+          "label": "Сегментация по пяти признакам",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 154
+          },
+          "slidePosition": {
+            "x": 777,
+            "y": 208
+          }
+        },
+        {
+          "id": "otchet-po-oshibke-prognoza",
+          "type": "step",
+          "label": "Отчёт по ошибке прогноза",
+          "description": "Отчёт по расхождению прогноза и факта: FA, BIAS и σ по горизонту.\n\nВ платформе такой алгоритм ЕСТЬ — то есть ошибка прогноза как база неопределённости модулю доступна, и её отсутствие на прежней версии карты было пробелом карты, а не продукта. Отсюда же берётся вход «База неопределённости» на этапе 2: контур замыкается на следующем цикле.",
+          "group": "otchety",
+          "inputs": [
+            "Прогноз спроса из DP",
+            "Фактические отгрузки за период"
+          ],
+          "outputs": [
+            "Ошибка прогноза по горизонту"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO отчет по ошибке прогноза"
+          ],
+          "position": {
+            "x": 296,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 1015,
+            "y": 109
+          }
+        },
+        {
+          "id": "otchet-po-segmentacii",
+          "type": "step",
+          "label": "Отчёт по сегментации",
+          "description": "Распределение номенклатуры по сегментам и его изменение от цикла к циклу.\n\nСмена сегмента — причина смены политики пополнения, поэтому отчёт читается не как статистика, а как перечень позиций, у которых поменяются нормативы.",
+          "group": "otchety",
+          "inputs": [
+            "Сегментация по пяти признакам",
+            "Классы ABC"
+          ],
+          "outputs": [
+            "Отчёт по сегментации"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO отчет по сегментации"
+          ],
+          "position": {
+            "x": 296,
+            "y": 84
+          },
+          "slidePosition": {
+            "x": 1015,
+            "y": 236
+          }
+        },
+        {
+          "id": "otchet-po-strahovym-zapasam",
+          "type": "step",
+          "label": "Отчёт по страховым запасам",
+          "description": "Рассчитанные страховые запасы в разрезах, в которых их принимает бизнес: по узлам, категориям и сегментам, в днях покрытия и в деньгах.",
+          "group": "otchety",
+          "inputs": [
+            "Рекомендованные уровни запасов по эшелонам",
+            "Три сценария"
+          ],
+          "outputs": [
+            "Отчёт по страховым запасам"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO отчет по страховым запасам"
+          ],
+          "position": {
+            "x": 296,
+            "y": 168
+          },
+          "slidePosition": {
+            "x": 1015,
+            "y": 362
+          }
+        },
         {
           "id": "ocenka-effektov",
           "type": "step",
           "label": "Оценка эффектов",
           "description": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев, формирование рекомендаций для бизнеса.\n\nBPMN: IO-040 — Отчетность: проверка соответствия рассчитанных запасов бюджетным значениям",
+          "group": "itog",
           "inputs": [
-            "Оценка эффектов и формирование рекомендаций"
+            "Ошибка прогноза по горизонту",
+            "Отчёт по сегментации",
+            "Отчёт по страховым запасам",
+            "Сравнение сценариев по эффектам"
           ],
           "outputs": [
             "Комплексная оценка эффектов",
             "Рекомендации для бизнеса"
           ],
           "owner": "Планер запасов совместно с финансами",
-          "algorithms": [
-            "MEIO отчет по ошибке прогноза",
-            "MEIO отчет по сегментации",
-            "MEIO отчет по страховым запасам"
-          ],
           "position": {
-            "x": 0,
-            "y": 38
+            "x": 710,
+            "y": 84
           },
           "slidePosition": {
             "x": 1015,
-            "y": 109
+            "y": 507
           }
         },
         {
@@ -1065,12 +1535,12 @@
           "label": "Оценка эффектов и рекомендации",
           "direction": "out",
           "position": {
-            "x": 414,
-            "y": 72
+            "x": 1124,
+            "y": 118
           },
           "slidePosition": {
             "x": 1015,
-            "y": 236
+            "y": 669
           }
         },
         {
@@ -1079,8 +1549,8 @@
           "label": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев",
           "direction": "out",
           "position": {
-            "x": 414,
-            "y": 0
+            "x": 1124,
+            "y": 46
           },
           "slidePosition": {
             "x": 1297,
@@ -1090,9 +1560,45 @@
       ],
       "edges": [
         {
+          "id": "e-otchet-po-oshibke-prognoza--ocenka-effektov",
+          "source": "otchet-po-oshibke-prognoza",
+          "target": "ocenka-effektov",
+          "kind": "process"
+        },
+        {
+          "id": "e-otchet-po-segmentacii--ocenka-effektov",
+          "source": "otchet-po-segmentacii",
+          "target": "ocenka-effektov",
+          "kind": "process"
+        },
+        {
+          "id": "e-otchet-po-strahovym-zapasam--ocenka-effektov",
+          "source": "otchet-po-strahovym-zapasam",
+          "target": "ocenka-effektov",
+          "kind": "process"
+        },
+        {
           "id": "e-ocenka-effektov--ocenka-effektov-i-rekomendacii",
           "source": "ocenka-effektov",
           "target": "ocenka-effektov-i-rekomendacii",
+          "kind": "process"
+        },
+        {
+          "id": "e-tri-scenariya-1-800400--otchet-po-oshibke-prognoza",
+          "source": "tri-scenariya-1-800400",
+          "target": "otchet-po-oshibke-prognoza",
+          "kind": "process"
+        },
+        {
+          "id": "e-rekomendovannye-urovni-zapasov-po-eshelonam-1-800401--otchet-po-oshibke-prognoza",
+          "source": "rekomendovannye-urovni-zapasov-po-eshelonam-1-800401",
+          "target": "otchet-po-oshibke-prognoza",
+          "kind": "process"
+        },
+        {
+          "id": "e-segmentaciya-po-pyati-priznakam-1-800402--otchet-po-oshibke-prognoza",
+          "source": "segmentaciya-po-pyati-priznakam-1-800402",
+          "target": "otchet-po-oshibke-prognoza",
           "kind": "process"
         },
         {
@@ -1108,6 +1614,12 @@
   ],
   "overviewEdges": [
     {
+      "id": "ov-stage-1-poluchenie-dannyh--stage-2-podgotovka-k-raschetu",
+      "source": "stage-1-poluchenie-dannyh",
+      "target": "stage-2-podgotovka-k-raschetu",
+      "kind": "process"
+    },
+    {
       "id": "ov-stage-2-podgotovka-k-raschetu--stage-3-raschet-i-analiz",
       "source": "stage-2-podgotovka-k-raschetu",
       "target": "stage-3-raschet-i-analiz",
@@ -1117,12 +1629,6 @@
       "id": "ov-stage-3-raschet-i-analiz--stage-4-ocenka-effektov",
       "source": "stage-3-raschet-i-analiz",
       "target": "stage-4-ocenka-effektov",
-      "kind": "process"
-    },
-    {
-      "id": "ov-stage-1-poluchenie-dannyh--stage-2-podgotovka-k-raschetu",
-      "source": "stage-1-poluchenie-dannyh",
-      "target": "stage-2-podgotovka-k-raschetu",
       "kind": "process"
     },
     {
