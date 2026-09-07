@@ -179,7 +179,7 @@ MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "3a9271496d56b2d7c6f423286addb07de5d78f5b0a58f2ba5d46018d7972981c"
+MAP_DATA_FINGERPRINT_MEIO = "d641a1aebf7ac3652b7ff7152aab387ef261b79200d2d1f3a3f196171ff93588"
 
 
 @dataclass(frozen=True)
@@ -2116,6 +2116,35 @@ STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
 # process-map-3wh.1), а второй подписи под тем же шагом геометрия не даёт —
 # окно CAPTION_MAX_GAP одно. Группа тем более: контейнер СТАЛ этапом, вложенный
 # контейнер уже́ CONTAINER_MIN_WIDTH и импортёром за контейнер не считается.
+# Входные данные этапа отдельными карточками. Зеркало STAGE_KEY_OUTPUTS: тот же
+# довод, только про колонку входов.
+#
+# ПОЧЕМУ НЕ ПЛАШКАМИ НА СЛАЙДЕ. Плашка-артефакт обязана лежать в левой полосе
+# шириной 15 % слайда (LEFT_MARGIN_LIMIT), и полоса эта ОДНА на все этапы: там
+# уже стоят плашки внешних систем. Десятки карточек туда не помещаются
+# физически, поэтому перечень объявляется здесь.
+#
+# ЧЕМ ОТЛИЧАЮТСЯ ОТ ПЛАШЕК. Плашка называет внешнюю систему и порождает
+# ExternalIO со свимлейном на обзоре. Карточка входа системы не называет: это
+# перечень данных, которые этап потребляет, а откуда они приходят — говорят
+# плашки. Поэтому ExternalIO они НЕ создают.
+STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
+    "dp": {
+    },
+    "meio": {
+        "stage-1-poluchenie-dannyh": (
+            "Структура текущих запасов по узлам и партиям",
+            "Фактические отгрузки за период",
+            "Остатки на руках, в заказе и в пути",
+            "Связки продукт-локация и эшелоны сети",
+            "Источники поставки, квоты и маршруты",
+            "Календари пополнения и производственные календари",
+            "Мощности хранения по температурным режимам",
+            "Незакрытый спрос и списания за период",
+        ),
+    },
+}
+
 STEP_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "dp": {
         "proverka-kachestva-dannyh": (
@@ -2329,6 +2358,44 @@ def is_artifact_box(shape: Shape) -> bool:
     прогон существующего build_stage давал 17 узлов и НОЛЬ data-узлов.
     """
     return shape.kind == "auto" and shape.has_text and shape.fill == ARTIFACT_FILL
+
+
+def input_cards(
+    labels: Sequence[str],
+    members: Sequence[NodeDraft],
+    container: Shape,
+    meta: dict,
+    ids: IdFactory,
+    slide_no: int,
+) -> list[dict]:
+    """
+    Входные данные этапа отдельными карточками — зеркало result_nodes.
+
+    Подпись, уже занятая плашкой-артефактом этого этапа, второй раз не заводится:
+    иначе «Структура текущих запасов … из ERP» задвоилась бы с карточкой того же
+    смысла. Системы у карточек нет — она есть у плашки.
+    """
+    existing = {d.label for d in members if d.direction == "in"}
+    nodes: list[dict] = []
+    for index, label in enumerate(labels):
+        if label in existing:
+            continue
+        sid = 800_000 + meta["number"] * 100 + index
+        node_id = ids.make(label, slide_no, sid)
+        left = max(container.box.left - 2_200_000, 0)
+        top = container.box.top + index * 500_000
+        position = {"x": round(left / EMU_PER_PX), "y": round(top / EMU_PER_PX)}
+        nodes.append(
+            {
+                "id": node_id,
+                "type": "data",
+                "label": label,
+                "direction": "in",
+                "position": dict(position),
+                "slidePosition": position,
+            }
+        )
+    return nodes
 
 
 def result_nodes(
@@ -2757,6 +2824,7 @@ def build_single_slide_map(
     # Ключ здесь — id этапа (slugify заголовка), одинаковый в обеих фазах, а не
     # id узла из IdFactory, поэтому читать её рано безопасно.
     key_outputs_table = STAGE_KEY_OUTPUTS.get(spec.key)
+    input_cards_table = STAGE_INPUT_CARDS.get(spec.key, {})
     if descriptions:
         known = {d.node_id for d in drafts}
         for node_id in sorted(descriptions):
@@ -2839,7 +2907,15 @@ def build_single_slide_map(
                 # на шаг «Анализ предупреждений», который планировщик выполняет
                 # сам, значило бы соврать. Поле необязательное (SPEC §3).
                 "groups": group_of_stage.get(stage_id, []),
-                "nodes": [
+                "nodes": input_cards(
+                    input_cards_table.get(stage_id, ()),
+                    members,
+                    container_of[stage_id],
+                    meta,
+                    ids,
+                    slide_no,
+                )
+                + [
                     serialize_node(d)
                     for d in sorted(members, key=lambda d: (d.box.top, d.box.left, d.node_id))
                 ]

@@ -27,6 +27,118 @@
       ],
       "nodes": [
         {
+          "id": "struktura-tekuschih-zapasov-po-uzlam-i-partiyam",
+          "type": "data",
+          "label": "Структура текущих запасов по узлам и партиям",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 103
+          }
+        },
+        {
+          "id": "fakticheskie-otgruzki-za-period",
+          "type": "data",
+          "label": "Фактические отгрузки за период",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 155
+          }
+        },
+        {
+          "id": "ostatki-na-rukah-v-zakaze-i-v-puti",
+          "type": "data",
+          "label": "Остатки на руках, в заказе и в пути",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 216
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 208
+          }
+        },
+        {
+          "id": "svyazki-produkt-lokaciya-i-eshelony-seti",
+          "type": "data",
+          "label": "Связки продукт-локация и эшелоны сети",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 288
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 260
+          }
+        },
+        {
+          "id": "istochniki-postavki-kvoty-i-marshruty",
+          "type": "data",
+          "label": "Источники поставки, квоты и маршруты",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 360
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 313
+          }
+        },
+        {
+          "id": "kalendari-popolneniya-i-proizvodstvennye-kalendari",
+          "type": "data",
+          "label": "Календари пополнения и производственные календари",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 432
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 365
+          }
+        },
+        {
+          "id": "moschnosti-hraneniya-po-temperaturnym-rezhimam",
+          "type": "data",
+          "label": "Мощности хранения по температурным режимам",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 504
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 418
+          }
+        },
+        {
+          "id": "nezakrytyy-spros-i-spisaniya-za-period",
+          "type": "data",
+          "label": "Незакрытый спрос и списания за период",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 576
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 470
+          }
+        },
+        {
           "id": "struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp",
           "type": "data",
           "label": "Структура текущих запасов и фактические отгрузки из ERP",
@@ -64,7 +176,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 74
+            "y": 290
           },
           "slidePosition": {
             "x": 204,
@@ -90,7 +202,7 @@
           "owner": "Владелец мастер-данных (MDM)",
           "position": {
             "x": 710,
-            "y": 74
+            "y": 290
           },
           "slidePosition": {
             "x": 204,
@@ -116,7 +228,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 1124,
-            "y": 74
+            "y": 290
           },
           "slidePosition": {
             "x": 204,
@@ -130,7 +242,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 0
+            "y": 216
           },
           "slidePosition": {
             "x": 486,
@@ -144,7 +256,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 72
+            "y": 288
           },
           "slidePosition": {
             "x": 486,
@@ -158,7 +270,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 144
+            "y": 360
           },
           "slidePosition": {
             "x": 486,

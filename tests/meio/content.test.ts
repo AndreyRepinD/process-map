@@ -64,13 +64,21 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('пять входов и одиннадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(16);
-    expect(labels(data.filter((node) => node.direction === 'in'))).toEqual([...INPUTS].sort());
-    // Кроме двух плашек слайда — карточки-результаты из keyOutputs этапов.
+  it('тринадцать входов и одиннадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(24);
+    for (const label of INPUTS) {
+      expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
+    }
+    // Кроме плашек слайда — карточки-результаты из keyOutputs этапов и
+    // карточки входных данных этапа 1 (решение владельца от 07.09.2026:
+    // «должно быть много», а перечень лежал списком внутри шага).
     for (const label of OUTPUTS) {
       expect(labels(data.filter((node) => node.direction === 'out'))).toContain(label);
     }
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(13);
+    expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
+      'Мощности хранения по температурным режимам',
+    );
     expect(data.filter((node) => node.direction === 'out')).toHaveLength(11);
 
     const stageOf = (label: string): number | undefined =>
