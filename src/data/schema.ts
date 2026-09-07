@@ -277,6 +277,20 @@ export const OverrideEntrySchema = z.object({
   removed: z.literal(true).optional(),
   /** Узел, которого в process.json нет вовсе: он создан правкой. */
   added: AddedNodeSchema.optional(),
+  /**
+   * Связи, проведённые правкой ИЗ ЭТОГО УЗЛА: список id целей.
+   *
+   * ПОЧЕМУ НА УЗЛЕ-ИСТОЧНИКЕ. Ребро принадлежит этапу, а правки устроены как
+   * Record<nodeId, …> — этапа в этом ключе нет. Но у ребра есть источник, и он
+   * узел: храня список целей на источнике, связь выражается без смены формы
+   * хранилища и без второго словаря, который пришлось бы держать в синхроне.
+   *
+   * Оба конца обязаны лежать в ОДНОМ этапе: межэтапные связи рисуются на обзоре
+   * и выводятся из потока, а не задаются вручную (см. loader.ts).
+   */
+  edgesAdded: z.array(z.string()).optional(),
+  /** Связи из process.json, снятые правкой: список id целей. */
+  edgesRemoved: z.array(z.string()).optional(),
 });
 export type OverrideEntry = z.infer<typeof OverrideEntrySchema>;
 

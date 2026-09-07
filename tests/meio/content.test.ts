@@ -92,8 +92,35 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(4);
   });
 
-  it('рёбра внутри этапов: 3 + 5 + 3 + 1', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([3, 5, 3, 1]);
+  it('рёбра внутри этапов: 14 + 12 + 9 + 2', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([14, 12, 9, 2]);
+  });
+
+  it('ни один узел не висит без связей', () => {
+    // Решение владельца от 07.09.2026. Карточки входов и результатов заводились
+    // по образцу карты SNP, где они рёбрами не связаны вовсе. На двух-трёх
+    // карточках это незаметно, на сорока — карта перестаёт показывать, что из
+    // чего считается.
+    for (const stage of map.stages) {
+      const linked = new Set(stage.edges.flatMap((edge) => [edge.source, edge.target]));
+      for (const node of stage.nodes) {
+        expect(linked, `узел «${node.id}» без единой связи`).toContain(node.id);
+      }
+    }
+  });
+
+  it('каждый результат приписан своему шагу, а не последнему подряд', () => {
+    // Умолчание «результаты производит последний шаг этапа» верно для этапа с
+    // одним шагом и врёт для остальных: до правки все три результата этапа 1
+    // приписались «Проверке цепочки на связанность». Производители названы
+    // поимённо в STAGE_WIRING.
+    const stage = map.stages[0];
+    const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
+    const producerOf = (result: string): string | undefined =>
+      labelOf.get(stage?.edges.find((edge) => labelOf.get(edge.target) === result)?.source ?? '');
+    expect(producerOf('Модель данных для расчёта')).toBe('Подготовка данных');
+    expect(producerOf('Отчёт по мастер-данным')).toBe('Проверка мастер-данных');
+    expect(producerOf('Отчёт связности цепочки')).toBe('Проверка цепочки на связанность');
   });
 
   it('обзорные рёбра — линейный поток 1 → 2 → 3 → 4 без обратного', () => {

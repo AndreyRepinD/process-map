@@ -25,6 +25,7 @@ import {
   overridesStorageKey,
   ProcessMapSchema,
   type AddedNode,
+  type Edge,
   type OverrideEntry,
   type Overrides,
   type ProcessMap,
@@ -115,6 +116,58 @@ function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode
   return next;
 }
 
+/** Идентификатор ребра — тот же формат, что у импортёра (scripts/import-pptx.py). */
+function edgeId(source: string, target: string): string {
+  return `e-${source}--${target}`;
+}
+
+/**
+ * Рёбра этапа после правок: снятые убраны, проведённые добавлены.
+ *
+ * ОБА КОНЦА ОБЯЗАНЫ БЫТЬ ЖИВЫ И ЛЕЖАТЬ В ЭТОМ ЖЕ ЭТАПЕ. Межэтапную связь
+ * вручную не проводят: на обзоре она выводится из потока шагов, а нарисованная
+ * поверх — рассказывала бы о процессе то, чего в нём нет.
+ */
+function mergeStageEdges(stage: Stage, overrides: Overrides, alive: Set<string>): Edge[] {
+  const here = new Set(stage.nodes.map((node) => node.id));
+  // СРАВНЕНИЕ ПО ПАРЕ КОНЦОВ, А НЕ ПО id. У рёбер из process.json id свой
+  // (импортёр SNP выдаёт «stage-1-edge-1»), и сверка по вычисленному
+  // «e-источник--цель» не нашла бы такое ребро: снятие молча не срабатывало бы,
+  // а повторное добавление задваивало бы стрелку. Поймано тестом.
+  const pair = (source: string, target: string): string => `${source}\u0000${target}`;
+
+  const removed = new Set<string>();
+  for (const [source, entry] of Object.entries(overrides)) {
+    for (const target of entry.edgesRemoved ?? []) {
+      removed.add(pair(source, target));
+    }
+  }
+
+  const kept = stage.edges.filter(
+    (edge) =>
+      alive.has(edge.source) &&
+      alive.has(edge.target) &&
+      !removed.has(pair(edge.source, edge.target)),
+  );
+  const present = new Set(kept.map((edge) => pair(edge.source, edge.target)));
+
+  const added: Edge[] = [];
+  for (const [source, entry] of Object.entries(overrides)) {
+    if (!here.has(source)) {
+      continue;
+    }
+    for (const target of entry.edgesAdded ?? []) {
+      const key = pair(source, target);
+      if (!here.has(target) || source === target || present.has(key) || removed.has(key)) {
+        continue;
+      }
+      present.add(key);
+      added.push({ id: edgeId(source, target), source, target, kind: 'process' });
+    }
+  }
+  return [...kept, ...added];
+}
+
 /**
  * Узлы, созданные правкой, — их нет в process.json.
  *
@@ -183,7 +236,7 @@ export function mergeOverrides(map: ProcessMap, overrides: Overrides): ProcessMa
     ...map,
     stages: stages.map((stage) => ({
       ...stage,
-      edges: stage.edges.filter((edge) => alive.has(edge.source) && alive.has(edge.target)),
+      edges: mergeStageEdges(stage, overrides, alive),
     })),
   };
 }
@@ -322,6 +375,46 @@ export function addNode(draft: AddedNode, label: string): string {
   const current = readStoredOverrides();
   writeStoredOverrides({ ...current, [id]: { added: draft, label } });
   return id;
+}
+
+/** Проводит связь между двумя узлами ОДНОГО этапа. */
+export function connectNodes(source: string, target: string): Overrides {
+  const current = readStoredOverrides();
+  const entry = current[source] ?? {};
+  const added = new Set(entry.edgesAdded ?? []);
+  added.add(target);
+  const removed = (entry.edgesRemoved ?? []).filter((item) => item !== target);
+  const next: Overrides = {
+    ...current,
+    [source]: { ...entry, edgesAdded: [...added], edgesRemoved: removed },
+  };
+  writeStoredOverrides(next);
+  return next;
+}
+
+/**
+ * Снимает связь.
+ *
+ * Ребро могло прийти и из process.json, и из правки, поэтому нужны оба
+ * действия: убрать из добавленных И записать в снятые. Одного мало — снятие
+ * только из добавленных не тронуло бы ребро из карты, а только запись в снятые
+ * оставила бы его среди добавленных и вернула бы после перезагрузки.
+ */
+export function disconnectNodes(source: string, target: string): Overrides {
+  const current = readStoredOverrides();
+  const entry = current[source] ?? {};
+  const removed = new Set(entry.edgesRemoved ?? []);
+  removed.add(target);
+  const next: Overrides = {
+    ...current,
+    [source]: {
+      ...entry,
+      edgesAdded: (entry.edgesAdded ?? []).filter((item) => item !== target),
+      edgesRemoved: [...removed],
+    },
+  };
+  writeStoredOverrides(next);
+  return next;
 }
 
 /**

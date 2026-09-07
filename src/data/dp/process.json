@@ -186,6 +186,36 @@
           "source": "plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps",
           "target": "podgotovka-sopostavimoy-istorii",
           "kind": "process"
+        },
+        {
+          "id": "e-spravochnik-dfu-i-mapping-sku--proverka-kachestva-dannyh",
+          "source": "spravochnik-dfu-i-mapping-sku",
+          "target": "proverka-kachestva-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-oos-i-deficitov--proverka-kachestva-dannyh",
+          "source": "kalendar-oos-i-deficitov",
+          "target": "proverka-kachestva-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-promo-proshlyh-periodov--proverka-kachestva-dannyh",
+          "source": "kalendar-promo-proshlyh-periodov",
+          "target": "proverka-kachestva-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-proverka-kachestva-dannyh--otchet-kachestva-dannyh",
+          "source": "proverka-kachestva-dannyh",
+          "target": "otchet-kachestva-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-podgotovka-sopostavimoy-istorii--sopostavimaya-istoriya-1-900101",
+          "source": "podgotovka-sopostavimoy-istorii",
+          "target": "sopostavimaya-istoriya-1-900101",
+          "kind": "process"
         }
       ],
       "inputs": [
@@ -438,6 +468,36 @@
           "source": "novinki-pohozhie-tovary",
           "target": "promo-light-prognoz-promo-obemov-opcionalno",
           "kind": "process"
+        },
+        {
+          "id": "e-sopostavimaya-istoriya-1-800200--segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "source": "sopostavimaya-istoriya-1-800200",
+          "target": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-akciy-i-mehanik--segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "source": "kalendar-akciy-i-mehanik",
+          "target": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "kind": "process"
+        },
+        {
+          "id": "e-profil-podobiya-dlya-novinok--segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "source": "profil-podobiya-dlya-novinok",
+          "target": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "kind": "process"
+        },
+        {
+          "id": "e-assortiment-metody-i-chempion--bazovyy-prognoz-s-chempionom-po-serii",
+          "source": "assortiment-metody-i-chempion",
+          "target": "bazovyy-prognoz-s-chempionom-po-serii",
+          "kind": "process"
+        },
+        {
+          "id": "e-promo-light-prognoz-promo-obemov-opcionalno--promo-obemy",
+          "source": "promo-light-prognoz-promo-obemov-opcionalno",
+          "target": "promo-obemy",
+          "kind": "process"
         }
       ],
       "inputs": [],
@@ -603,6 +663,30 @@
           "id": "e-otkrytye-zakazy-i-celevoy-zapas-klienta--sell-out-balans-sell-in",
           "source": "otkrytye-zakazy-i-celevoy-zapas-klienta",
           "target": "sell-out-balans-sell-in",
+          "kind": "process"
+        },
+        {
+          "id": "e-bazovyy-prognoz-s-promo-obemami--pryamye-kanaly-pryamoy-prognoz-sell-in",
+          "source": "bazovyy-prognoz-s-promo-obemami",
+          "target": "pryamye-kanaly-pryamoy-prognoz-sell-in",
+          "kind": "process"
+        },
+        {
+          "id": "e-model-kanala-po-klientam--pryamye-kanaly-pryamoy-prognoz-sell-in",
+          "source": "model-kanala-po-klientam",
+          "target": "pryamye-kanaly-pryamoy-prognoz-sell-in",
+          "kind": "process"
+        },
+        {
+          "id": "e-sell-out-balans-sell-in--prognoz-sell-in-po-kanalam-1-900300",
+          "source": "sell-out-balans-sell-in",
+          "target": "prognoz-sell-in-po-kanalam-1-900300",
+          "kind": "process"
+        },
+        {
+          "id": "e-sell-out-balans-sell-in--prognoznyy-ostatok-i-dni-pokrytiya-u-klienta",
+          "source": "sell-out-balans-sell-in",
+          "target": "prognoznyy-ostatok-i-dni-pokrytiya-u-klienta",
           "kind": "process"
         }
       ],
@@ -773,6 +857,24 @@
           "id": "e-kommercheskie-finansy-konsensus-prognoz-v-dengah--demand-review-meeting",
           "source": "kommercheskie-finansy-konsensus-prognoz-v-dengah",
           "target": "demand-review-meeting",
+          "kind": "process"
+        },
+        {
+          "id": "e-prognoz-sell-in-po-kanalam-1-800400--building-blocks-i-korrektirovki",
+          "source": "prognoz-sell-in-po-kanalam-1-800400",
+          "target": "building-blocks-i-korrektirovki",
+          "kind": "process"
+        },
+        {
+          "id": "e-biblioteka-building-blocks-i-versii--building-blocks-i-korrektirovki",
+          "source": "biblioteka-building-blocks-i-versii",
+          "target": "building-blocks-i-korrektirovki",
+          "kind": "process"
+        },
+        {
+          "id": "e-demand-review-meeting--soglasovannyy-plan-sprosa-sell-in-1-900400",
+          "source": "demand-review-meeting",
+          "target": "soglasovannyy-plan-sprosa-sell-in-1-900400",
           "kind": "process"
         }
       ],
@@ -1049,6 +1151,42 @@
           "id": "e-kontrol-tochnosti-i-fva--analiz-preduprezhdeniy",
           "source": "kontrol-tochnosti-i-fva",
           "target": "analiz-preduprezhdeniy",
+          "kind": "process"
+        },
+        {
+          "id": "e-soglasovannyy-plan-sprosa-sell-in-1-800500--publikaciya-plana-sprosa",
+          "source": "soglasovannyy-plan-sprosa-sell-in-1-800500",
+          "target": "publikaciya-plana-sprosa",
+          "kind": "process"
+        },
+        {
+          "id": "e-porogi-tochnosti-i-pravila-alertov--publikaciya-plana-sprosa",
+          "source": "porogi-tochnosti-i-pravila-alertov",
+          "target": "publikaciya-plana-sprosa",
+          "kind": "process"
+        },
+        {
+          "id": "e-publikaciya-plana-sprosa--opublikovannyy-plan-sprosa-v-snp-i-meio",
+          "source": "publikaciya-plana-sprosa",
+          "target": "opublikovannyy-plan-sprosa-v-snp-i-meio",
+          "kind": "process"
+        },
+        {
+          "id": "e-sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu--reshenie-po-razryvu-s-planom-snp",
+          "source": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+          "target": "reshenie-po-razryvu-s-planom-snp",
+          "kind": "process"
+        },
+        {
+          "id": "e-kontrol-tochnosti-i-fva--kpi-tochnosti-i-fva",
+          "source": "kontrol-tochnosti-i-fva",
+          "target": "kpi-tochnosti-i-fva",
+          "kind": "process"
+        },
+        {
+          "id": "e-analiz-preduprezhdeniy--perechen-preduprezhdeniy-s-prioritetom",
+          "source": "analiz-preduprezhdeniy",
+          "target": "perechen-preduprezhdeniy-s-prioritetom",
           "kind": "process"
         }
       ],

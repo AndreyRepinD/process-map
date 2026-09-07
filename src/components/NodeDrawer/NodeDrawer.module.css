@@ -306,3 +306,55 @@
   outline: none;
   text-decoration: underline;
 }
+
+/* ── Связи узла ───────────────────────────────────────────────────────────── */
+.edgeList {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  gap: var(--scp-spacing-xs);
+  list-style: none;
+}
+
+.edgeItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--pm-space-6) var(--pm-space-10);
+  border-radius: var(--scp-radius-button);
+  background: var(--scp-background-secondary);
+  gap: var(--scp-spacing-sm);
+}
+
+.edgeLabel {
+  overflow: hidden;
+  color: var(--scp-content-primary);
+  font-size: var(--pm-font-size-12-5);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.edgeRemove {
+  flex: none;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--scp-color-error-600);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-11);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.edgeAdd {
+  display: flex;
+  align-items: flex-end;
+  margin-top: var(--scp-spacing-sm);
+  gap: var(--scp-spacing-sm);
+}
+
+.edgeAdd .formLabel {
+  flex: 1;
+  min-width: 0;
+}
