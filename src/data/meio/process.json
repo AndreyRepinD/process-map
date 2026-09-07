@@ -11,9 +11,20 @@
       "title": "Получение данных",
       "shortTitle": "Получение данных",
       "keyOutputs": [
-        "Модель данных для расчёта"
+        "Модель данных для расчёта",
+        "Отчёт по мастер-данным",
+        "Отчёт связности цепочки"
       ],
-      "groups": [],
+      "groups": [
+        {
+          "id": "sbor-dannyh",
+          "label": "Сбор данных"
+        },
+        {
+          "id": "proverki",
+          "label": "Проверки"
+        }
+      ],
       "nodes": [
         {
           "id": "struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp",
@@ -23,7 +34,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 72
           },
           "slidePosition": {
             "x": 10,
@@ -34,22 +45,124 @@
           "id": "podgotovka-dannyh",
           "type": "step",
           "label": "Подготовка данных",
-          "description": "Анализ структуры текущих запасов и фактических отгрузок за период; формирование модели данных для расчёта.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
+          "description": "Сбор и приведение исходных данных к модели, на которой считает оптимизатор: структура текущих запасов по узлам и партиям, фактические отгрузки за период, остатки на руках, в заказе и в пути. Сюда же — устройство сети: связки продукт-локация и эшелоны, источники поставки, квоты и маршруты, календари пополнения и производства.\n\nМощности хранения по температурным режимам берутся здесь же: для охлаждённой и замороженной продукции холод — конечный ресурс, и уровень запаса, который в него не помещается, нереализуем. Незакрытый спрос и списания нужны, чтобы отличать фактическую отгрузку от фактического спроса.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
+          "group": "sbor-dannyh",
           "inputs": [
-            "Анализ структуры текущих запасов",
-            "Фактические отгрузки за период"
+            "Структура текущих запасов по узлам и партиям",
+            "Фактические отгрузки за период",
+            "Остатки на руках, в заказе и в пути",
+            "Связки продукт-локация и эшелоны сети",
+            "Источники поставки, квоты и маршруты",
+            "Календари пополнения и производственные календари",
+            "Мощности хранения по температурным режимам",
+            "Незакрытый спрос и списания за период"
           ],
           "outputs": [
-            "Модель данных для расчёта"
+            "Модель данных для расчёта",
+            "Профиль запасов по эшелонам"
           ],
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 2
+            "y": 74
           },
           "slidePosition": {
             "x": 204,
             "y": 109
+          }
+        },
+        {
+          "id": "proverka-master-dannyh",
+          "type": "step",
+          "label": "Проверка мастер-данных",
+          "description": "Первая из двух проверок: справочники. Полнота карточек товара и локаций, единицы измерения и кратности, дубли и неактуальные записи, атрибуты сроков годности и температурных режимов.\n\nОтвечает на вопрос «корректны ли сами данные», отдельно от вопроса «сходится ли из них цепочка». Разводить их важно: ошибка в карточке чинится в мастер-данных, разрыв в цепочке — в схеме снабжения, и это разные владельцы и разные сроки.",
+          "group": "proverki",
+          "inputs": [
+            "Полнота карточек товара и локаций",
+            "Единицы измерения и кратности",
+            "Дубли и неактуальные записи",
+            "Атрибуты сроков годности и температурных режимов"
+          ],
+          "outputs": [
+            "Отчёт по мастер-данным",
+            "Перечень записей к исправлению"
+          ],
+          "owner": "Владелец мастер-данных (MDM)",
+          "position": {
+            "x": 710,
+            "y": 74
+          },
+          "slidePosition": {
+            "x": 204,
+            "y": 395
+          }
+        },
+        {
+          "id": "proverka-cepochki-na-svyazannost",
+          "type": "step",
+          "label": "Проверка цепочки на связанность",
+          "description": "Вторая проверка: сходится ли из данных сама цепочка. У каждой связки продукт-локация обязан быть источник поставки, между эшелонами не должно быть разрывов, квоты и маршруты заданы для всех связей, лидтаймы проставлены по всем дугам.\n\nЭто проверка ГРАФА, а не записей: узел без источника не выпадает с ошибкой, он молча выпадает из расчёта — оптимизатору некуда распространять спрос вверх по сети. Такой пропуск виден только здесь, до прогона.",
+          "group": "proverki",
+          "inputs": [
+            "У каждой связки продукт-локация есть источник поставки",
+            "Нет разрывов между эшелонами",
+            "Квоты и маршруты заданы для всех связей",
+            "Лидтаймы проставлены по всем дугам"
+          ],
+          "outputs": [
+            "Отчёт связности цепочки",
+            "Перечень разрывов"
+          ],
+          "owner": "Планер запасов",
+          "position": {
+            "x": 1124,
+            "y": 74
+          },
+          "slidePosition": {
+            "x": 204,
+            "y": 574
+          }
+        },
+        {
+          "id": "model-dannyh-dlya-rascheta",
+          "type": "data",
+          "label": "Модель данных для расчёта",
+          "direction": "out",
+          "position": {
+            "x": 1538,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 486,
+            "y": 103
+          }
+        },
+        {
+          "id": "otchet-po-master-dannym",
+          "type": "data",
+          "label": "Отчёт по мастер-данным",
+          "direction": "out",
+          "position": {
+            "x": 1538,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 486,
+            "y": 176
+          }
+        },
+        {
+          "id": "otchet-svyaznosti-cepochki",
+          "type": "data",
+          "label": "Отчёт связности цепочки",
+          "direction": "out",
+          "position": {
+            "x": 1538,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 486,
+            "y": 250
           }
         }
       ],
@@ -58,6 +171,18 @@
           "id": "e-struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp--podgotovka-dannyh",
           "source": "struktura-tekuschih-zapasov-i-fakticheskie-otgruzki-iz-erp",
           "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-podgotovka-dannyh--proverka-master-dannyh",
+          "source": "podgotovka-dannyh",
+          "target": "proverka-master-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-proverka-master-dannyh--proverka-cepochki-na-svyazannost",
+          "source": "proverka-master-dannyh",
+          "target": "proverka-cepochki-na-svyazannost",
           "kind": "process"
         }
       ],
@@ -205,6 +330,34 @@
             "x": 10,
             "y": 615
           }
+        },
+        {
+          "id": "nastroennye-parametry-rascheta",
+          "type": "data",
+          "label": "Настроенные параметры расчёта",
+          "direction": "out",
+          "position": {
+            "x": 1124,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 756,
+            "y": 103
+          }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam",
+          "type": "data",
+          "label": "Сегментация по пяти признакам",
+          "direction": "out",
+          "position": {
+            "x": 1124,
+            "y": 144
+          },
+          "slidePosition": {
+            "x": 756,
+            "y": 176
+          }
         }
       ],
       "edges": [
@@ -310,7 +463,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 0,
-            "y": 2
+            "y": 74
           },
           "slidePosition": {
             "x": 744,
@@ -335,7 +488,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 414,
-            "y": 2
+            "y": 74
           },
           "slidePosition": {
             "x": 744,
@@ -350,11 +503,39 @@
           "system": "INPLAN",
           "position": {
             "x": 828,
-            "y": 0
+            "y": 144
           },
           "slidePosition": {
             "x": 744,
             "y": 486
+          }
+        },
+        {
+          "id": "optimizacionnyy-raschet-raspredeleniya-zapasov-po-eshelonam-v-razreze",
+          "type": "data",
+          "label": "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период",
+          "direction": "out",
+          "position": {
+            "x": 828,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 1026,
+            "y": 103
+          }
+        },
+        {
+          "id": "tri-scenariya",
+          "type": "data",
+          "label": "Три сценария",
+          "direction": "out",
+          "position": {
+            "x": 828,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 1026,
+            "y": 176
           }
         }
       ],
@@ -419,7 +600,7 @@
           "owner": "Планер запасов совместно с финансами",
           "position": {
             "x": 0,
-            "y": 2
+            "y": 38
           },
           "slidePosition": {
             "x": 1015,
@@ -433,11 +614,25 @@
           "direction": "out",
           "position": {
             "x": 414,
-            "y": 0
+            "y": 72
           },
           "slidePosition": {
             "x": 1015,
             "y": 236
+          }
+        },
+        {
+          "id": "kompleksnaya-ocenka-effektov-i-parametrov-postavok-na-osnove-treh",
+          "type": "data",
+          "label": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев",
+          "direction": "out",
+          "position": {
+            "x": 414,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 1297,
+            "y": 103
           }
         }
       ],
@@ -455,12 +650,6 @@
   ],
   "overviewEdges": [
     {
-      "id": "ov-stage-1-poluchenie-dannyh--stage-2-podgotovka-k-raschetu",
-      "source": "stage-1-poluchenie-dannyh",
-      "target": "stage-2-podgotovka-k-raschetu",
-      "kind": "process"
-    },
-    {
       "id": "ov-stage-2-podgotovka-k-raschetu--stage-3-raschet-i-analiz",
       "source": "stage-2-podgotovka-k-raschetu",
       "target": "stage-3-raschet-i-analiz",
@@ -470,6 +659,12 @@
       "id": "ov-stage-3-raschet-i-analiz--stage-4-ocenka-effektov",
       "source": "stage-3-raschet-i-analiz",
       "target": "stage-4-ocenka-effektov",
+      "kind": "process"
+    },
+    {
+      "id": "ov-stage-1-poluchenie-dannyh--stage-2-podgotovka-k-raschetu",
+      "source": "stage-1-poluchenie-dannyh",
+      "target": "stage-2-podgotovka-k-raschetu",
       "kind": "process"
     },
     {

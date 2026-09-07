@@ -1,5 +1,7 @@
 [
   "podgotovka-dannyh",
+  "proverka-master-dannyh",
+  "proverka-cepochki-na-svyazannost",
   "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
   "segmentaciya",
   "raschet-rekomendaciy-po-urovnyam-zapasov",

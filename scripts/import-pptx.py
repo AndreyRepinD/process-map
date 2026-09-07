@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "6baf5a09ccbfd30760bc4f71f5d450cfcf6153d6878cd46d19beb35f558049d5"
+MAP_DATA_FINGERPRINT_DP = "07dc7b991311595d842aba7c63ac3a3ffe61e98022c3abeab9cdd53d00292dd6"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "201616f64d8bd2e4f20197d033211213fe87379c97589b34b17202f16c434288"
+MAP_DATA_FINGERPRINT_MEIO = "f5cf3c9f33a1f580fe0a3f9d913a1418705a5d90c31bbe7247c98926128b27cb"
 
 
 @dataclass(frozen=True)
@@ -1912,6 +1912,15 @@ def choose_key_outputs(
 # презентаций и меняться не должно.
 STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
     "dp": {
+        "proverka-kachestva-dannyh": (
+            "Гейт качества ДО прогона: полнота истории и пропуски, новые и изменённые DFU "
+            "и маппинг SKU, единицы измерения, дубли и отрицательные значения. При отказе "
+            "запуск расчёта блокируется.\n\n"
+            "Стоит ПЕРЕД очисткой намеренно: очистка уже предполагает, что данные пришли "
+            "и пригодны. Ошибка маппинга или пропуск месяца, пойманные после прогона, "
+            "означают выброшенный цикл.\n\n"
+            "BPMN: DP-010 — Подготовка данных"
+        ),
         "podgotovka-sopostavimoy-istorii": (
             "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, "
             "промо, ML-очистка. Перенос истории при смене схемы, замена SKU через DFU, "
@@ -1992,9 +2001,34 @@ STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
     },
     "meio": {
         "podgotovka-dannyh": (
-            "Анализ структуры текущих запасов и фактических отгрузок за период; "
-            "формирование модели данных для расчёта.\n\n"
+            "Сбор и приведение исходных данных к модели, на которой считает оптимизатор: "
+            "структура текущих запасов по узлам и партиям, фактические отгрузки за "
+            "период, остатки на руках, в заказе и в пути. Сюда же — устройство сети: "
+            "связки продукт-локация и эшелоны, источники поставки, квоты и маршруты, "
+            "календари пополнения и производства.\n\n"
+            "Мощности хранения по температурным режимам берутся здесь же: для охлаждённой "
+            "и замороженной продукции холод — конечный ресурс, и уровень запаса, который "
+            "в него не помещается, нереализуем. Незакрытый спрос и списания нужны, чтобы "
+            "отличать фактическую отгрузку от фактического спроса.\n\n"
             "BPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)"
+        ),
+        "proverka-master-dannyh": (
+            "Первая из двух проверок: справочники. Полнота карточек товара и локаций, "
+            "единицы измерения и кратности, дубли и неактуальные записи, атрибуты сроков "
+            "годности и температурных режимов.\n\n"
+            "Отвечает на вопрос «корректны ли сами данные», отдельно от вопроса «сходится "
+            "ли из них цепочка». Разводить их важно: ошибка в карточке чинится в "
+            "мастер-данных, разрыв в цепочке — в схеме снабжения, и это разные владельцы "
+            "и разные сроки."
+        ),
+        "proverka-cepochki-na-svyazannost": (
+            "Вторая проверка: сходится ли из данных сама цепочка. У каждой связки "
+            "продукт-локация обязан быть источник поставки, между эшелонами не должно "
+            "быть разрывов, квоты и маршруты заданы для всех связей, лидтаймы проставлены "
+            "по всем дугам.\n\n"
+            "Это проверка ГРАФА, а не записей: узел без источника не выпадает с ошибкой, "
+            "он молча выпадает из расчёта — оптимизатору некуда распространять спрос "
+            "вверх по сети. Такой пропуск виден только здесь, до прогона."
         ),
         "nastroyka-parametrov-dlya-rascheta-urovney-zapasov": (
             "Настройка параметров расчёта: плановые лидтаймы и отклонения, квоты, спрос и "
@@ -2051,6 +2085,10 @@ STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
 # контейнер уже́ CONTAINER_MIN_WIDTH и импортёром за контейнер не считается.
 STEP_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "dp": {
+        "proverka-kachestva-dannyh": (
+            "Отчёт качества данных",
+            "Перечень отклонений для исправления",
+        ),
         "podgotovka-sopostavimoy-istorii": (
             "Сопоставимая история",
             "Список исключений планера",
@@ -2101,6 +2139,15 @@ STEP_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "meio": {
         "podgotovka-dannyh": (
             "Модель данных для расчёта",
+            "Профиль запасов по эшелонам",
+        ),
+        "proverka-master-dannyh": (
+            "Отчёт по мастер-данным",
+            "Перечень записей к исправлению",
+        ),
+        "proverka-cepochki-na-svyazannost": (
+            "Отчёт связности цепочки",
+            "Перечень разрывов",
         ),
         "nastroyka-parametrov-dlya-rascheta-urovney-zapasov": (
             "Настроенные параметры расчёта",
@@ -2146,6 +2193,10 @@ STAGE_GROUPS: dict[str, dict[str, tuple[tuple[str, tuple[str, ...]], ...]]] = {
         ),
     },
     "meio": {
+        "stage-1-poluchenie-dannyh": (
+            ("Сбор данных", ("podgotovka-dannyh",)),
+            ("Проверки", ("proverka-master-dannyh", "proverka-cepochki-na-svyazannost",)),
+        ),
         "stage-2-podgotovka-k-raschetu": (
             ("Параметры расчёта", ("nastroyka-parametrov-dlya-rascheta-urovney-zapasov",)),
             ("Сегментация", ("segmentaciya",)),
@@ -2160,6 +2211,7 @@ STAGE_GROUPS: dict[str, dict[str, tuple[tuple[str, tuple[str, ...]], ...]]] = {
 STAGE_KEY_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "dp": {
         "stage-1-podgotovka-istorii": (
+            "Отчёт качества данных",
             "Сопоставимая история",
         ),
         "stage-2-raschet-prognoza": (
@@ -2182,6 +2234,8 @@ STAGE_KEY_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "meio": {
         "stage-1-poluchenie-dannyh": (
             "Модель данных для расчёта",
+            "Отчёт по мастер-данным",
+            "Отчёт связности цепочки",
         ),
         "stage-2-podgotovka-k-raschetu": (
             "Настроенные параметры расчёта",
@@ -2231,6 +2285,57 @@ def is_artifact_box(shape: Shape) -> bool:
     прогон существующего build_stage давал 17 узлов и НОЛЬ data-узлов.
     """
     return shape.kind == "auto" and shape.has_text and shape.fill == ARTIFACT_FILL
+
+
+def result_nodes(
+    key_outputs: Sequence[str],
+    members: Sequence[NodeDraft],
+    container: Shape,
+    meta: dict,
+    ids: IdFactory,
+    slide_no: int,
+) -> list[dict]:
+    """
+    Ключевые выходы этапа — отдельными карточками в колонке выходов.
+
+    ЗАЧЕМ. На обзоре «Ключевые выходы» видно на карточке этапа, а на экране
+    самого этапа результата не было видно вовсе: только шаги и колонка входов.
+    Решение владельца от 07.09.2026 — показывать, что этап даёт, там же, где
+    показано, что он делает.
+
+    ЭТО НЕ НОВОЕ СОДЕРЖАНИЕ. Подписи берутся из тех же keyOutputs, которые уже
+    согласованы и заморожены, поэтому карточка этапа и колонка выходов говорят
+    дословно одно и то же. Тот же приём, что у карты SNP: там выходные data-узлы
+    и keyOutputs совпадают подпись в подпись, и рёбрами такие узлы НЕ связаны —
+    они стоят в колонке выходов как результат этапа, а не как шаг потока.
+
+    Выход, который на слайде уже нарисован плашкой-артефактом, второй раз не
+    заводится: иначе «Передача плана в SNP и MEIO» задвоилась бы.
+    """
+    existing = {d.label for d in members if d.direction == "out"}
+    nodes: list[dict] = []
+    for index, label in enumerate(key_outputs):
+        if label in existing:
+            continue
+        # sid синтетический и детерминированный: он уходит в IdFactory только как
+        # различитель при коллизии базового slug'а, а порядок обхода на него не
+        # влияет — как и у фигур слайда.
+        sid = 900_000 + meta["number"] * 100 + index
+        node_id = ids.make(label, slide_no, sid)
+        left = container.box.right + 200_000
+        top = container.box.top + index * 700_000
+        position = {"x": round(left / EMU_PER_PX), "y": round(top / EMU_PER_PX)}
+        nodes.append(
+            {
+                "id": node_id,
+                "type": "data",
+                "label": label,
+                "direction": "out",
+                "position": dict(position),
+                "slidePosition": position,
+            }
+        )
+    return nodes
 
 
 def build_single_slide_map(
@@ -2603,6 +2708,10 @@ def build_single_slide_map(
     #     выдаёт временные id вида «base~1», поэтому сверка таблицы с узлами там
     #     заведомо не сойдётся. collisions is None — признак первой фазы.
     descriptions = STEP_DESCRIPTIONS.get(spec.key, {}) if collisions is not None else {}
+    # НЕ под условием фазы, в отличие от описаний: из этой таблицы рождаются
+    # узлы-результаты, то есть от неё зависит подсчёт коллизий id в первой фазе.
+    # Ключ здесь — id этапа (slugify заголовка), одинаковый в обеих фазах, а не
+    # id узла из IdFactory, поэтому читать её рано безопасно.
     key_outputs_table = STAGE_KEY_OUTPUTS.get(spec.key)
     if descriptions:
         known = {d.node_id for d in drafts}
@@ -2656,6 +2765,7 @@ def build_single_slide_map(
         group_of_stage[stage_key] = bucket
 
     # 8. Сборка этапов.
+    container_of = {stage_id: shape for shape, stage_id in stage_containers}
     stages: list[dict] = []
     for meta in stage_meta:
         stage_id = meta["id"]
@@ -2688,7 +2798,8 @@ def build_single_slide_map(
                 "nodes": [
                     serialize_node(d)
                     for d in sorted(members, key=lambda d: (d.box.top, d.box.left, d.node_id))
-                ],
+                ]
+                + result_nodes(key_outputs, members, container_of[stage_id], meta, ids, slide_no),
                 "edges": stage_edges[stage_id],
                 "inputs": stage_io[stage_id][0],
                 "outputs": stage_io[stage_id][1],
