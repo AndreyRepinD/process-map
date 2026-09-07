@@ -10,7 +10,8 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useFrameSize } from '../../hooks/useFrameSize';
-import { useProcessMap } from '../../hooks/useProcessMap';
+import { moveNode } from '../../data/loader';
+import { commitOverrides, useProcessMap } from '../../hooks/useProcessMap';
 import { ru } from '../../i18n/ru';
 import { useProcessStore } from '../../store/useProcessStore';
 import { Breadcrumbs } from '../Breadcrumbs';
@@ -72,6 +73,7 @@ const proOptions = { hideAttribution: true };
 
 export function StageDetail() {
   const currentStageId = useProcessStore((state) => state.currentStageId);
+  const mode = useProcessStore((state) => state.mode);
   const showIntegrations = useProcessStore((state) => state.showIntegrations);
   const selectedNodeId = useProcessStore((state) => state.selectedNodeId);
 
@@ -128,7 +130,16 @@ export function StageDetail() {
               edges={graph.edges}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
-              nodesDraggable={false}
+              // ПЕРЕТАСКИВАНИЕ ТОЛЬКО В РЕДАКТОРЕ (решение владельца от
+              // 07.09.2026). Правило «узлы не перетаскиваются» вводилось для
+              // читателя вики: там таскать нечего и незачем, а сдвинутая
+              // карточка выглядела бы сломанной вёрсткой. Владельцу карты
+              // раскладку править нужно, и его правки живут в overrides —
+              // пересчёт координат конвейером их не затирает.
+              nodesDraggable={mode === 'edit'}
+              onNodeDragStop={(_, dragged) => {
+                commitOverrides(() => moveNode(dragged.id, dragged.position));
+              }}
               nodesConnectable={false}
               elementsSelectable={false}
               // Фокус несут <button> карточек узлов (см. overviewGraph.ts).
