@@ -23,7 +23,11 @@ const STAGE_TITLES = [
 const STEPS_BY_STAGE: string[][] = [
   ['Подготовка данных', 'Проверка мастер-данных', 'Проверка цепочки на связанность'],
   ['Настройка параметров для расчёта уровней запасов', 'Сегментация'],
-  ['Расчёт рекомендаций по уровням запасов', 'Анализ полученных значений'],
+  [
+    'Расчёт рекомендаций по уровням запасов',
+    'Анализ полученных значений',
+    'Анализ предупреждений расчёта',
+  ],
   ['Оценка эффектов'],
 ];
 
@@ -50,8 +54,8 @@ describe('карта MEIO: четыре этапа', () => {
 });
 
 describe('карта MEIO: содержание', () => {
-  it('восемь шагов, по этапам, дословно', () => {
-    expect(steps).toHaveLength(8);
+  it('девять шагов, по этапам, дословно', () => {
+    expect(steps).toHaveLength(9);
     for (const [index, stage] of map.stages.entries()) {
       expect(
         labels(stage.nodes.filter((node) => node.type !== 'data')),
@@ -60,14 +64,14 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('пять входов и десять выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(15);
+  it('пять входов и одиннадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(16);
     expect(labels(data.filter((node) => node.direction === 'in'))).toEqual([...INPUTS].sort());
     // Кроме двух плашек слайда — карточки-результаты из keyOutputs этапов.
     for (const label of OUTPUTS) {
       expect(labels(data.filter((node) => node.direction === 'out'))).toContain(label);
     }
-    expect(data.filter((node) => node.direction === 'out')).toHaveLength(10);
+    expect(data.filter((node) => node.direction === 'out')).toHaveLength(11);
 
     const stageOf = (label: string): number | undefined =>
       map.stages.find((stage) => stage.nodes.some((node) => node.label === label))?.number;
@@ -80,8 +84,8 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(4);
   });
 
-  it('рёбра внутри этапов: 3 + 5 + 2 + 1', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([3, 5, 2, 1]);
+  it('рёбра внутри этапов: 3 + 5 + 3 + 1', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([3, 5, 3, 1]);
   });
 
   it('обзорные рёбра — линейный поток 1 → 2 → 3 → 4 без обратного', () => {
@@ -156,6 +160,7 @@ describe('карта MEIO: содержание', () => {
       [
         'Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период',
         'Три сценария',
+        'Перечень предупреждений расчёта',
       ],
       ['Комплексная оценка эффектов и параметров поставок на основе трёх сценариев'],
     ]);
@@ -230,8 +235,8 @@ describe('карта MEIO: содержание', () => {
       expect(step.outputs, `шаг «${step.id}» без выходов`).toBeTruthy();
       expect(step.owner, `шаг «${step.id}» без ответственного`).toBeTruthy();
     }
-    expect(steps.filter((step) => step.outputs !== undefined)).toHaveLength(8);
-    expect(steps.filter((step) => step.owner !== undefined)).toHaveLength(8);
+    expect(steps.filter((step) => step.outputs !== undefined)).toHaveLength(9);
+    expect(steps.filter((step) => step.owner !== undefined)).toHaveLength(9);
 
     expect(
       nodes.find((node) => node.id === 'raschet-rekomendaciy-po-urovnyam-zapasov')?.outputs,
@@ -248,7 +253,7 @@ describe('карта MEIO: содержание', () => {
   it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
     // Импортёру запрещено отдавать owner (самопроверка serialize_node), поэтому
     // поле живёт в этом файле и восстанавливается carry_over_manual_fields.
-    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(8);
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(9);
   });
 
   it('warningsCount не проставлен', () => {

@@ -44,6 +44,7 @@ const STEPS_BY_STAGE: string[][] = [
     'Публикация плана спроса',
     'Сверка с ограниченным планом SNP и решение по разрыву',
     'Контроль точности и FVA',
+    'Анализ предупреждений',
   ],
 ];
 
@@ -82,12 +83,12 @@ describe('карта DP: пять этапов', () => {
 });
 
 describe('карта DP: содержание', () => {
-  it('тринадцать шагов, по этапам, дословно', () => {
+  it('четырнадцать шагов, по этапам, дословно', () => {
     // Было десять. Этап 5 разделён на три шага решением владельца от 07.09.2026:
     // публикация, сверка с ограниченным планом SNP и контроль точности — разные
     // вопросы к разным владельцам, и держать их одним шагом значило смешивать
     // выполнимость с точностью.
-    expect(steps).toHaveLength(13);
+    expect(steps).toHaveLength(14);
     for (const [index, stage] of map.stages.entries()) {
       expect(
         labels(stage.nodes.filter((node) => node.type !== 'data')),
@@ -96,14 +97,14 @@ describe('карта DP: содержание', () => {
     }
   });
 
-  it('восемь входов и одиннадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(19);
+  it('восемь входов и двенадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(20);
     expect(labels(data.filter((node) => node.direction === 'in'))).toEqual([...INPUTS].sort());
     // Выходов больше, чем плашек на слайде: к единственной плашке-передаче
     // добавились карточки-результаты, порождённые из keyOutputs этапов
     // (решение владельца от 07.09.2026, приём карты SNP).
     expect(labels(data.filter((node) => node.direction === 'out'))).toContain(OUTPUT);
-    expect(data.filter((node) => node.direction === 'out')).toHaveLength(11);
+    expect(data.filter((node) => node.direction === 'out')).toHaveLength(12);
 
     const stageOf = (label: string): number | undefined =>
       map.stages.find((stage) => stage.nodes.some((node) => node.label === label))?.number;
@@ -121,11 +122,11 @@ describe('карта DP: содержание', () => {
     expect(stageOf(OUTPUT)).toBe(5);
   });
 
-  it('рёбра внутри этапов: 3 + 5 + 2 + 3 + 4', () => {
+  it('рёбра внутри этапов: 3 + 5 + 2 + 3 + 5', () => {
     // «Прямые каналы» и «Sell-Out → баланс → Sell-In» по-прежнему параллельны и
     // между собой не связаны; два ребра этапа 3 — это связи плашек-входов со
     // своим шагом, а не поток между шагами.
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([3, 5, 2, 3, 4]);
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([3, 5, 2, 3, 5]);
   });
 
   it('поток 1 → 2 → 3 → 4 → 5 и ОБРАТНАЯ связь 5 → 2 по точности', () => {
@@ -199,6 +200,7 @@ describe('карта DP: содержание', () => {
         'Опубликованный план спроса в SNP и MEIO',
         'Решение по разрыву с планом SNP',
         'KPI точности и FVA',
+        'Перечень предупреждений с приоритетом',
       ],
     ]);
   });
@@ -274,8 +276,8 @@ describe('карта DP: содержание', () => {
       expect(step.outputs?.length, `шаг «${step.id}»`).toBeGreaterThan(0);
       expect(step.owner, `шаг «${step.id}» без ответственного`).toBeTruthy();
     }
-    expect(steps.filter((step) => step.outputs !== undefined)).toHaveLength(13);
-    expect(steps.filter((step) => step.owner !== undefined)).toHaveLength(13);
+    expect(steps.filter((step) => step.outputs !== undefined)).toHaveLength(14);
+    expect(steps.filter((step) => step.owner !== undefined)).toHaveLength(14);
 
     // Дословно, из согласованного authoring source.
     expect(nodes.find((node) => node.id === 'kontrol-tochnosti-i-fva')?.outputs).toEqual([
@@ -294,7 +296,7 @@ describe('карта DP: содержание', () => {
     // как переносимое поле). Значит ответственные живут в этом файле и
     // восстанавливаются carry_over_manual_fields по id при каждом npm run data.
     // Тест сторожит, что их не стёрли очередной перегенерацией.
-    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(13);
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(14);
   });
 
   it('warningsCount не проставлен', () => {

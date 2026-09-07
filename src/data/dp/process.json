@@ -647,7 +647,8 @@
       "keyOutputs": [
         "Опубликованный план спроса в SNP и MEIO",
         "Решение по разрыву с планом SNP",
-        "KPI точности и FVA"
+        "KPI точности и FVA",
+        "Перечень предупреждений с приоритетом"
       ],
       "groups": [
         {
@@ -678,7 +679,7 @@
           "owner": "Планер спроса",
           "position": {
             "x": 296,
-            "y": 110
+            "y": 146
           },
           "slidePosition": {
             "x": 1069,
@@ -704,7 +705,7 @@
           "owner": "Руководитель планирования спроса",
           "position": {
             "x": 710,
-            "y": 68
+            "y": 104
           },
           "slidePosition": {
             "x": 1069,
@@ -731,7 +732,7 @@
           "owner": "Методолог планирования спроса",
           "position": {
             "x": 710,
-            "y": 152
+            "y": 188
           },
           "slidePosition": {
             "x": 1069,
@@ -739,14 +740,25 @@
           }
         },
         {
-          "id": "peredacha-neogranichennogo-plana-sprosa-v-snp-i-meio",
-          "type": "data",
-          "label": "Передача неограниченного плана спроса в SNP и MEIO",
-          "direction": "out",
-          "system": "INPLAN",
+          "id": "analiz-preduprezhdeniy",
+          "type": "warning",
+          "label": "Анализ предупреждений",
+          "description": "Разбор предупреждений цикла: точность ниже порога по FA или BIAS, разрыв с ограниченным планом SNP, прогноз без истории по новому DFU, ручная корректировка без обоснования.\n\nПриоритет предупреждения — по бизнес-эффекту, а не по величине отклонения: строка без ожидаемого эффекта в рублях и без владельца не работа, а шум.",
+          "group": "sverka-i-kontrol",
+          "inputs": [
+            "Предупреждение: точность ниже порога по FA или BIAS",
+            "Предупреждение: разрыв с ограниченным планом SNP",
+            "Предупреждение: прогноз без истории по новому DFU",
+            "Предупреждение: ручная корректировка без обоснования"
+          ],
+          "outputs": [
+            "Перечень предупреждений с приоритетом",
+            "Решения по отработке"
+          ],
+          "owner": "Планер спроса",
           "position": {
             "x": 1124,
-            "y": 216
+            "y": 188
           },
           "slidePosition": {
             "x": 1069,
@@ -761,11 +773,26 @@
           "system": "INPLAN",
           "position": {
             "x": 0,
-            "y": 108
+            "y": 144
           },
           "slidePosition": {
             "x": 10,
             "y": 615
+          }
+        },
+        {
+          "id": "peredacha-neogranichennogo-plana-sprosa-v-snp-i-meio",
+          "type": "data",
+          "label": "Передача неограниченного плана спроса в SNP и MEIO",
+          "direction": "out",
+          "system": "INPLAN",
+          "position": {
+            "x": 1538,
+            "y": 288
+          },
+          "slidePosition": {
+            "x": 1069,
+            "y": 845
           }
         },
         {
@@ -774,7 +801,7 @@
           "label": "Опубликованный план спроса в SNP и MEIO",
           "direction": "out",
           "position": {
-            "x": 1124,
+            "x": 1538,
             "y": 0
           },
           "slidePosition": {
@@ -788,7 +815,7 @@
           "label": "Решение по разрыву с планом SNP",
           "direction": "out",
           "position": {
-            "x": 1124,
+            "x": 1538,
             "y": 72
           },
           "slidePosition": {
@@ -802,12 +829,26 @@
           "label": "KPI точности и FVA",
           "direction": "out",
           "position": {
-            "x": 1124,
+            "x": 1538,
             "y": 144
           },
           "slidePosition": {
             "x": 1297,
             "y": 250
+          }
+        },
+        {
+          "id": "perechen-preduprezhdeniy-s-prioritetom",
+          "type": "data",
+          "label": "Перечень предупреждений с приоритетом",
+          "direction": "out",
+          "position": {
+            "x": 1538,
+            "y": 216
+          },
+          "slidePosition": {
+            "x": 1297,
+            "y": 323
           }
         }
       ],
@@ -834,6 +875,12 @@
           "id": "e-poluchenie-ogranichennogo-prognoza-iz-modulya-snp--sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
           "source": "poluchenie-ogranichennogo-prognoza-iz-modulya-snp",
           "target": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+          "kind": "process"
+        },
+        {
+          "id": "e-kontrol-tochnosti-i-fva--analiz-preduprezhdeniy",
+          "source": "kontrol-tochnosti-i-fva",
+          "target": "analiz-preduprezhdeniy",
           "kind": "process"
         }
       ],
