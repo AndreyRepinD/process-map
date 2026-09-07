@@ -33,7 +33,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 616
           },
           "slidePosition": {
             "x": 0,
@@ -47,7 +47,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 0
           },
           "slidePosition": {
             "x": 0,
@@ -61,7 +61,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 216
+            "y": 440
           },
           "slidePosition": {
             "x": 0,
@@ -75,7 +75,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 288
+            "y": 704
           },
           "slidePosition": {
             "x": 0,
@@ -89,7 +89,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 360
+            "y": 88
           },
           "slidePosition": {
             "x": 0,
@@ -103,7 +103,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 432
+            "y": 176
           },
           "slidePosition": {
             "x": 0,
@@ -117,7 +117,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 504
+            "y": 264
           },
           "slidePosition": {
             "x": 0,
@@ -131,7 +131,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 576
+            "y": 352
           },
           "slidePosition": {
             "x": 0,
@@ -146,7 +146,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 528
           },
           "slidePosition": {
             "x": 10,
@@ -176,7 +176,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 290
+            "y": 354
           },
           "slidePosition": {
             "x": 204,
@@ -205,7 +205,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 290
+            "y": 303
           },
           "slidePosition": {
             "x": 204,
@@ -234,7 +234,7 @@
           ],
           "position": {
             "x": 1124,
-            "y": 290
+            "y": 295
           },
           "slidePosition": {
             "x": 204,
@@ -247,8 +247,8 @@
           "label": "Модель данных для расчёта",
           "direction": "out",
           "position": {
-            "x": 1538,
-            "y": 216
+            "x": 769,
+            "y": 687
           },
           "slidePosition": {
             "x": 486,
@@ -261,8 +261,8 @@
           "label": "Отчёт по мастер-данным",
           "direction": "out",
           "position": {
-            "x": 1538,
-            "y": 288
+            "x": 1183,
+            "y": 403
           },
           "slidePosition": {
             "x": 486,
@@ -276,7 +276,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 360
+            "y": 293
           },
           "slidePosition": {
             "x": 486,
@@ -412,7 +412,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 440
           },
           "slidePosition": {
             "x": 237,
@@ -426,7 +426,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 264
           },
           "slidePosition": {
             "x": 237,
@@ -440,7 +440,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 0
           },
           "slidePosition": {
             "x": 237,
@@ -454,7 +454,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 288
+            "y": 528
           },
           "slidePosition": {
             "x": 237,
@@ -468,7 +468,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 360
+            "y": 88
           },
           "slidePosition": {
             "x": 237,
@@ -495,7 +495,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 282
+            "y": 266
           },
           "slidePosition": {
             "x": 474,
@@ -509,8 +509,8 @@
           "direction": "in",
           "system": "DP",
           "position": {
-            "x": 0,
-            "y": 216
+            "x": 355,
+            "y": 596
           },
           "slidePosition": {
             "x": 10,
@@ -537,7 +537,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 374
+            "y": 615
           },
           "slidePosition": {
             "x": 474,
@@ -551,8 +551,8 @@
           "direction": "in",
           "system": "DP",
           "position": {
-            "x": 0,
-            "y": 432
+            "x": 355,
+            "y": 684
           },
           "slidePosition": {
             "x": 10,
@@ -578,7 +578,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 206
+            "y": 267
           },
           "slidePosition": {
             "x": 474,
@@ -593,7 +593,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 504
+            "y": 176
           },
           "slidePosition": {
             "x": 10,
@@ -608,7 +608,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 576
+            "y": 352
           },
           "slidePosition": {
             "x": 10,
@@ -634,7 +634,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 290
+            "y": 457
           },
           "slidePosition": {
             "x": 474,
@@ -659,7 +659,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 1124,
-            "y": 290
+            "y": 351
           },
           "slidePosition": {
             "x": 474,
@@ -686,7 +686,7 @@
           ],
           "position": {
             "x": 1538,
-            "y": 290
+            "y": 300
           },
           "slidePosition": {
             "x": 474,
@@ -715,7 +715,7 @@
           ],
           "position": {
             "x": 1952,
-            "y": 290
+            "y": 300
           },
           "slidePosition": {
             "x": 474,
@@ -728,8 +728,8 @@
           "label": "Настроенные параметры расчёта",
           "direction": "out",
           "position": {
-            "x": 2366,
-            "y": 216
+            "x": 769,
+            "y": 0
           },
           "slidePosition": {
             "x": 756,
@@ -742,8 +742,8 @@
           "label": "Скорректированный CV",
           "direction": "out",
           "position": {
-            "x": 2366,
-            "y": 288
+            "x": 1597,
+            "y": 667
           },
           "slidePosition": {
             "x": 756,
@@ -757,7 +757,7 @@
           "direction": "out",
           "position": {
             "x": 2366,
-            "y": 360
+            "y": 298
           },
           "slidePosition": {
             "x": 756,
@@ -957,7 +957,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 72
+            "y": 322
           },
           "slidePosition": {
             "x": 507,
@@ -971,7 +971,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 144
+            "y": 234
           },
           "slidePosition": {
             "x": 507,
@@ -985,7 +985,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 216
+            "y": 88
           },
           "slidePosition": {
             "x": 507,
@@ -1012,7 +1012,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 110
+            "y": 178
           },
           "slidePosition": {
             "x": 744,
@@ -1040,7 +1040,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 110
+            "y": 178
           },
           "slidePosition": {
             "x": 744,
@@ -1071,7 +1071,7 @@
           ],
           "position": {
             "x": 1124,
-            "y": 152
+            "y": 236
           },
           "slidePosition": {
             "x": 744,
@@ -1098,7 +1098,7 @@
           ],
           "position": {
             "x": 1124,
-            "y": 60
+            "y": 41
           },
           "slidePosition": {
             "x": 744,
@@ -1131,7 +1131,7 @@
           ],
           "position": {
             "x": 1538,
-            "y": 152
+            "y": 134
           },
           "slidePosition": {
             "x": 744,
@@ -1159,7 +1159,7 @@
           ],
           "position": {
             "x": 1952,
-            "y": 68
+            "y": 50
           },
           "slidePosition": {
             "x": 744,
@@ -1185,7 +1185,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 1952,
-            "y": 160
+            "y": 134
           },
           "slidePosition": {
             "x": 744,
@@ -1199,8 +1199,8 @@
           "direction": "out",
           "system": "INPLAN",
           "position": {
-            "x": 2366,
-            "y": 216
+            "x": 1597,
+            "y": 322
           },
           "slidePosition": {
             "x": 744,
@@ -1213,8 +1213,8 @@
           "label": "Рекомендованные уровни запасов по эшелонам",
           "direction": "out",
           "position": {
-            "x": 2366,
-            "y": 0
+            "x": 1597,
+            "y": 234
           },
           "slidePosition": {
             "x": 1026,
@@ -1227,8 +1227,8 @@
           "label": "Три сценария",
           "direction": "out",
           "position": {
-            "x": 2366,
-            "y": 72
+            "x": 2011,
+            "y": 234
           },
           "slidePosition": {
             "x": 1026,
@@ -1242,7 +1242,7 @@
           "direction": "out",
           "position": {
             "x": 2366,
-            "y": 144
+            "y": 132
           },
           "slidePosition": {
             "x": 1026,
@@ -1390,7 +1390,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 10
+            "y": 198
           },
           "slidePosition": {
             "x": 777,
@@ -1404,7 +1404,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 82
+            "y": 0
           },
           "slidePosition": {
             "x": 777,
@@ -1418,7 +1418,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 154
+            "y": 88
           },
           "slidePosition": {
             "x": 777,
@@ -1444,7 +1444,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 0
+            "y": 55
           },
           "slidePosition": {
             "x": 1015,
@@ -1470,7 +1470,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 84
+            "y": 139
           },
           "slidePosition": {
             "x": 1015,
@@ -1496,7 +1496,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 168
+            "y": 223
           },
           "slidePosition": {
             "x": 1015,
@@ -1522,7 +1522,7 @@
           "owner": "Планер запасов совместно с финансами",
           "position": {
             "x": 710,
-            "y": 84
+            "y": 174
           },
           "slidePosition": {
             "x": 1015,
@@ -1536,7 +1536,7 @@
           "direction": "out",
           "position": {
             "x": 1124,
-            "y": 118
+            "y": 221
           },
           "slidePosition": {
             "x": 1015,
@@ -1550,7 +1550,7 @@
           "direction": "out",
           "position": {
             "x": 1124,
-            "y": 46
+            "y": 53
           },
           "slidePosition": {
             "x": 1297,

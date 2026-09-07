@@ -206,9 +206,12 @@ function bySlideOrder(a: ProcessNode, b: ProcessNode): number {
  * dagre, а её узлы — детьми кластера. Благодаря этому dagre держит узлы одной
  * группы в смежных ранга́х и рядах, и dashed-контейнер группы (SPEC §4.2)
  * получается компактным прямоугольником, а не размазанным по всей раскладке.
+ *
+ * `members` — не обязательно только шаги. Data-узлы, СВЯЗАННЫЕ рёбрами, тоже
+ * приходят сюда: см. wiredDataNodes ниже.
  */
-function layoutFlow(stage: Stage): Map<string, Placement> {
-  const flow = [...stage.nodes.filter((node) => node.type !== 'data')].sort(bySlideOrder);
+function layoutFlow(stage: Stage, members: readonly ProcessNode[]): Map<string, Placement> {
+  const flow = [...members].sort(bySlideOrder);
   const placements = new Map<string, Placement>();
   if (flow.length === 0) {
     return placements;
@@ -271,6 +274,35 @@ function layoutFlow(stage: Stage): Map<string, Placement> {
   return placements;
 }
 
+/**
+ * Data-узлы этапа, у которых есть хотя бы одна связь ВНУТРИ этапа.
+ *
+ * ЗАЧЕМ ЭТО РАЗЛИЧЕНИЕ (решение владельца 07.09.2026, «всё пересекается и
+ * переплетается»). Колонки входов слева и выходов справа придуманы для карточек,
+ * которые НИ С ЧЕМ не соединены: у карты SNP их 56 и ни одной связи, там колонка
+ * — единственный способ показать, что артефакт относится к этапу.
+ *
+ * Как только карточка привязана к своему шагу, колонка начинает вредить: шаги
+ * стоят на разных рангах, а все карточки — в одном столбце у края, и связь к
+ * шагу третьего ранга пересекает всё полотно. На картах DP и MEIO связана каждая
+ * карточка, и после разбиения MEIO по алгоритмам (21 шаг) читать это стало
+ * нельзя.
+ *
+ * Поэтому связанные карточки идут в dagre наравне с шагами — он ставит вход
+ * рангом раньше потребителя, выход рангом позже производителя и сам минимизирует
+ * пересечения. Несвязанные остаются в колонках, и карта SNP не меняется вовсе.
+ */
+function wiredDataNodes(stage: Stage): Set<string> {
+  const linked = new Set<string>();
+  for (const edge of stage.edges) {
+    linked.add(edge.source);
+    linked.add(edge.target);
+  }
+  return new Set(
+    stage.nodes.filter((node) => node.type === 'data' && linked.has(node.id)).map((n) => n.id),
+  );
+}
+
 function stackColumn(nodes: readonly ProcessNode[]): number {
   return nodes.length === 0
     ? 0
@@ -278,13 +310,21 @@ function stackColumn(nodes: readonly ProcessNode[]): number {
 }
 
 /**
- * Полная раскладка этапа: поток шагов посередине, колонка входов слева,
- * колонка выходов справа. Колонки центрируются по высоте относительно самого
- * высокого блока, порядок внутри колонки — исходный (сверху вниз).
+ * Полная раскладка этапа.
+ *
+ * Поток посередине, колонки НЕСВЯЗАННЫХ карточек — слева (входы) и справа
+ * (выходы), центрированные по высоте; порядок внутри колонки исходный.
+ *
+ * Связанные карточки в колонки не попадают: их раскладывает dagre вместе с
+ * шагами, рядом со своим шагом (wiredDataNodes). На карте SNP связанных
+ * карточек нет ни одной, поэтому её раскладка не меняется.
  */
 export function layoutStage(stage: Stage): Map<string, Placement> {
-  const flowPlacements = layoutFlow(stage);
-  const flow = stage.nodes.filter((node) => node.type !== 'data');
+  // Поток — шаги ПЛЮС связанные карточки данных (см. wiredDataNodes). Несвязанные
+  // остаются колонкам: там карточка ничем, кроме колонки, к этапу не привязана.
+  const wired = wiredDataNodes(stage);
+  const flow = stage.nodes.filter((node) => node.type !== 'data' || wired.has(node.id));
+  const flowPlacements = layoutFlow(stage, flow);
   const flowRects: Rect[] = flow.map((node) => {
     const placement = flowPlacements.get(node.id) ?? { x: 0, y: 0 };
     const size = NODE_SIZE[node.type];
@@ -298,8 +338,8 @@ export function layoutStage(stage: Stage): Map<string, Placement> {
   // навсегда оставался бы входом). Правило — общее с приложением,
   // src/utils/stageNodes.ts.
   const { inputs, outputs } = splitDataNodes(seedStage(stage));
-  const sortedInputs = [...inputs].sort(bySlideOrder);
-  const sortedOutputs = [...outputs].sort(bySlideOrder);
+  const sortedInputs = [...inputs].filter((node) => !wired.has(node.id)).sort(bySlideOrder);
+  const sortedOutputs = [...outputs].filter((node) => !wired.has(node.id)).sort(bySlideOrder);
 
   const inputsHeight = stackColumn(sortedInputs);
   const outputsHeight = stackColumn(sortedOutputs);
