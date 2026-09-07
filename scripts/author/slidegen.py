@@ -64,7 +64,42 @@ COLUMNS_X0 = 1_880_000
 COLUMNS_X1 = 12_150_000
 COLUMN_GAP = 30_000
 CONTAINER_TOP = 980_000
-CONTAINER_H = 5_500_000
+
+# ВЫСОТА КОНТЕЙНЕРА СЧИТАЕТСЯ ПО СОДЕРЖАНИЮ, а не задана числом.
+#
+# ЗАЧЕМ. Жёсткое ограничение слайда одно: ЦЕНТР шага обязан лежать внутри
+# контейнера этапа, иначе импортёр останавливается (см. bd-память про профиль
+# single-slide). Подписи входов и плашки-артефакты ниже последнего шага свисать
+# могут — плашка наследует этап от связанного шага, а не от геометрии.
+#
+# При фиксированной высоте это ограничение проверялось только падением импорта
+# после полной перегенерации: карта MEIO, где каждый алгоритм стал отдельным
+# блоком, потребовала 10 798 000 EMU при 5 500 000 доступных. Поэтому высота
+# выводится из самого высокого этапа карты, а _container_height ниже — ещё и
+# сторож: он падает с числом, а не оставляет молчаливое переполнение.
+#
+# МИНИМУМ РАВЕН ПРЕЖНЕМУ ЗНАЧЕНИЮ намеренно. Карте DP (максимум 5 164 000) он не
+# жмёт, и её слайд остаётся байт в байт прежним: иначе перестройка MEIO молча
+# сдвинула бы плашки-входы DP — их разброс считается от высоты контейнера — и
+# потянула бы за собой отпечаток чужой карты.
+CONTAINER_H_MIN = 5_500_000
+CONTAINER_H_PAD = 100_000
+# Высота округляется ВВЕРХ до сетки: правка одной подписи не должна менять
+# геометрию слайда и тянуть за собой отпечаток карты. Сетка же удерживает карту
+# DP (нужно 5 164 000) ровно на прежних 5 500 000 — её слайд не меняется вовсе.
+CONTAINER_H_GRID = 500_000
+
+# Высота колонки плашек-входов — СВОЯ, не равна высоте контейнера.
+#
+# ЗАЧЕМ РАЗВЯЗАНО. Разброс входных плашек считался от CONTAINER_H, и в первой
+# версии этой правки перестройка MEIO сдвинула плашки чужой карты DP на 1–2 px:
+# её контейнер вырос на 64 000 EMU (5 164 000 + запас против прежних 5 500 000),
+# плашки поехали, slidePosition изменился, отпечаток карты DP — вместе с ними.
+# Ловится это только полным прогоном конвейера ОБЕИХ карт, то есть поздно и
+# дорого. Вертикаль колонки входов ни на что в импортёре не влияет: вход от
+# выхода отличается по ЛЕВОЙ координате (LEFT_MARGIN_LIMIT), а этап плашка
+# наследует от связанного шага. Поэтому она фиксирована.
+PLATE_COLUMN_H = 5_500_000
 
 TITLE_H = 380_000
 TITLE_TOP = CONTAINER_TOP - 480_000          # в окне [top-1 200 000, top)
@@ -189,14 +224,33 @@ def _freeze_zip(path: Path) -> None:
             target.writestr(frozen, payload)
 
 
+def _container_height(stages: list[dict], step_w: int) -> int:
+    """Высота контейнера этапа: центр последнего шага самого высокого этапа + запас.
+
+    Повторяет раскладку build() шаг в шаг — иначе сторож считал бы не то, что
+    рисуется, и молчал бы ровно там, где нужен.
+    """
+    worst = 0
+    for stage in stages:
+        cursor = STEP_PAD
+        for step in stage["steps"]:
+            worst = max(worst, cursor + STEP_H // 2)
+            cursor += STEP_H
+            items = step.get("inputs") or []
+            if items:
+                cursor += CAPTION_GAP + _caption_height(items, step_w)
+            cursor += BLOCK_GAP
+    need = worst + CONTAINER_H_PAD
+    snapped = -(-need // CONTAINER_H_GRID) * CONTAINER_H_GRID
+    return max(CONTAINER_H_MIN, snapped)
+
+
 def build(author_path: Path, out_path: Path) -> dict:
     doc = json.loads(author_path.read_text(encoding="utf-8"))
     stages = doc["stages"]
 
     prs = Presentation()
-    prs.slide_width = Emu(SLIDE_W)
-    prs.slide_height = Emu(SLIDE_H)
-    slide = prs.slides.add_slide(prs.slide_layouts[6])   # пустой макет: плейсхолдеров нет
+    slide = None    # создаётся ниже: высота слайда зависит от содержания
 
     # Колонки этапов. Ширина не может быть меньше CONTAINER_MIN_W — иначе
     # контейнер перестаёт быть контейнером; при большом числе этапов это
@@ -210,12 +264,21 @@ def build(author_path: Path, out_path: Path) -> dict:
             f"{CONTAINER_MIN_W}. Это решение владельца о раскладке, а не правка содержания."
         )
 
+    step_w_probe = column_w - 2 * STEP_PAD
+    container_h = _container_height(stages, step_w_probe)
+    # Слайд обязан вмещать контейнер целиком. Импортёр проверяет только ШИРИНУ
+    # слайда (SLIDE_WIDTH_EMU), высота ему безразлична — pptx здесь машинный
+    # источник, а не презентация для показа.
+    prs.slide_width = Emu(SLIDE_W)
+    prs.slide_height = Emu(max(SLIDE_H, CONTAINER_TOP + container_h + CONTAINER_H_PAD))
+    slide = prs.slides.add_slide(prs.slide_layouts[6])   # пустой макет: плейсхолдеров нет
+
     shapes_by_key: dict[str, object] = {}
     inbound: list[dict] = []     # плашки-входы: рисуются общей левой колонкой
 
     for index, stage in enumerate(stages):
         left = COLUMNS_X0 + index * (column_w + COLUMN_GAP)
-        container = _shape(slide, MSO_SHAPE.RECTANGLE, left, CONTAINER_TOP, column_w, CONTAINER_H)
+        container = _shape(slide, MSO_SHAPE.RECTANGLE, left, CONTAINER_TOP, column_w, container_h)
         container.fill.background()          # noFill — признак контейнера
         container.line.fill.background()
         _textbox(slide, left, TITLE_TOP, column_w, TITLE_H, [stage["title"]], size=Pt(11), bold=True)
@@ -228,6 +291,15 @@ def build(author_path: Path, out_path: Path) -> dict:
                 left + STEP_PAD, cursor, step_w, STEP_H, step["label"],
             )
             _fill(box, "accent1")
+            # Сторож на месте отрисовки, а не только в расчёте: если раскладка
+            # и _container_height когда-нибудь разойдутся, падать должно здесь,
+            # с именем шага, а не молчаливым выпадением его из импорта.
+            centre = cursor + STEP_H // 2 - CONTAINER_TOP
+            if centre >= container_h:
+                raise SystemExit(
+                    f"шаг «{step['key']}» выходит за контейнер этапа "
+                    f"{stage['number']}: центр +{centre} EMU при высоте {container_h}"
+                )
             shapes_by_key[step["key"]] = box
             cursor += STEP_H
             items = step.get("inputs") or []
@@ -251,7 +323,7 @@ def build(author_path: Path, out_path: Path) -> dict:
 
     # Плашки-входы — ОБЩЕЙ левой колонкой, иначе импортёр признает их выходами.
     plate_top = CONTAINER_TOP
-    available = CONTAINER_H - PLATE_MIN_H
+    available = PLATE_COLUMN_H - PLATE_MIN_H
     step_down = available // max(len(inbound) - 1, 1) if len(inbound) > 1 else 0
     for order, external in enumerate(inbound):
         plate = _shape(
