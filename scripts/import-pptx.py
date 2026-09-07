@@ -2397,10 +2397,22 @@ def build_single_slide_map(
     #     из линий: на слайде нет уровня обзора, но принадлежность известна точно
     #     — артефакт лежит в своём этапе и называет свою систему. Формат концов
     #     тот же, что у карты SNP: код системы как идентификатор.
+    #
+    #     ПАРА «СИСТЕМА + ЭТАП» ДЕДУПЛИЦИРУЕТСЯ. Свимлейн на обзоре один на
+    #     систему, поэтому два артефакта одной системы у одного этапа — это одна
+    #     связь, а не две. Без дедупликации id ребра совпадал бы дословно
+    #     (ov-ERP--stage-2-...), и check_unique_ids роняла бы импорт. Поймано
+    #     картой MEIO, когда у этапа 2 появился второй вход из ERP; у карт с
+    #     разными системами на этапе дефект не проявлялся.
+    seen_integration: set[tuple[str, str]] = set()
     for meta in stage_meta:
         stage_id = meta["id"]
         inputs_bucket, outputs_bucket = stage_io[stage_id]
         for entry in inputs_bucket:
+            pair = (entry["system"], stage_id)
+            if pair in seen_integration:
+                continue
+            seen_integration.add(pair)
             overview_edges.append(
                 {
                     "id": f"ov-{entry['system']}--{stage_id}",
@@ -2410,6 +2422,10 @@ def build_single_slide_map(
                 }
             )
         for entry in outputs_bucket:
+            pair = (stage_id, entry["system"])
+            if pair in seen_integration:
+                continue
+            seen_integration.add(pair)
             overview_edges.append(
                 {
                     "id": f"ov-{stage_id}--{entry['system']}",
