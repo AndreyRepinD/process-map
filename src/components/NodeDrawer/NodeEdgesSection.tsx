@@ -10,7 +10,7 @@
 // узле-источнике (schema.ts), поэтому «ведёт к» — естественная форма. Межэтапные
 // связи на обзоре выводятся из потока шагов, руками их не проводят.
 import { useState } from 'react';
-import { connectNodes, disconnectNodes } from '../../data/loader';
+import { connectNodes, disconnectNodes, reverseEdge } from '../../data/loader';
 import type { ProcessNode, Stage } from '../../data/schema';
 import { commitOverrides } from '../../hooks/useProcessMap';
 import { ru } from '../../i18n/ru';
@@ -26,19 +26,32 @@ export function NodeEdgesSection({ node, stage }: NodeEdgesSectionProps) {
   const [target, setTarget] = useState('');
 
   const outgoing = stage.edges.filter((edge) => edge.source === node.id);
+  const incoming = stage.edges.filter((edge) => edge.target === node.id);
   const connected = new Set(outgoing.map((edge) => edge.target));
   const labelOf = new Map(stage.nodes.map((item) => [item.id, item.label]));
   const candidates = stage.nodes.filter((item) => item.id !== node.id && !connected.has(item.id));
 
   return (
     <Section title={ru.nodeEditor.edges}>
-      {outgoing.length === 0 ? (
+      {outgoing.length > 0 && (
+        <span className={styles.edgeGroupTitle}>{ru.nodeEditor.edgesOut}</span>
+      )}
+      {outgoing.length === 0 && incoming.length === 0 ? (
         <span className={styles.fieldValue}>{ru.nodeEditor.edgesEmpty}</span>
-      ) : (
+      ) : outgoing.length === 0 ? null : (
         <ul className={styles.edgeList}>
           {outgoing.map((edge) => (
             <li className={styles.edgeItem} key={edge.id}>
               <span className={styles.edgeLabel}>{labelOf.get(edge.target) ?? edge.target}</span>
+              <button
+                type="button"
+                className={styles.edgeGhost}
+                onClick={() => {
+                  commitOverrides(() => reverseEdge(node.id, edge.target));
+                }}
+              >
+                {ru.nodeEditor.edgeReverse}
+              </button>
               <button
                 type="button"
                 className={styles.edgeRemove}
@@ -51,6 +64,41 @@ export function NodeEdgesSection({ node, stage }: NodeEdgesSectionProps) {
             </li>
           ))}
         </ul>
+      )}
+
+      {/* Входящие связи показаны отдельным списком: развернуть их надо уметь с
+          обоих концов, иначе за стрелкой «А ведёт к Б» пришлось бы идти в
+          карточку А, даже когда открыта Б. Проводить связь отсюда нельзя — она
+          хранится на источнике. */}
+      {incoming.length > 0 && (
+        <>
+          <span className={styles.edgeGroupTitle}>{ru.nodeEditor.edgesIn}</span>
+          <ul className={styles.edgeList}>
+            {incoming.map((edge) => (
+              <li className={styles.edgeItem} key={edge.id}>
+                <span className={styles.edgeLabel}>{labelOf.get(edge.source) ?? edge.source}</span>
+                <button
+                  type="button"
+                  className={styles.edgeGhost}
+                  onClick={() => {
+                    commitOverrides(() => reverseEdge(edge.source, node.id));
+                  }}
+                >
+                  {ru.nodeEditor.edgeReverse}
+                </button>
+                <button
+                  type="button"
+                  className={styles.edgeRemove}
+                  onClick={() => {
+                    commitOverrides(() => disconnectNodes(edge.source, node.id));
+                  }}
+                >
+                  {ru.nodeEditor.edgeRemove}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
 
       {candidates.length === 0 ? (

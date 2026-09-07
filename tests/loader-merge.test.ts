@@ -9,6 +9,8 @@ import {
   addNode,
   connectNodes,
   disconnectNodes,
+  moveNode,
+  reverseEdge,
   patchNodeContent,
   removeNode,
   removeNodeOverride,
@@ -504,5 +506,44 @@ describe('mergeOverrides — связи', () => {
     disconnectNodes('n1', 'n2');
     expect(readStoredOverrides()['n1']?.edgesAdded).toEqual([]);
     expect(readStoredOverrides()['n1']?.edgesRemoved).toEqual(['n2']);
+  });
+});
+
+describe('перемещение и разворот', () => {
+  it('перетаскивание запоминает координаты и переживает пересчёт карты', () => {
+    // Правка кладётся ПОВЕРХ карты, поэтому переживает и npm run data, и любой
+    // пересчёт раскладки — в отличие от правки position прямо в process.json.
+    const map = buildSampleProcessMap();
+    const id = map.stages[0]?.nodes[0]?.id as string;
+    moveNode(id, { x: 123.7, y: 45.2 });
+    // Дробные координаты округляются: React Flow отдаёт их с хвостом, а лишние
+    // знаки раздували бы хранилище и диффы экспорта.
+    expect(readStoredOverrides()[id]?.position).toEqual({ x: 124, y: 45 });
+
+    const merged = mergeOverrides(map, readStoredOverrides());
+    expect(merged.stages[0]?.nodes[0]?.position).toEqual({ x: 124, y: 45 });
+    // Исходная геометрия слайда не трогается: она семя для раскладки, а не то,
+    // что видно на экране.
+    expect(merged.stages[0]?.nodes[0]?.slidePosition).toEqual(
+      map.stages[0]?.nodes[0]?.slidePosition,
+    );
+  });
+
+  it('разворот меняет направление, а не заводит вторую стрелку', () => {
+    const map = buildSampleProcessMap();
+    const existing = map.stages[0]?.edges[0];
+    const [a, b] = [existing?.source as string, existing?.target as string];
+
+    reverseEdge(a, b);
+    const merged = mergeOverrides(map, readStoredOverrides());
+    const edges = merged.stages[0]?.edges ?? [];
+    expect(
+      edges.some((e) => e.source === a && e.target === b),
+      'старое направление осталось',
+    ).toBe(false);
+    expect(
+      edges.some((e) => e.source === b && e.target === a),
+      'нового направления нет',
+    ).toBe(true);
   });
 });

@@ -291,6 +291,18 @@ export const OverrideEntrySchema = z.object({
   edgesAdded: z.array(z.string()).optional(),
   /** Связи из process.json, снятые правкой: список id целей. */
   edgesRemoved: z.array(z.string()).optional(),
+  /**
+   * Координаты, поставленные перетаскиванием (решение владельца от 07.09.2026).
+   *
+   * ЗДЕСЬ ЭТО ЗАКОННО, а в process.json — нет. В файле карты position считает
+   * scripts/layout.ts, и правка руками была бы затёрта следующим прогоном
+   * конвейера. Правка же накладывается ПОВЕРХ пересчитанной карты и переживает
+   * любую перегенерацию, пока сам узел на месте.
+   *
+   * slidePosition не дублируется намеренно: он хранит исходную геометрию слайда
+   * и служит семенем для раскладки, а не тем, что видно на экране.
+   */
+  position: z.object({ x: z.number(), y: z.number() }).optional(),
 });
 export type OverrideEntry = z.infer<typeof OverrideEntrySchema>;
 

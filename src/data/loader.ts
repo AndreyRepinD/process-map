@@ -113,6 +113,7 @@ function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode
   next = patchField(next, 'inputs', entry.inputs);
   next = patchField(next, 'outputs', entry.outputs);
   next = patchField(next, 'owner', entry.owner);
+  next = patchField(next, 'position', entry.position);
   return next;
 }
 
@@ -375,6 +376,23 @@ export function addNode(draft: AddedNode, label: string): string {
   const current = readStoredOverrides();
   writeStoredOverrides({ ...current, [id]: { added: draft, label } });
   return id;
+}
+
+/** Запоминает координаты, поставленные перетаскиванием. */
+export function moveNode(nodeId: string, position: { x: number; y: number }): Overrides {
+  const current = readStoredOverrides();
+  // Округление до целого: React Flow отдаёт дробные координаты, а лишние знаки
+  // раздували бы хранилище и диффы экспортированного JSON без всякой пользы.
+  const rounded = { x: Math.round(position.x), y: Math.round(position.y) };
+  const next: Overrides = { ...current, [nodeId]: { ...current[nodeId], position: rounded } };
+  writeStoredOverrides(next);
+  return next;
+}
+
+/** Разворачивает связь: то, что вело A → B, начинает вести B → A. */
+export function reverseEdge(source: string, target: string): Overrides {
+  disconnectNodes(source, target);
+  return connectNodes(target, source);
 }
 
 /** Проводит связь между двумя узлами ОДНОГО этапа. */
