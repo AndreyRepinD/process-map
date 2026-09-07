@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "id": "dp",
-  "updatedAt": "2026-09-06",
+  "updatedAt": "2026-09-07",
   "title": "Процесс планирования спроса",
   "moduleLabel": "Модуль DP",
   "stages": [
@@ -34,20 +34,36 @@
           "id": "podgotovka-sopostavimoy-istorii",
           "type": "step",
           "label": "Подготовка сопоставимой истории",
-          "description": "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, промо, ML-очистка. Перенос истории при смене схемы, замена SKU через DFU, исключения планеру.\n\nBPMN: DP-020 — Очистка данных",
+          "description": "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, промо, ML-очистка. Перенос истории при смене схемы, замена SKU через DFU, исключения планеру.\n\nПотоки спроса разделяются до расчёта: рыночный спрос прогнозируется статистикой, спрос собственной переработки ЗАВИСИМЫЙ и выводится из плана производства, а не из истории отгрузок. Смешение двух природ спроса в одном ряду ломает и методы прогнозирования, и сегментацию ABC/XYZ.\n\nBPMN: DP-020 — Очистка данных",
           "inputs": [
             "OOS, выбросы, промо, ML-очистка",
             "Перенос истории при смене схемы",
             "Замена SKU через DFU",
-            "Исключения планеру"
+            "Исключения планеру",
+            "Разделение потоков: рынок / внутренний передел / экспорт"
           ],
           "position": {
             "x": 296,
-            "y": 2
+            "y": 38
           },
           "slidePosition": {
             "x": 204,
             "y": 109
+          }
+        },
+        {
+          "id": "plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps",
+          "type": "data",
+          "label": "План производства собственной переработки из SNP и PS",
+          "direction": "in",
+          "system": "INPLAN",
+          "position": {
+            "x": 0,
+            "y": 72
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 176
           }
         }
       ],
@@ -57,12 +73,30 @@
           "source": "istoriya-prodazh-i-zakazy-iz-erp-dwh",
           "target": "podgotovka-sopostavimoy-istorii",
           "kind": "process"
+        },
+        {
+          "id": "e-plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps--podgotovka-sopostavimoy-istorii",
+          "source": "plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps",
+          "target": "podgotovka-sopostavimoy-istorii",
+          "kind": "process"
         }
       ],
       "inputs": [
         {
           "system": "ERP",
           "label": "История продаж и заказы из ERP / DWH",
+          "stage": 1,
+          "direction": "in"
+        },
+        {
+          "system": "INPLAN",
+          "label": "План производства собственной переработки из SNP и PS",
+          "stage": 1,
+          "direction": "in"
+        },
+        {
+          "system": "PS",
+          "label": "План производства собственной переработки из SNP и PS",
           "stage": 1,
           "direction": "in"
         }
@@ -110,7 +144,7 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 231
+            "y": 249
           }
         },
         {
@@ -207,7 +241,8 @@
       "title": "Sell-In по модели канала",
       "shortTitle": "Sell-In по модели канала",
       "keyOutputs": [
-        "Прогноз Sell-In по каналам"
+        "Прогноз Sell-In по каналам",
+        "Прогнозный остаток и дни покрытия у клиента"
       ],
       "groups": [],
       "nodes": [
@@ -217,7 +252,7 @@
           "label": "Прямые каналы: прямой прогноз Sell-In",
           "description": "Прямой прогноз Sell-In для прямых каналов сбыта.",
           "position": {
-            "x": 0,
+            "x": 296,
             "y": 0
           },
           "slidePosition": {
@@ -229,23 +264,72 @@
           "id": "sell-out-balans-sell-in",
           "type": "step",
           "label": "Sell-Out → баланс → Sell-In",
-          "description": "Пересчёт Sell-Out в Sell-In через материальный баланс: остатки, транзит, открытые заказы, целевой запас; прогнозный остаток и дни покрытия.\n\nBPMN: DP-070-070 — Demand Propagation. Автоматизированный расчет Sell-In дистрибутора",
+          "description": "Пересчёт Sell-Out в Sell-In через материальный баланс: остатки, транзит, открытые заказы, целевой запас; прогнозный остаток и дни покрытия.\n\nШаг работает на данных КЛИЕНТА, а не на собственных отгрузках: рост Sell-In может быть заполнением склада дистрибьютора, а не ростом потребления. Без sell-out, остатков и открытых заказов клиента этап посчитать нельзя.\n\nBPMN: DP-070-070 — Demand Propagation. Автоматизированный расчет Sell-In дистрибутора",
           "inputs": [
             "Остатки, транзит, открытые заказы, целевой запас",
             "Прогнозный остаток и дни покрытия"
           ],
           "position": {
-            "x": 0,
+            "x": 296,
             "y": 84
           },
           "slidePosition": {
             "x": 636,
             "y": 190
           }
+        },
+        {
+          "id": "sell-out-i-ostatki-klienta-iz-erp",
+          "type": "data",
+          "label": "Sell-Out и остатки клиента из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 4
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 322
+          }
+        },
+        {
+          "id": "otkrytye-zakazy-i-celevoy-zapas-klienta",
+          "type": "data",
+          "label": "Открытые заказы и целевой запас клиента",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 76
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 396
+          }
         }
       ],
-      "edges": [],
-      "inputs": [],
+      "edges": [
+        {
+          "id": "e-sell-out-i-ostatki-klienta-iz-erp--sell-out-balans-sell-in",
+          "source": "sell-out-i-ostatki-klienta-iz-erp",
+          "target": "sell-out-balans-sell-in",
+          "kind": "process"
+        },
+        {
+          "id": "e-otkrytye-zakazy-i-celevoy-zapas-klienta--sell-out-balans-sell-in",
+          "source": "otkrytye-zakazy-i-celevoy-zapas-klienta",
+          "target": "sell-out-balans-sell-in",
+          "kind": "process"
+        }
+      ],
+      "inputs": [
+        {
+          "system": "ERP",
+          "label": "Sell-Out и остатки клиента из ERP",
+          "stage": 3,
+          "direction": "in"
+        }
+      ],
       "outputs": []
     },
     {
@@ -307,7 +391,7 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 359
+            "y": 469
           }
         },
         {
@@ -321,7 +405,7 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 487
+            "y": 542
           }
         }
       ],
@@ -355,28 +439,68 @@
       "shortTitle": "Публикация и контроль точности",
       "keyOutputs": [
         "Опубликованный план спроса в SNP и MEIO",
-        "KPI точности прогноза"
+        "Решение по разрыву с планом SNP",
+        "KPI точности и FVA"
       ],
       "groups": [],
       "nodes": [
         {
-          "id": "publikaciya-i-analiz-tochnosti",
+          "id": "publikaciya-plana-sprosa",
           "type": "step",
-          "label": "Публикация и анализ точности",
-          "description": "Дезагрегация DFU → SKU и публикация плана с лагом, передача плана в SNP и MEIO. Контроль точности: FA, MAPE, BIAS, алерты. Разрыв с планом SNP выносится на решение.\n\nBPMN: DP-080-030 — Дезагрегация DFU->SKU и публикация прогноза",
+          "label": "Публикация плана спроса",
+          "description": "Дезагрегация DFU → SKU и публикация плана спроса с лагом, передача неограниченного плана в SNP и MEIO с фиксацией версии.\n\nBPMN: DP-080-030 — Дезагрегация DFU->SKU и публикация прогноза",
           "inputs": [
             "DFU → SKU, публикация с лагом",
             "Передача плана в SNP и MEIO",
-            "FA, MAPE, BIAS, алерты",
-            "Разрыв с планом SNP → решение"
+            "Версия и дата фиксации плана"
           ],
           "position": {
             "x": 296,
-            "y": 2
+            "y": 42
           },
           "slidePosition": {
             "x": 1069,
             "y": 109
+          }
+        },
+        {
+          "id": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+          "type": "step",
+          "label": "Сверка с ограниченным планом SNP и решение по разрыву",
+          "description": "Сопоставление опубликованного неограниченного плана спроса с ограниченным планом SNP, разбор дефицитов и избытков, решение по разрыву: приоритизация клиентов и SKU, перераспределение, перенос промо.\n\nОТДЕЛЬНЫЙ ШАГ, А НЕ ЧАСТЬ КОНТРОЛЯ ТОЧНОСТИ: ограничение поставки не делает исходный прогноз неточным. Выполнимость и точность — разные вопросы к разным владельцам, и смешение их в одном шаге прятало решение по разрыву внутри отчёта о качестве прогноза.",
+          "inputs": [
+            "Ограниченный план из SNP",
+            "Дефициты и избытки по периодам",
+            "Приоритизация клиентов и SKU",
+            "Решение по разрыву"
+          ],
+          "position": {
+            "x": 646,
+            "y": 84
+          },
+          "slidePosition": {
+            "x": 1069,
+            "y": 253
+          }
+        },
+        {
+          "id": "kontrol-tochnosti-i-fva",
+          "type": "step",
+          "label": "Контроль точности и FVA",
+          "description": "Оценка точности по версии прогноза и лагу: FA, MAPE, BIAS, а на разреженных рядах WAPE. FVA-разложение показывает вклад каждого слоя — наивный прогноз, статистика, корректировки Building Blocks, консенсус DRM, — и BIAS считается в том числе по авторам корректировок.\n\nРезультат возвращается на этап 2: сегментация, методы и чемпион пересматриваются по ретроспективе точности. Без этой обратной связи ручной этап 4 остаётся без измерения качества.\n\nBPMN: DP-030 — Расчет метрик точности прогноза",
+          "inputs": [
+            "FA, MAPE, BIAS, WAPE по версии и лагу",
+            "FVA: наивный → статистика → Building Blocks → консенсус",
+            "BIAS по авторам корректировок",
+            "Алерты точности и разбор причин"
+          ],
+          "position": {
+            "x": 646,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 1069,
+            "y": 415
           }
         },
         {
@@ -386,12 +510,12 @@
           "direction": "out",
           "system": "INPLAN",
           "position": {
-            "x": 710,
-            "y": 0
+            "x": 1060,
+            "y": 40
           },
           "slidePosition": {
             "x": 1069,
-            "y": 271
+            "y": 612
           }
         },
         {
@@ -402,7 +526,7 @@
           "system": "INPLAN",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 40
           },
           "slidePosition": {
             "x": 10,
@@ -412,15 +536,27 @@
       ],
       "edges": [
         {
-          "id": "e-poluchenie-ogranichennogo-prognoza-iz-modulya-snp--publikaciya-i-analiz-tochnosti",
-          "source": "poluchenie-ogranichennogo-prognoza-iz-modulya-snp",
-          "target": "publikaciya-i-analiz-tochnosti",
+          "id": "e-publikaciya-plana-sprosa--sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+          "source": "publikaciya-plana-sprosa",
+          "target": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
           "kind": "process"
         },
         {
-          "id": "e-publikaciya-i-analiz-tochnosti--peredacha-neogranichennogo-plana-sprosa-v-snp-i-meio",
-          "source": "publikaciya-i-analiz-tochnosti",
+          "id": "e-publikaciya-plana-sprosa--kontrol-tochnosti-i-fva",
+          "source": "publikaciya-plana-sprosa",
+          "target": "kontrol-tochnosti-i-fva",
+          "kind": "process"
+        },
+        {
+          "id": "e-publikaciya-plana-sprosa--peredacha-neogranichennogo-plana-sprosa-v-snp-i-meio",
+          "source": "publikaciya-plana-sprosa",
           "target": "peredacha-neogranichennogo-plana-sprosa-v-snp-i-meio",
+          "kind": "process"
+        },
+        {
+          "id": "e-poluchenie-ogranichennogo-prognoza-iz-modulya-snp--sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+          "source": "poluchenie-ogranichennogo-prognoza-iz-modulya-snp",
+          "target": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
           "kind": "process"
         }
       ],
@@ -456,6 +592,12 @@
       "kind": "process"
     },
     {
+      "id": "ov-stage-5-publikaciya-i-kontrol-tochnosti--stage-2-raschet-prognoza",
+      "source": "stage-5-publikaciya-i-kontrol-tochnosti",
+      "target": "stage-2-raschet-prognoza",
+      "kind": "process"
+    },
+    {
       "id": "ov-stage-3-sell-in-po-modeli-kanala--stage-4-obogaschenie-i-soglasovanie",
       "source": "stage-3-sell-in-po-modeli-kanala",
       "target": "stage-4-obogaschenie-i-soglasovanie",
@@ -477,6 +619,24 @@
       "id": "ov-ERP--stage-1-podgotovka-istorii",
       "source": "ERP",
       "target": "stage-1-podgotovka-istorii",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-INPLAN--stage-1-podgotovka-istorii",
+      "source": "INPLAN",
+      "target": "stage-1-podgotovka-istorii",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-PS--stage-1-podgotovka-istorii",
+      "source": "PS",
+      "target": "stage-1-podgotovka-istorii",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-ERP--stage-3-sell-in-po-modeli-kanala",
+      "source": "ERP",
+      "target": "stage-3-sell-in-po-modeli-kanala",
       "kind": "integration"
     },
     {
