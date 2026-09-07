@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "bfdc5d7cde187ec408b336aa4a59e5fa922745cd4a1e5475b1abde593fc9eb95"
+MAP_DATA_FINGERPRINT_DP = "821efa64527f3ec27aeaa5e35a3d2212c303291a6bff244c3957feeeac4b4a71"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-07"
-MAP_DATA_FINGERPRINT_MEIO = "fdb132d28cecdbb2faa0241b2f56fdf11325b1316d4b93a0d0b0a4289129508e"
+MAP_DATA_FINGERPRINT_MEIO = "9f35d1a6cd4e0948d66e82e873d130ced612f4b254b4ea625b3a497e34ca3ab4"
 
 
 @dataclass(frozen=True)
@@ -2179,6 +2179,63 @@ STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
     },
 }
 
+# Кто потребляет входные карточки и кто производит карточки-результаты.
+#
+# ЗАЧЕМ. Без связей колонки входов и выходов висят отдельно от потока, и карта
+# не показывает главного — что из чего считается. Замерено до правки: 49 узлов
+# из 87 на двух картах не имели ни одного ребра.
+#
+# УМОЛЧАНИЕ РАЗУМНОЕ, ПОЭТОМУ ЗДЕСЬ ТОЛЬКО ИСКЛЮЧЕНИЯ: входы этапа потребляет
+# ПЕРВЫЙ его шаг, результаты производит ПОСЛЕДНИЙ. Там, где это неверно — у
+# этапа несколько шагов и каждый даёт свой результат, — производитель назван
+# поимённо в outputsFrom.
+STAGE_WIRING: dict[str, dict[str, dict[str, object]]] = {
+    "dp": {
+        "stage-1-podgotovka-istorii": {
+            "outputsFrom": {
+                "Отчёт качества данных": "proverka-kachestva-dannyh",
+                "Сопоставимая история": "podgotovka-sopostavimoy-istorii",
+            },
+        },
+        "stage-2-raschet-prognoza": {
+            "outputsFrom": {
+                "Базовый прогноз с чемпионом по серии": "assortiment-metody-i-chempion",
+                "Промо-объёмы": "promo-light-prognoz-promo-obemov-opcionalno",
+            },
+        },
+        "stage-5-publikaciya-i-kontrol-tochnosti": {
+            "outputsFrom": {
+                "Опубликованный план спроса в SNP и MEIO": "publikaciya-plana-sprosa",
+                "Решение по разрыву с планом SNP": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+                "KPI точности и FVA": "kontrol-tochnosti-i-fva",
+                "Перечень предупреждений с приоритетом": "analiz-preduprezhdeniy",
+            },
+        },
+    },
+    "meio": {
+        "stage-1-poluchenie-dannyh": {
+            "outputsFrom": {
+                "Модель данных для расчёта": "podgotovka-dannyh",
+                "Отчёт по мастер-данным": "proverka-master-dannyh",
+                "Отчёт связности цепочки": "proverka-cepochki-na-svyazannost",
+            },
+        },
+        "stage-2-podgotovka-k-raschetu": {
+            "outputsFrom": {
+                "Настроенные параметры расчёта": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+                "Сегментация по пяти признакам": "segmentaciya",
+            },
+        },
+        "stage-3-raschet-i-analiz": {
+            "outputsFrom": {
+                "Оптимизационный расчёт распределения запасов по эшелонам в разрезе продукт-локация-период": "raschet-rekomendaciy-po-urovnyam-zapasov",
+                "Три сценария": "analiz-poluchennyh-znacheniy",
+                "Перечень предупреждений расчёта": "analiz-preduprezhdeniy-rascheta",
+            },
+        },
+    },
+}
+
 STEP_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
     "dp": {
         "proverka-kachestva-dannyh": (
@@ -2401,7 +2458,8 @@ def input_cards(
     meta: dict,
     ids: IdFactory,
     slide_no: int,
-) -> list[dict]:
+    consumer: str | None,
+) -> tuple[list[dict], list[dict]]:
     """
     Входные данные этапа отдельными карточками — зеркало result_nodes.
 
@@ -2411,6 +2469,7 @@ def input_cards(
     """
     existing = {d.label for d in members if d.direction == "in"}
     nodes: list[dict] = []
+    edges: list[dict] = []
     for index, label in enumerate(labels):
         if label in existing:
             continue
@@ -2429,7 +2488,16 @@ def input_cards(
                 "slidePosition": position,
             }
         )
-    return nodes
+        if consumer is not None:
+            edges.append(
+                {
+                    "id": f"e-{node_id}--{consumer}",
+                    "source": node_id,
+                    "target": consumer,
+                    "kind": "process",
+                }
+            )
+    return nodes, edges
 
 
 def result_nodes(
@@ -2439,7 +2507,9 @@ def result_nodes(
     meta: dict,
     ids: IdFactory,
     slide_no: int,
-) -> list[dict]:
+    producers: dict[str, str],
+    default_producer: str | None,
+) -> tuple[list[dict], list[dict]]:
     """
     Ключевые выходы этапа — отдельными карточками в колонке выходов.
 
@@ -2459,6 +2529,7 @@ def result_nodes(
     """
     existing = {d.label for d in members if d.direction == "out"}
     nodes: list[dict] = []
+    edges: list[dict] = []
     for index, label in enumerate(key_outputs):
         if label in existing:
             continue
@@ -2480,7 +2551,17 @@ def result_nodes(
                 "slidePosition": position,
             }
         )
-    return nodes
+        producer = producers.get(label, default_producer)
+        if producer is not None:
+            edges.append(
+                {
+                    "id": f"e-{producer}--{node_id}",
+                    "source": producer,
+                    "target": node_id,
+                    "kind": "process",
+                }
+            )
+    return nodes, edges
 
 
 def build_single_slide_map(
@@ -2859,6 +2940,7 @@ def build_single_slide_map(
     # id узла из IdFactory, поэтому читать её рано безопасно.
     key_outputs_table = STAGE_KEY_OUTPUTS.get(spec.key)
     input_cards_table = STAGE_INPUT_CARDS.get(spec.key, {})
+    wiring_table = STAGE_WIRING.get(spec.key, {})
     if descriptions:
         known = {d.node_id for d in drafts}
         for node_id in sorted(descriptions):
@@ -2916,6 +2998,30 @@ def build_single_slide_map(
     for meta in stage_meta:
         stage_id = meta["id"]
         members = [d for d in drafts if stage_of_node.get(d.node_id) == stage_id]
+        # Шаги этапа в порядке потока слева направо: первый потребляет входы,
+        # последний производит результаты, если в STAGE_WIRING не сказано иное.
+        flow = [
+            d.node_id
+            for d in sorted(
+                (d for d in members if d.node_type != "data"),
+                key=lambda d: (d.box.left, d.box.top),
+            )
+        ]
+        wiring = wiring_table.get(stage_id, {})
+        raw_consumer = wiring.get("inputsTo")
+        consumer = raw_consumer if isinstance(raw_consumer, str) else (flow[0] if flow else None)
+        raw_producers = wiring.get("outputsFrom")
+        producers = raw_producers if isinstance(raw_producers, dict) else {}
+        default_producer = flow[-1] if flow else None
+        card_nodes_in, card_edges_in = input_cards(
+            input_cards_table.get(stage_id, ()),
+            members,
+            container_of[stage_id],
+            meta,
+            ids,
+            slide_no,
+            consumer,
+        )
         if key_outputs_table is None:
             key_outputs = [d.label for d in members if d.direction == "out"][:MAX_KEY_OUTPUTS]
         else:
@@ -2929,6 +3035,16 @@ def build_single_slide_map(
             report.owner_step_text.append(
                 f"ключевые выходы этапа «{stage_id}»: {len(declared)}"
             )
+        card_nodes_out, card_edges_out = result_nodes(
+            key_outputs,
+            members,
+            container_of[stage_id],
+            meta,
+            ids,
+            slide_no,
+            producers,
+            default_producer,
+        )
         stages.append(
             {
                 "id": stage_id,
@@ -2941,20 +3057,13 @@ def build_single_slide_map(
                 # на шаг «Анализ предупреждений», который планировщик выполняет
                 # сам, значило бы соврать. Поле необязательное (SPEC §3).
                 "groups": group_of_stage.get(stage_id, []),
-                "nodes": input_cards(
-                    input_cards_table.get(stage_id, ()),
-                    members,
-                    container_of[stage_id],
-                    meta,
-                    ids,
-                    slide_no,
-                )
+                "nodes": card_nodes_in
                 + [
                     serialize_node(d)
                     for d in sorted(members, key=lambda d: (d.box.top, d.box.left, d.node_id))
                 ]
-                + result_nodes(key_outputs, members, container_of[stage_id], meta, ids, slide_no),
-                "edges": stage_edges[stage_id],
+                + card_nodes_out,
+                "edges": stage_edges[stage_id] + card_edges_in + card_edges_out,
                 "inputs": stage_io[stage_id][0],
                 "outputs": stage_io[stage_id][1],
             }

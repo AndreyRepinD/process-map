@@ -22,10 +22,12 @@ import {
 import { iconUrl } from '../../assets/icons';
 import type { ProcessNode } from '../../data/schema';
 import { ru } from '../../i18n/ru';
+import { useProcessMap } from '../../hooks/useProcessMap';
 import { useProcessStore } from '../../store/useProcessStore';
 import { openScreen } from '../../utils/url';
 import { descriptionParagraphs } from './descriptionParagraphs';
 import { NodeContentForm } from './NodeContentForm';
+import { NodeEdgesSection } from './NodeEdgesSection';
 import { ScreenLinkSection } from './ScreenLinkSection';
 import { Section } from './Section';
 import styles from './NodeDrawer.module.css';
@@ -72,6 +74,9 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
   const mode = useProcessStore((state) => state.mode);
+  const currentStageId = useProcessStore((state) => state.currentStageId);
+  const map = useProcessMap();
+  const stage = map.stages.find((candidate) => candidate.id === currentStageId);
   const [editingContent, setEditingContent] = useState(false);
 
   // Выход из редактора закрывает форму — иначе в режиме «Просмотр» на панели
@@ -237,6 +242,10 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
           )}
 
           <ScreenLinkSection node={node} />
+
+          {/* Связи правятся только в редакторе: читателю вики они видны
+              стрелками на полотне, а список ему ни к чему. */}
+          {mode === 'edit' && stage !== undefined && <NodeEdgesSection node={node} stage={stage} />}
 
           <ListSection title={ru.drawer.inputs} items={node.inputs} />
           <ListSection title={ru.drawer.outputs} items={node.outputs} />

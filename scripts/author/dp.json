@@ -55,7 +55,11 @@
         "Справочник DFU и маппинг SKU",
         "Календарь OOS и дефицитов",
         "Календарь промо прошлых периодов"
-      ]
+      ],
+      "outputsFrom": {
+        "Отчёт качества данных": "proverka-kachestva-dannyh",
+        "Сопоставимая история": "podgotovka-sopostavimoy-istorii"
+      }
     },
     {
       "number": 2,
@@ -122,7 +126,11 @@
         "Сопоставимая история",
         "Календарь акций и механик",
         "Профиль подобия для новинок"
-      ]
+      ],
+      "outputsFrom": {
+        "Базовый прогноз с чемпионом по серии": "assortiment-metody-i-chempion",
+        "Промо-объёмы": "promo-light-prognoz-promo-obemov-opcionalno"
+      }
     },
     {
       "number": 3,
@@ -295,7 +303,13 @@
           "expectSystems": ["INPLAN", "IO"]
         }
       ],
-      "inputCards": ["Согласованный план спроса Sell-In", "Пороги точности и правила алертов"]
+      "inputCards": ["Согласованный план спроса Sell-In", "Пороги точности и правила алертов"],
+      "outputsFrom": {
+        "Опубликованный план спроса в SNP и MEIO": "publikaciya-plana-sprosa",
+        "Решение по разрыву с планом SNP": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+        "KPI точности и FVA": "kontrol-tochnosti-i-fva",
+        "Перечень предупреждений с приоритетом": "analiz-preduprezhdeniy"
+      }
     }
   ],
   "edges": [

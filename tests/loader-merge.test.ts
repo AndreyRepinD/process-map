@@ -7,6 +7,8 @@ import {
   parseOverrides,
   readStoredOverrides,
   addNode,
+  connectNodes,
+  disconnectNodes,
   patchNodeContent,
   removeNode,
   removeNodeOverride,
@@ -439,5 +441,68 @@ describe('запись правок в хранилище', () => {
 
     removeNode('n2');
     expect(readStoredOverrides()['n2']?.removed).toBe(true);
+  });
+});
+
+describe('mergeOverrides — связи', () => {
+  it('проведённая связь появляется ребром в своём этапе', () => {
+    const map = buildSampleProcessMap();
+    const stage = map.stages[0];
+    const [a, b] = [stage?.nodes[0]?.id, stage?.nodes[1]?.id];
+    expect(a && b).toBeTruthy();
+
+    const merged = mergeOverrides(map, { [a as string]: { edgesAdded: [b as string] } });
+    const edge = merged.stages[0]?.edges.find((e) => e.source === a && e.target === b);
+    expect(edge, 'связь не появилась').toBeTruthy();
+    expect(edge?.kind).toBe('process');
+  });
+
+  it('снятая связь исчезает, даже если она из process.json', () => {
+    const map = buildSampleProcessMap();
+    const existing = map.stages[0]?.edges[0];
+    expect(existing, 'в фикстуре нет рёбер').toBeTruthy();
+
+    const merged = mergeOverrides(map, {
+      [existing?.source as string]: { edgesRemoved: [existing?.target as string] },
+    });
+    expect(merged.stages[0]?.edges.some((e) => e.id === existing?.id)).toBe(false);
+  });
+
+  it('связь между этапами руками не проводится', () => {
+    // Межэтапные связи на обзоре выводятся из потока шагов. Нарисованная поверх
+    // рассказывала бы о процессе то, чего в нём нет, поэтому цель из чужого
+    // этапа молча игнорируется, а не роняет карту.
+    const map = buildSampleProcessMap();
+    const from = map.stages[0]?.nodes[0]?.id;
+    const alien = map.stages[1]?.nodes[0]?.id;
+    expect(from && alien).toBeTruthy();
+
+    const merged = mergeOverrides(map, { [from as string]: { edgesAdded: [alien as string] } });
+    for (const stage of merged.stages) {
+      expect(stage.edges.some((e) => e.source === from && e.target === alien)).toBe(false);
+    }
+  });
+
+  it('связь на себя и дубль не создаются', () => {
+    const map = buildSampleProcessMap();
+    const existing = map.stages[0]?.edges[0];
+    const a = existing?.source as string;
+    const merged = mergeOverrides(map, {
+      [a]: { edgesAdded: [a, existing?.target as string] },
+    });
+    expect(merged.stages[0]?.edges.filter((e) => e.source === a && e.target === a)).toHaveLength(0);
+    expect(
+      merged.stages[0]?.edges.filter((e) => e.id === existing?.id),
+      'ребро задвоилось',
+    ).toHaveLength(1);
+  });
+
+  it('снятие связи убирает её и из добавленных, и помечает снятой', () => {
+    // Ребро могло прийти из карты ИЛИ из правки, поэтому нужны оба действия.
+    connectNodes('n1', 'n2');
+    expect(readStoredOverrides()['n1']?.edgesAdded).toEqual(['n2']);
+    disconnectNodes('n1', 'n2');
+    expect(readStoredOverrides()['n1']?.edgesAdded).toEqual([]);
+    expect(readStoredOverrides()['n1']?.edgesRemoved).toEqual(['n2']);
   });
 });

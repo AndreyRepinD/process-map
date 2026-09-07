@@ -296,6 +296,72 @@
           "source": "proverka-master-dannyh",
           "target": "proverka-cepochki-na-svyazannost",
           "kind": "process"
+        },
+        {
+          "id": "e-struktura-tekuschih-zapasov-po-uzlam-i-partiyam--podgotovka-dannyh",
+          "source": "struktura-tekuschih-zapasov-po-uzlam-i-partiyam",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-fakticheskie-otgruzki-za-period--podgotovka-dannyh",
+          "source": "fakticheskie-otgruzki-za-period",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-ostatki-na-rukah-v-zakaze-i-v-puti--podgotovka-dannyh",
+          "source": "ostatki-na-rukah-v-zakaze-i-v-puti",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-svyazki-produkt-lokaciya-i-eshelony-seti--podgotovka-dannyh",
+          "source": "svyazki-produkt-lokaciya-i-eshelony-seti",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-istochniki-postavki-kvoty-i-marshruty--podgotovka-dannyh",
+          "source": "istochniki-postavki-kvoty-i-marshruty",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendari-popolneniya-i-proizvodstvennye-kalendari--podgotovka-dannyh",
+          "source": "kalendari-popolneniya-i-proizvodstvennye-kalendari",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-moschnosti-hraneniya-po-temperaturnym-rezhimam--podgotovka-dannyh",
+          "source": "moschnosti-hraneniya-po-temperaturnym-rezhimam",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-nezakrytyy-spros-i-spisaniya-za-period--podgotovka-dannyh",
+          "source": "nezakrytyy-spros-i-spisaniya-za-period",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-podgotovka-dannyh--model-dannyh-dlya-rascheta",
+          "source": "podgotovka-dannyh",
+          "target": "model-dannyh-dlya-rascheta",
+          "kind": "process"
+        },
+        {
+          "id": "e-proverka-master-dannyh--otchet-po-master-dannym",
+          "source": "proverka-master-dannyh",
+          "target": "otchet-po-master-dannym",
+          "kind": "process"
+        },
+        {
+          "id": "e-proverka-cepochki-na-svyazannost--otchet-svyaznosti-cepochki",
+          "source": "proverka-cepochki-na-svyazannost",
+          "target": "otchet-svyaznosti-cepochki",
+          "kind": "process"
         }
       ],
       "inputs": [
@@ -572,6 +638,48 @@
           "source": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
           "target": "segmentaciya",
           "kind": "process"
+        },
+        {
+          "id": "e-validirovannye-dannye-dlya-rascheta--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "validirovannye-dannye-dlya-rascheta",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-planovye-lidtaymy-i-otkloneniya--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "planovye-lidtaymy-i-otkloneniya",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-kvoty-i-prioritety-istochnikov--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "kvoty-i-prioritety-istochnikov",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-zatraty-na-hranenie--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "zatraty-na-hranenie",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-minimalnaya-partiya-i-kratnost--nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "source": "minimalnaya-partiya-i-kratnost",
+          "target": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-nastroyka-parametrov-dlya-rascheta-urovney-zapasov--nastroennye-parametry-rascheta-1-900200",
+          "source": "nastroyka-parametrov-dlya-rascheta-urovney-zapasov",
+          "target": "nastroennye-parametry-rascheta-1-900200",
+          "kind": "process"
+        },
+        {
+          "id": "e-segmentaciya--segmentaciya-po-pyati-priznakam-1-900201",
+          "source": "segmentaciya",
+          "target": "segmentaciya-po-pyati-priznakam-1-900201",
+          "kind": "process"
         }
       ],
       "inputs": [
@@ -828,6 +936,42 @@
           "source": "analiz-poluchennyh-znacheniy",
           "target": "analiz-preduprezhdeniy-rascheta",
           "kind": "process"
+        },
+        {
+          "id": "e-nastroennye-parametry-rascheta-1-800300--raschet-rekomendaciy-po-urovnyam-zapasov",
+          "source": "nastroennye-parametry-rascheta-1-800300",
+          "target": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-segmentaciya-po-pyati-priznakam-1-800301--raschet-rekomendaciy-po-urovnyam-zapasov",
+          "source": "segmentaciya-po-pyati-priznakam-1-800301",
+          "target": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-ogranicheniya-optimizacii-moschnosti-byudzhet-srok-godnosti--raschet-rekomendaciy-po-urovnyam-zapasov",
+          "source": "ogranicheniya-optimizacii-moschnosti-byudzhet-srok-godnosti",
+          "target": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "kind": "process"
+        },
+        {
+          "id": "e-raschet-rekomendaciy-po-urovnyam-zapasov--optimizacionnyy-raschet-raspredeleniya-zapasov-po-eshelonam-v-razreze",
+          "source": "raschet-rekomendaciy-po-urovnyam-zapasov",
+          "target": "optimizacionnyy-raschet-raspredeleniya-zapasov-po-eshelonam-v-razreze",
+          "kind": "process"
+        },
+        {
+          "id": "e-analiz-poluchennyh-znacheniy--tri-scenariya",
+          "source": "analiz-poluchennyh-znacheniy",
+          "target": "tri-scenariya",
+          "kind": "process"
+        },
+        {
+          "id": "e-analiz-preduprezhdeniy-rascheta--perechen-preduprezhdeniy-rascheta",
+          "source": "analiz-preduprezhdeniy-rascheta",
+          "target": "perechen-preduprezhdeniy-rascheta",
+          "kind": "process"
         }
       ],
       "inputs": [],
@@ -918,6 +1062,12 @@
           "id": "e-ocenka-effektov--ocenka-effektov-i-rekomendacii",
           "source": "ocenka-effektov",
           "target": "ocenka-effektov-i-rekomendacii",
+          "kind": "process"
+        },
+        {
+          "id": "e-ocenka-effektov--kompleksnaya-ocenka-effektov-i-parametrov-postavok-na-osnove-treh",
+          "source": "ocenka-effektov",
+          "target": "kompleksnaya-ocenka-effektov-i-parametrov-postavok-na-osnove-treh",
           "kind": "process"
         }
       ],
