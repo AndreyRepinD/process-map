@@ -191,3 +191,118 @@
   color: var(--scp-text-neutral-disable);
   cursor: default;
 }
+
+/* ── Правка содержания узла (решение владельца от 07.09.2026) ──────────────
+   Стили повторяют форму ссылки на экран (ScreenLinkForm.module.css) — это одна
+   и та же форма по смыслу, и расходиться им не с чего. Цвета и размеры только
+   токенами: хардкод hex в компонентах запрещён правилом ESLint. */
+.editContent {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--scp-content-action-brand);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.editContent:hover,
+.editContent:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+
+.contentForm {
+  display: flex;
+  flex-direction: column;
+  gap: var(--scp-spacing-sm);
+}
+
+.formLabel {
+  display: flex;
+  flex-direction: column;
+  color: var(--scp-content-sub-primary);
+  font-size: var(--pm-font-size-12-5);
+  gap: var(--scp-spacing-xs);
+}
+
+.formInput,
+.formArea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--pm-space-6) var(--pm-space-10);
+  border: 1px solid var(--scp-color-neutral-200);
+  border-radius: var(--scp-radius-button);
+  background: var(--scp-background-primary);
+  color: var(--scp-content-primary);
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+}
+
+.formArea {
+  resize: vertical;
+}
+
+.formInput:focus,
+.formArea:focus {
+  border-color: var(--scp-border-brand-default);
+  outline: none;
+}
+
+.formError {
+  margin: 0;
+  color: var(--scp-color-error-600);
+  font-size: var(--pm-font-size-11);
+}
+
+.formActions {
+  display: flex;
+  align-items: center;
+  gap: var(--scp-spacing-sm);
+}
+
+.formPrimary,
+.formGhost {
+  height: var(--pm-drawer-button-height);
+  padding: 0 var(--pm-space-14);
+  border: 1px solid transparent;
+  border-radius: var(--scp-radius-button);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.formPrimary {
+  background: var(--scp-background-action-brand-primary-default);
+  color: var(--scp-content-constant);
+}
+
+.formGhost {
+  border-color: var(--scp-color-neutral-200);
+  background: var(--scp-background-action-brand-secondary-default);
+  color: var(--scp-content-primary);
+}
+
+/* Удаление — текстовое действие в красном, а не третья равновесная кнопка:
+   тот же довод, что в форме ссылки. */
+.formDanger {
+  padding: 0;
+  border: 0;
+  margin-left: auto;
+  background: none;
+  color: var(--scp-color-error-600);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.formDanger:hover,
+.formDanger:focus-visible {
+  color: var(--scp-color-error-700);
+  outline: none;
+  text-decoration: underline;
+}

@@ -233,11 +233,50 @@ export const ProcessMapSchema = z.object({
 export type ProcessMap = z.infer<typeof ProcessMapSchema>;
 
 // Overrides (localStorage), SPEC.md §3 «Overrides».
-// null у screen — значимое значение (явно удалённая ссылка), поэтому нельзя
-// использовать .optional() для самого поля screen внутри записи: undefined
-// («не трогали») и null («удалили») должны различаться.
+//
+// ТРИ СОСТОЯНИЯ У КАЖДОГО ПОЛЯ, и различать их обязательно:
+//   · ключа нет  — «не трогали», берём значение из process.json;
+//   · null       — «очистили явно» (кнопка «Удалить ссылку» и её аналоги);
+//   · значение   — «заменили».
+// Поэтому у полей .nullable().optional(), а не просто .optional().
+//
+// ЗАЧЕМ ЗДЕСЬ СОДЕРЖАНИЕ, А НЕ ТОЛЬКО ССЫЛКА (решение владельца от 07.09.2026).
+// Раньше правки в браузере ограничивались полем screen: содержание карты
+// собирается конвейером из authoring source, и правка в process.json была бы
+// затёрта следующим прогоном. Теперь владелец правит содержание прямо на карте,
+// а обратно в authoring source оно попадает через «Экспорт JSON» — тем же
+// путём, которым уже ходят ссылки на экраны (docs/ссылки-на-экраны.md).
+//
+// ЧТО ЗДЕСЬ НЕ РЕДАКТИРУЕТСЯ И ПОЧЕМУ. position и slidePosition: координаты —
+// производная величина, их считает scripts/layout.ts, и правка руками была бы
+// затёрта. Рёбра: связь принадлежит этапу, а не узлу, и в Record<nodeId, …> её
+// не выразить.
+export const AddedNodeSchema = z.object({
+  /** Номер этапа, в который добавлен узел (Stage.number). */
+  stage: z.number().int().min(1),
+  type: NodeTypeSchema,
+  /** Колонка для data-узла: вход или выход. */
+  direction: DirectionSchema.optional(),
+  /** id группы внутри этапа, если узел кладётся в группу. */
+  group: z.string().optional(),
+});
+export type AddedNode = z.infer<typeof AddedNodeSchema>;
+
 export const OverrideEntrySchema = z.object({
   screen: ScreenLinkSchema.nullable().optional(),
+  label: z.string().optional(),
+  description: z.string().nullable().optional(),
+  inputs: z.array(z.string()).nullable().optional(),
+  outputs: z.array(z.string()).nullable().optional(),
+  owner: z.string().nullable().optional(),
+  /**
+   * Узел скрыт правкой. Именно `true`, а не булев флаг: значение false
+   * означало бы «восстановлен», а восстановление делается удалением записи —
+   * два способа сказать одно и то же расходятся при первом же рассинхроне.
+   */
+  removed: z.literal(true).optional(),
+  /** Узел, которого в process.json нет вовсе: он создан правкой. */
+  added: AddedNodeSchema.optional(),
 });
 export type OverrideEntry = z.infer<typeof OverrideEntrySchema>;
 

@@ -10,13 +10,22 @@
 // Подсветка выбранного узла уже реализована в самих карточках
 // (StepCard.module.css/.selected, DataNode.module.css/.selected) — здесь
 // только затемнение полотна.
-import { useCallback, useEffect, useId, useMemo, useRef, type KeyboardEvent } from 'react';
+import {
+  type KeyboardEvent,
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 import { iconUrl } from '../../assets/icons';
 import type { ProcessNode } from '../../data/schema';
 import { ru } from '../../i18n/ru';
 import { useProcessStore } from '../../store/useProcessStore';
 import { openScreen } from '../../utils/url';
 import { descriptionParagraphs } from './descriptionParagraphs';
+import { NodeContentForm } from './NodeContentForm';
 import { ScreenLinkSection } from './ScreenLinkSection';
 import { Section } from './Section';
 import styles from './NodeDrawer.module.css';
@@ -62,6 +71,16 @@ interface NodeDrawerPanelProps {
 function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
+  const mode = useProcessStore((state) => state.mode);
+  const [editingContent, setEditingContent] = useState(false);
+
+  // Выход из редактора закрывает форму — иначе в режиме «Просмотр» на панели
+  // остались бы поля ввода. Тот же довод, что у ScreenLinkSection.
+  useEffect(() => {
+    if (mode !== 'edit') {
+      setEditingContent(false);
+    }
+  }, [mode]);
 
   const paragraphs = useMemo(() => descriptionParagraphs(node.description), [node.description]);
   const hasDescription = paragraphs.length > 0;
@@ -184,6 +203,29 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
             не сообщает, а только удлиняет панель. Исключение — «Экран в
             системе»: у неё есть осмысленное пустое состояние. */}
         <div className={styles.content}>
+          {/* Правка содержания — только в режиме редактора (SPEC §4.4). В режиме
+              просмотра секция не рендерится вовсе, как и действие «Добавить» у
+              ссылки на экран. */}
+          {mode === 'edit' &&
+            (editingContent ? (
+              <NodeContentForm
+                node={node}
+                onClose={() => {
+                  setEditingContent(false);
+                }}
+              />
+            ) : (
+              <button
+                type="button"
+                className={styles.editContent}
+                onClick={() => {
+                  setEditingContent(true);
+                }}
+              >
+                {ru.nodeEditor.edit}
+              </button>
+            ))}
+
           {hasDescription && (
             <div className={styles.description}>
               {paragraphs.map((paragraph, index) => (

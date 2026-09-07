@@ -21,6 +21,7 @@ import { useReactFlow, useViewport, type FitViewOptions } from '@xyflow/react';
 import { iconUrl } from '../../assets/icons';
 import { ru } from '../../i18n/ru';
 import { useProcessStore } from '../../store/useProcessStore';
+import { AddBlockActions } from './AddBlockActions';
 import { EditorActions } from './EditorActions';
 import styles from './Toolbar.module.css';
 
@@ -114,6 +115,10 @@ export function Toolbar({ fitViewOptions, drawerOpen = false, compact = false }:
           делать ни с одной из трёх кнопок, а «Сбросить правки» ему ещё и
           опасна. */}
       {mode === 'edit' && <EditorActions />}
+      {/* Добавлять блок можно только внутри этапа: на обзоре узлов нет, там
+          карточки этапов. Открытый этап компонент находит сам — тулбару о нём
+          знать незачем, у него и так семь пропсов. */}
+      {mode === 'edit' && <AddBlockActions />}
 
       {/* Роль, aria-checked, aria-label и onClick одинаковы в обоих видах —
           меняется только содержимое. Это и позволяет свернуть кнопку, не
