@@ -1,0 +1,116 @@
+/*
+ * Секция «Алгоритмы в платформе» (process-map-trt).
+ *
+ * Оформление взято у соседней секции ссылки (ScreenLinkSection.module.css) —
+ * это соседние блоки одной панели, и своя типографика у второго из них читалась
+ * бы как другая по природе сущность. Только var(...) из src/theme/tokens.css
+ * (CLAUDE.md «Кодовые правила»).
+ */
+
+.empty {
+  margin: 0;
+  color: var(--scp-text-neutral-secondary);
+  font-size: var(--pm-font-size-12-5);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  margin: 0;
+  gap: var(--scp-spacing-xs);
+  list-style: none;
+}
+
+.item {
+  color: var(--scp-content-primary);
+  font-size: var(--pm-font-size-12-5);
+  line-height: var(--scp-line-height-16);
+}
+
+/* Маркер перед именем — «·», а не bullet списка: имена длинные и переносятся,
+   и висячий bullet отрывался бы от второй строки. */
+.item::before {
+  color: var(--scp-text-neutral-secondary);
+  content: '· ';
+}
+
+.open {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  border: 0;
+  margin-top: var(--scp-spacing-xs);
+  background: none;
+  color: var(--scp-content-brand);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+  gap: var(--scp-spacing-xs);
+}
+
+.open:hover,
+.open:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+
+.icon {
+  width: var(--pm-icon-12);
+  height: var(--pm-icon-12);
+}
+
+/* Пояснение, почему переход у всех узлов один и тот же. */
+.note {
+  margin: var(--scp-spacing-xs) 0 0;
+  color: var(--scp-text-neutral-secondary);
+  font-size: var(--pm-font-size-11);
+  line-height: var(--scp-line-height-16);
+}
+
+.action {
+  padding: 0;
+  border: 0;
+  margin-top: var(--scp-spacing-xs);
+  background: none;
+  color: var(--scp-content-brand);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+  font-weight: var(--scp-font-weight-semi-bold);
+  text-align: left;
+}
+
+.action:hover,
+.action:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
+
+.picker {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  border: 0;
+  margin: var(--scp-spacing-xs) 0 0;
+  gap: var(--scp-spacing-xs);
+}
+
+.legend {
+  padding: 0;
+  color: var(--scp-text-neutral-secondary);
+  font-size: var(--pm-font-size-11);
+}
+
+.option {
+  display: flex;
+  align-items: flex-start;
+  cursor: pointer;
+  gap: var(--scp-spacing-xs);
+}
+
+.optionText {
+  color: var(--scp-content-primary);
+  font-size: var(--pm-font-size-12-5);
+  line-height: var(--scp-line-height-16);
+}

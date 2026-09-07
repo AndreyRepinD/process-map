@@ -20,6 +20,8 @@ import {
   useState,
 } from 'react';
 import { iconUrl } from '../../assets/icons';
+import { algorithmsForMap } from '../../data/algorithms';
+import { LOADED_MAP_ID } from '../../data/loader';
 import type { ProcessNode } from '../../data/schema';
 import { ru } from '../../i18n/ru';
 import { useProcessMap } from '../../hooks/useProcessMap';
@@ -28,11 +30,18 @@ import { openScreen } from '../../utils/url';
 import { descriptionParagraphs } from './descriptionParagraphs';
 import { NodeContentForm } from './NodeContentForm';
 import { NodeEdgesSection } from './NodeEdgesSection';
+import { AlgorithmSection } from './AlgorithmSection';
 import { ScreenLinkSection } from './ScreenLinkSection';
 import { Section } from './Section';
 import styles from './NodeDrawer.module.css';
 
 const CLOSE_ICON = iconUrl('x-close');
+
+/**
+ * Имена алгоритмов СВОЕЙ карты — считаются один раз на модуль, а не на каждое
+ * открытие панели: реестр статичен, id карты выведен из данных бандла.
+ */
+const ALGORITHM_REGISTRY = algorithmsForMap(LOADED_MAP_ID);
 
 /** Что считаем фокусируемым внутри панели (для Tab-ловушки). */
 const FOCUSABLE_SELECTOR = [
@@ -242,6 +251,12 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
           )}
 
           <ScreenLinkSection node={node} />
+
+          {/* Алгоритмы платформы — отдельная секция от экрана: у шага бывают
+              обе связи сразу, и они отвечают на разные вопросы («где посмотреть
+              данные» и «чем это считается»). Имена берутся из реестра СВОЕГО
+              модуля; у карт без реестра (snp, mrp) он пуст и секции нет. */}
+          <AlgorithmSection node={node} registry={ALGORITHM_REGISTRY} />
 
           {/* Связи правятся только в редакторе: читателю вики они видны
               стрелками на полотне, а список ему ни к чему. */}

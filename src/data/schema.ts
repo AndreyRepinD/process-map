@@ -129,6 +129,23 @@ export const ProcessNodeSchema = z.object({
   system: SystemCodeSchema.optional(),
   owner: z.string().optional(),
   screen: ScreenLinkSchema.optional(),
+  // Алгоритмы Менеджера процессов In.Plan, которыми считается этот шаг.
+  //
+  // ОТДЕЛЬНОЕ ПОЛЕ, А НЕ ВТОРОЕ ЗНАЧЕНИЕ screen: у шага бывают обе связи сразу
+  // и отвечают они на разные вопросы — screen «где посмотреть данные»,
+  // algorithms «чем это считается». Свести их в одно поле значило бы заставить
+  // владельца выбирать между таблицей и алгоритмом там, где верны оба ответа.
+  //
+  // СПИСОК, А НЕ ОДНО ИМЯ. Соответствие шага и алгоритма не взаимно однозначно:
+  // «Настройка параметров» в MEIO — это четыре расчёта CV и усреднитель,
+  // «Контроль точности» в DP — «DP FA» и «DP FA (неочищ данные)». Одно поле
+  // заставило бы выбросить остальные имена, и карта утверждала бы неполноту.
+  //
+  // ИМЕНА, А НЕ ССЫЛКИ. Платформа не даёт адреса на отдельный алгоритм
+  // (проверено 07.09.2026: выбор процесса в комбобоксе не меняет URL), поэтому
+  // адрес у всех один — экран `/process-manager` из src/data/algorithms.ts, и
+  // хранить его в каждом узле значило бы размножить одну и ту же строку.
+  algorithms: z.array(z.string()).optional(),
   position: z.object({ x: z.number(), y: z.number() }),
   // Исходная геометрия слайда презентации (левый верхний угол фигуры, px).
   //
@@ -264,6 +281,7 @@ export type AddedNode = z.infer<typeof AddedNodeSchema>;
 
 export const OverrideEntrySchema = z.object({
   screen: ScreenLinkSchema.nullable().optional(),
+  algorithms: z.array(z.string()).nullable().optional(),
   label: z.string().optional(),
   description: z.string().nullable().optional(),
   inputs: z.array(z.string()).nullable().optional(),

@@ -6,7 +6,7 @@
 //   «Экспорт отдаёт полный слитый `process.json`; импорт валидирует zod'ом
 //    и заменяет overrides.»
 // Экспорт — это ProcessMap (вся карта), а хранилище — Overrides
-// (Record<nodeId, { screen?: ScreenLink | null }>). Если понять импорт
+// (Record<nodeId, { screen?: ScreenLink | null, … }>). Если понять импорт
 // буквально как «файл overrides», round-trip «экспорт → импорт» не сойдётся:
 // пользователь выгрузит одно, а положить обратно сможет только другое, и
 // единственный файл, который приложение отдаёт, оно же и не примет.
@@ -129,6 +129,9 @@ export function deriveOverrides(base: ProcessMap, imported: ProcessMap): Overrid
         // явное удаление — null, а не отсутствие записи.
         entry.screen = next.screen ?? null;
       }
+      if (!listsEqual(node.algorithms, next.algorithms)) {
+        entry.algorithms = next.algorithms ?? null;
+      }
       if (node.label !== next.label) {
         entry.label = next.label;
       }
@@ -178,6 +181,9 @@ export function deriveOverrides(base: ProcessMap, imported: ProcessMap): Overrid
     }
     if (node.screen !== undefined) {
       entry.screen = node.screen;
+    }
+    if (node.algorithms !== undefined) {
+      entry.algorithms = node.algorithms;
     }
     overrides[id] = entry;
   }

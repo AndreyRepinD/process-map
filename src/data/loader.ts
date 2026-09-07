@@ -48,6 +48,16 @@ const MAP_ID = rawProcessJson.id;
  *  брали ровно то значение, которым пользуется код, а не повторяли формулу. */
 export const OVERRIDES_KEY = overridesStorageKey(MAP_ID);
 
+/**
+ * id ЗАГРУЖЕННОЙ карты (`dp`, `meio`, `snp`, `mrp`).
+ *
+ * Экспортируется по той же причине, что и OVERRIDES_KEY: значение выведено из
+ * файла, реально попавшего в бандл. Интерфейсу он нужен, чтобы подсказать
+ * список алгоритмов СВОЕГО модуля (src/data/algorithms.ts), а не читать его из
+ * переменной сборки, которую можно забыть выставить.
+ */
+export const LOADED_MAP_ID: string = MAP_ID;
+
 // ───────────────────────────── чистые функции ─────────────────────────────
 
 /** Валидирует произвольное значение как ProcessMap. Бросает ZodError при несоответствии. */
@@ -106,6 +116,7 @@ function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode
     return node;
   }
   let next = patchField(node, 'screen', entry.screen);
+  next = patchField(next, 'algorithms', entry.algorithms);
   // label без null: подпись — обязательное поле схемы, «очистить» её нельзя,
   // а безымянная карточка на полотне была бы хуже неправленой.
   next = patchField(next, 'label', entry.label);
@@ -339,6 +350,18 @@ export function setNodeOverride(nodeId: string, screen: ScreenLink | null): Over
   // при первой же правке ссылки, молча и без следа.
   const current = readStoredOverrides();
   const next: Overrides = { ...current, [nodeId]: { ...current[nodeId], screen } };
+  writeStoredOverrides(next);
+  return next;
+}
+
+/**
+ * Записывает набор алгоритмов узла. `null` — владелец снял привязку целиком
+ * (и это НЕ откат к значению из process.json); пустой список к записи не
+ * допускается вызывающим кодом, он означал бы то же самое двумя способами.
+ */
+export function setNodeAlgorithms(nodeId: string, algorithms: string[] | null): Overrides {
+  const current = readStoredOverrides();
+  const next: Overrides = { ...current, [nodeId]: { ...current[nodeId], algorithms } };
   writeStoredOverrides(next);
   return next;
 }
