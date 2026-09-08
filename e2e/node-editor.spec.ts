@@ -163,3 +163,37 @@ test('размер блока меняется и переживает пере�
   await page.waitForSelector(STEP_CARD);
   expect(await widthOf(), 'размер не пережил перезагрузку').toBeCloseTo(after, 0);
 });
+
+test('экран платформы открывается панелью рядом с картой', async ({ page }) => {
+  // Решение владельца 08.09.2026: «можно открыть экран не новой ссылкой, а как
+  // у платформы — рядом с картой».
+  //
+  // Адрес фрейма подставляется СВОЙ, а не платформенный: чужой origin в тесте
+  // означал бы поход в сеть на каждом прогоне и падения от чужой доступности.
+  // Проверяется механика панели — что она открылась, ведёт на нужный адрес,
+  // ужимает полотно и закрывается.
+  await openInEditor(page, NODE);
+
+  await page.getByRole('button', { name: 'Добавить' }).first().click();
+  await page.getByLabel('Название экрана').fill('Экран проверки');
+  await page.getByLabel('URL').fill('http://localhost:5173/?embedded=1');
+  await page.getByRole('button', { name: 'Сохранить', exact: true }).click();
+
+  const canvas = page.getByRole('region', { name: 'Схема этапа, уровень 2' });
+  const wideBefore = (await canvas.boundingBox())?.width ?? 0;
+
+  await page.getByRole('button', { name: 'Открыть рядом' }).click();
+
+  const panel = page.getByRole('complementary', { name: 'Экран платформы' });
+  await expect(panel).toBeVisible();
+  await expect(panel.locator('iframe')).toHaveAttribute('src', 'http://localhost:5173/?embedded=1');
+  // Панель именно УЖИМАЕТ карту, а не накрывает её: этим она и отличается от
+  // боковой карточки узла.
+  expect((await canvas.boundingBox())?.width ?? 0).toBeLessThan(wideBefore);
+  // Переход во вкладку остаётся рядом: фрейм могут запретить политикой.
+  await expect(panel.getByRole('link', { name: 'В новой вкладке' })).toBeVisible();
+
+  await panel.getByRole('button', { name: 'Закрыть' }).click();
+  await expect(panel).toHaveCount(0);
+  expect((await canvas.boundingBox())?.width ?? 0).toBeCloseTo(wideBefore, 0);
+});

@@ -24,7 +24,6 @@ import type { ProcessNode } from '../../data/schema';
 import { commitOverrides } from '../../hooks/useProcessMap';
 import { ru } from '../../i18n/ru';
 import { useProcessStore } from '../../store/useProcessStore';
-import { openScreen } from '../../utils/url';
 import { Section } from './Section';
 import styles from './AlgorithmSection.module.css';
 
@@ -38,6 +37,7 @@ export interface AlgorithmSectionProps {
 
 export function AlgorithmSection({ node, registry }: AlgorithmSectionProps) {
   const mode = useProcessStore((state) => state.mode);
+  const openEmbedded = useProcessStore((state) => state.openEmbedded);
   const editable = mode === 'edit';
   const [editing, setEditing] = useState(false);
   const selected = node.algorithms ?? [];
@@ -87,8 +87,12 @@ export function AlgorithmSection({ node, registry }: AlgorithmSectionProps) {
         <button
           type="button"
           className={styles.open}
+          // Рядом с картой, а не новой вкладкой (решение владельца 08.09.2026):
+          // алгоритм в Менеджере процессов ищут, сверяясь с блоком на карте, и
+          // в разных окнах это сверка вслепую. Заголовок панели — имя первого
+          // привязанного алгоритма: искать в комбобоксе всё равно по нему.
           onClick={() => {
-            openScreen(PROCESS_MANAGER_URL);
+            openEmbedded(PROCESS_MANAGER_URL, selected[0] ?? ru.drawer.algorithmOpen);
           }}
         >
           <img className={styles.icon} src={LINK_EXTERNAL_ICON} alt="" />
