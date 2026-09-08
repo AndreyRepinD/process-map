@@ -18,7 +18,6 @@ import { Breadcrumbs } from '../Breadcrumbs';
 import { DataEdge, EdgeMarkers, IntegrationEdge, ProcessEdge, ProcessInnerEdge } from '../edges';
 import { Legend } from '../Legend';
 import { NodeDrawer } from '../NodeDrawer';
-import { ScreenPanel } from '../ScreenPanel/ScreenPanel';
 import { DataNode } from '../nodes/DataNode';
 import { GroupNode } from '../nodes/GroupNode';
 import { StepNode } from '../nodes/StepNode';
@@ -116,66 +115,62 @@ export function StageDetail() {
   return (
     <div className={compact ? `${styles.root} ${styles.compact}` : styles.root} ref={rootRef}>
       <Breadcrumbs stages={map.stages} compact={compact} />
-      {/* Полотно и панель экрана — в один ряд: панель ужимает карту, а не
-          накрывает её. Тем она и отличается от боковой карточки узла, которая
-          лежит поверх и затемняет полотно. */}
-      <div className={styles.split}>
-        {/* role="region", а не "application" — см. комментарий в Overview.tsx. */}
-        <div className={styles.canvas} role="region" aria-label={ru.stageDetail.canvasLabel}>
-          {/* key по этапу на самом провайдере (не только на <ReactFlow> ниже):
+      {/* role="region", а не "application" — см. комментарий в Overview.tsx. */}
+      <div className={styles.canvas} role="region" aria-label={ru.stageDetail.canvasLabel}>
+        {/* key по этапу на самом провайдере (не только на <ReactFlow> ниже):
             смена этапа обязана пересобрать ОБЩИЙ store React Flow целиком,
             иначе Toolbar (сиблинг <ReactFlow>, читает viewport из того же
             store — см. Toolbar.tsx) на миг унаследовал бы масштаб/сдвиг
             предыдущего этапа, пока StartViewport его не перезапишет. Раскладки
             отличаются в разы (3942×1088 у этапа 2 против 3528×296 у этапа 1). */}
-          <ReactFlowProvider key={stage.id}>
-            <EdgeMarkers>
-              <ReactFlow
-                nodes={graph.nodes}
-                edges={graph.edges}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                // ПЕРЕТАСКИВАНИЕ ТОЛЬКО В РЕДАКТОРЕ (решение владельца от
-                // 07.09.2026). Правило «узлы не перетаскиваются» вводилось для
-                // читателя вики: там таскать нечего и незачем, а сдвинутая
-                // карточка выглядела бы сломанной вёрсткой. Владельцу карты
-                // раскладку править нужно, и его правки живут в overrides —
-                // пересчёт координат конвейером их не затирает.
-                nodesDraggable={mode === 'edit'}
-                onNodeDragStop={(_, dragged) => {
-                  // КООРДИНАТА ПРИВОДИТСЯ К АБСОЛЮТНОЙ. Узел внутри группы —
-                  // ребёнок контейнера (parentId в stageGraph.ts), и React Flow
-                  // отдаёт его позицию ОТНОСИТЕЛЬНО родителя. В process.json и в
-                  // overrides координаты абсолютные, и запись относительной
-                  // означала бы, что при следующем открытии карточка уедет на
-                  // смещение группы — тем дальше, чем правее группа.
-                  const parent =
-                    dragged.parentId === undefined
-                      ? undefined
-                      : graph.nodes.find((node) => node.id === dragged.parentId);
-                  const position =
-                    parent === undefined
-                      ? dragged.position
-                      : {
-                          x: dragged.position.x + parent.position.x,
-                          y: dragged.position.y + parent.position.y,
-                        };
-                  commitOverrides(() => moveNode(dragged.id, position));
-                }}
-                nodesConnectable={false}
-                elementsSelectable={false}
-                // Фокус несут <button> карточек узлов (см. overviewGraph.ts).
-                nodesFocusable={false}
-                edgesFocusable={false}
-                panOnScroll
-                // fitView намеренно НЕ используется: он опускал масштаб до 0.25…0.53
-                // и делал подписи нечитаемыми. Стартовый вид — StartViewport.
-                // minZoom/maxZoom здесь остаются границами РУЧНОГО зума (колесо,
-                // тулбар): отдалить схему целиком пользователь по-прежнему может.
-                minZoom={MIN_ZOOM}
-                maxZoom={MAX_ZOOM}
-                proOptions={proOptions}
-                /* process-map-9ji: при открытой панели полотно выпадает и из
+        <ReactFlowProvider key={stage.id}>
+          <EdgeMarkers>
+            <ReactFlow
+              nodes={graph.nodes}
+              edges={graph.edges}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              // ПЕРЕТАСКИВАНИЕ ТОЛЬКО В РЕДАКТОРЕ (решение владельца от
+              // 07.09.2026). Правило «узлы не перетаскиваются» вводилось для
+              // читателя вики: там таскать нечего и незачем, а сдвинутая
+              // карточка выглядела бы сломанной вёрсткой. Владельцу карты
+              // раскладку править нужно, и его правки живут в overrides —
+              // пересчёт координат конвейером их не затирает.
+              nodesDraggable={mode === 'edit'}
+              onNodeDragStop={(_, dragged) => {
+                // КООРДИНАТА ПРИВОДИТСЯ К АБСОЛЮТНОЙ. Узел внутри группы —
+                // ребёнок контейнера (parentId в stageGraph.ts), и React Flow
+                // отдаёт его позицию ОТНОСИТЕЛЬНО родителя. В process.json и в
+                // overrides координаты абсолютные, и запись относительной
+                // означала бы, что при следующем открытии карточка уедет на
+                // смещение группы — тем дальше, чем правее группа.
+                const parent =
+                  dragged.parentId === undefined
+                    ? undefined
+                    : graph.nodes.find((node) => node.id === dragged.parentId);
+                const position =
+                  parent === undefined
+                    ? dragged.position
+                    : {
+                        x: dragged.position.x + parent.position.x,
+                        y: dragged.position.y + parent.position.y,
+                      };
+                commitOverrides(() => moveNode(dragged.id, position));
+              }}
+              nodesConnectable={false}
+              elementsSelectable={false}
+              // Фокус несут <button> карточек узлов (см. overviewGraph.ts).
+              nodesFocusable={false}
+              edgesFocusable={false}
+              panOnScroll
+              // fitView намеренно НЕ используется: он опускал масштаб до 0.25…0.53
+              // и делал подписи нечитаемыми. Стартовый вид — StartViewport.
+              // minZoom/maxZoom здесь остаются границами РУЧНОГО зума (колесо,
+              // тулбар): отдалить схему целиком пользователь по-прежнему может.
+              minZoom={MIN_ZOOM}
+              maxZoom={MAX_ZOOM}
+              proOptions={proOptions}
+              /* process-map-9ji: при открытой панели полотно выпадает и из
                  обхода Tab, и из режима чтения скринридера. Помечено РОВНО
                  полотно — то, что накрывает затемнение. Крошки и легенда лежат
                  вне .canvas, затемнение до них не достаёт, и они обязаны
@@ -184,28 +179,26 @@ export function StageDetail() {
                  живёт поверх панели и лишь сдвигается (.shifted).
                  Атрибут ложится на обёртку полотна: ReactFlowProps наследует
                  HTMLAttributes<HTMLDivElement>, и лишние пропы спредятся на неё. */
-                inert={drawerOpen ? '' : undefined}
-              >
-                <StartViewport bounds={graph.bounds} anchor={graph.startAnchor} compact={compact} />
-                <Background variant={BackgroundVariant.Dots} gap={GRID_GAP} size={GRID_DOT_SIZE} />
-              </ReactFlow>
-            </EdgeMarkers>
-            {/* Кнопка «Уместить в экран» уважает тот же пол читаемости, что и
+              inert={drawerOpen ? '' : undefined}
+            >
+              <StartViewport bounds={graph.bounds} anchor={graph.startAnchor} compact={compact} />
+              <Background variant={BackgroundVariant.Dots} gap={GRID_GAP} size={GRID_DOT_SIZE} />
+            </ReactFlow>
+          </EdgeMarkers>
+          {/* Кнопка «Уместить в экран» уважает тот же пол читаемости, что и
               стартовый вид (SPEC §4.6) — см. комментарий у TOOLBAR_FIT_VIEW_OPTIONS
               в stageGraph.ts. */}
-            {/* drawerOpen: панель шириной 360 накрывает правый верхний угол
+          {/* drawerOpen: панель шириной 360 накрывает правый верхний угол
               полотна вместе со всем тулбаром — см. .shifted в Toolbar.module.css. */}
-            <Toolbar
-              fitViewOptions={TOOLBAR_FIT_VIEW_OPTIONS}
-              drawerOpen={drawerOpen}
-              compact={compact}
-            />
-          </ReactFlowProvider>
-          {/* Боковая панель узла — внутри .canvas, чтобы затемнение начиналось
+          <Toolbar
+            fitViewOptions={TOOLBAR_FIT_VIEW_OPTIONS}
+            drawerOpen={drawerOpen}
+            compact={compact}
+          />
+        </ReactFlowProvider>
+        {/* Боковая панель узла — внутри .canvas, чтобы затемнение начиналось
             под шапкой крошек, как в артборде A3 (SPEC §4.3). */}
-          <NodeDrawer nodes={visibleNodes} />
-        </div>
-        <ScreenPanel />
+        <NodeDrawer nodes={visibleNodes} />
       </div>
       {/* Легенда — строка ПОД полотном, не поверх него: раскладка потока
           шагов на реальных данных занимает весь угол/край полотна на всех
