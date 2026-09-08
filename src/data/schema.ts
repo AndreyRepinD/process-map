@@ -294,6 +294,18 @@ export const OverrideEntrySchema = z.object({
   screen: ScreenLinkSchema.nullable().optional(),
   algorithms: z.array(z.string()).nullable().optional(),
   size: z.object({ width: z.number().min(80), height: z.number().min(28) }).optional(),
+  /** Код системы под карточкой («DP» и подобные). null — подпись снята. */
+  system: SystemCodeSchema.nullable().optional(),
+  /**
+   * Группа узла — ПОДПИСЬ, а не id.
+   *
+   * У ProcessNode.group лежит идентификатор группы этапа, а владелец видит и
+   * вводит её заголовок («Проверки»). Хранить в правке id значило бы требовать
+   * от него знания внутреннего ключа, а завести новую группу было бы нечем: id
+   * для неё ещё не существует. Перевод подписи в id и создание недостающей
+   * группы делает merge (loader.ts::applyGroupOverrides).
+   */
+  group: z.string().nullable().optional(),
   label: z.string().optional(),
   description: z.string().nullable().optional(),
   inputs: z.array(z.string()).nullable().optional(),

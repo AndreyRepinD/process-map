@@ -125,6 +125,7 @@ function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode
   next = patchField(next, 'inputs', entry.inputs);
   next = patchField(next, 'outputs', entry.outputs);
   next = patchField(next, 'owner', entry.owner);
+  next = patchField(next, 'system', entry.system);
   next = patchField(next, 'position', entry.position);
   next = patchField(next, 'size', entry.size);
   return next;
@@ -261,6 +262,54 @@ function renameIo(stage: Stage, ios: ExternalIO[], overrides: Overrides): Extern
 }
 
 /**
+ * id группы, заведённой правкой владельца.
+ *
+ * НЕ ТРАНСЛИТЕРАЦИЯ ПОДПИСИ. Таблица транслитерации живёт в python-импортёре, и
+ * второй её экземпляр в браузере разошёлся бы с первым при первой же правке —
+ * тот же довод, что у newNodeId. Подпись кладётся в id как есть: id внутренний,
+ * сравнивается только на равенство и обязан быть лишь стабильным и уникальным.
+ */
+function ownerGroupId(label: string): string {
+  return `grp:${label}`;
+}
+
+/**
+ * Правка группы: подпись → id, недостающая группа этапа заводится.
+ *
+ * ЗАЧЕМ ОТДЕЛЬНО ОТ applyNodeOverride. Группа — свойство ЭТАПА: белая рамка с
+ * заголовком рисуется по stage.groups, а узел лишь ссылается на неё. Правка
+ * одного узла может потребовать завести новую группу, и сделать это можно
+ * только там, где виден весь этап.
+ */
+function applyGroupOverrides(stage: Stage, nodes: ProcessNode[], overrides: Overrides): Stage {
+  const byLabel = new Map(stage.groups.map((group) => [group.label, group.id]));
+  const groups = [...stage.groups];
+  let touched = false;
+  const patched = nodes.map((node) => {
+    const label = overrides[node.id]?.group;
+    if (label === undefined) {
+      return node;
+    }
+    touched = true;
+    if (label === null || label.trim() === '') {
+      // Явно снятая группа: карточка выходит из рамки. Опустевшая рамка
+      // исчезает сама — её рисуют по составу, а не по объявлению.
+      // patchField умеет ровно это: null снимает поле, а не пишет пустую строку.
+      return patchField(node, 'group', null);
+    }
+    const trimmed = label.trim();
+    let id = byLabel.get(trimmed);
+    if (id === undefined) {
+      id = ownerGroupId(trimmed);
+      byLabel.set(trimmed, id);
+      groups.push({ id, label: trimmed });
+    }
+    return { ...node, group: id };
+  });
+  return touched ? { ...stage, nodes: patched, groups } : { ...stage, nodes };
+}
+
+/**
  * Иммутабельно накладывает overrides поверх карты: входная карта не мутируется.
  * Overrides применяются только к узлам этапов (SPEC §3 задаёт значение как
  * Record<nodeId, …>); stage.screen не переопределяется — см. отчёт по задаче.
@@ -277,9 +326,9 @@ export function mergeOverrides(map: ProcessMap, overrides: Overrides): ProcessMa
         .map((node) => applyNodeOverride(node, overrides)),
       ...addedNodesFor(stage, overrides),
     ];
+    const withGroups = applyGroupOverrides(stage, nodes, overrides);
     return {
-      ...stage,
-      nodes,
+      ...withGroups,
       inputs: renameIo(stage, stage.inputs, overrides),
       outputs: renameIo(stage, stage.outputs, overrides),
     };
@@ -413,7 +462,7 @@ export function setNodeAlgorithms(nodeId: string, algorithms: string[] | null): 
 /** Поля содержания узла: подпись, описание, входы, выходы, ответственный. */
 export type NodeContentPatch = Pick<
   OverrideEntry,
-  'label' | 'description' | 'inputs' | 'outputs' | 'owner'
+  'label' | 'description' | 'inputs' | 'outputs' | 'owner' | 'system' | 'group'
 >;
 
 /** Записывает правку содержания узла поверх уже имеющейся записи. */

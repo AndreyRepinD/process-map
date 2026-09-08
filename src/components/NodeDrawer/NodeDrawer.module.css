@@ -257,6 +257,13 @@
   font-size: var(--pm-font-size-11);
 }
 
+/* Подсказка под полем формы: не ошибка и не значение, а пояснение к правилу. */
+.formHint {
+  color: var(--scp-text-neutral-secondary);
+  font-size: var(--pm-font-size-11);
+  line-height: var(--scp-line-height-16);
+}
+
 .formActions {
   display: flex;
   align-items: center;

@@ -224,6 +224,7 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
             (editingContent ? (
               <NodeContentForm
                 node={node}
+                groups={stage?.groups}
                 onClose={() => {
                   setEditingContent(false);
                 }}
