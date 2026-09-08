@@ -1,0 +1,124 @@
+/*
+ * Форма правки карточки этапа на обзоре.
+ *
+ * Панель справа, как у карточки узла на уровне 2: владелец уже знает это место.
+ * Полотно она НЕ затемняет — в отличие от панели узла: там затемнение отделяет
+ * выбранную карточку от остальных, а здесь выбранная карточка и так подсвечена
+ * рамкой, и гасить ради этого весь обзор незачем.
+ * Только var(...) из src/theme/tokens.css.
+ */
+
+.panel {
+  position: absolute;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  width: var(--pm-drawer-width);
+  flex-direction: column;
+  border-left: 1px solid var(--scp-color-neutral-200);
+  background: var(--scp-background-primary);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--scp-spacing-lg) var(--scp-spacing-2xl);
+  border-bottom: 1px solid var(--scp-color-neutral-200);
+  gap: var(--scp-spacing-sm);
+}
+
+.heading {
+  margin: 0;
+  color: var(--scp-content-primary);
+  font-size: var(--pm-font-size-13);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.close {
+  width: var(--pm-drawer-close-size);
+  height: var(--pm-drawer-close-size);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--scp-content-primary);
+  cursor: pointer;
+  font-size: var(--pm-font-size-13);
+  line-height: 1;
+}
+
+.form {
+  display: flex;
+  overflow-y: auto;
+  flex: 1;
+  flex-direction: column;
+  padding: var(--scp-spacing-lg) var(--scp-spacing-2xl);
+  gap: var(--scp-spacing-md);
+}
+
+.label {
+  display: flex;
+  flex-direction: column;
+  color: var(--scp-content-sub-primary);
+  font-size: var(--pm-font-size-12-5);
+  gap: var(--scp-spacing-xs);
+}
+
+.input,
+.area {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--scp-spacing-xs) var(--pm-space-10);
+  border: 1px solid var(--scp-color-neutral-200);
+  border-radius: var(--scp-radius-button);
+  background: var(--scp-background-primary);
+  color: var(--scp-content-primary);
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+}
+
+.area {
+  resize: vertical;
+}
+
+.hint {
+  color: var(--scp-text-neutral-secondary);
+  font-size: var(--pm-font-size-11);
+  line-height: var(--scp-line-height-16);
+}
+
+.error {
+  margin: 0;
+  color: var(--scp-color-error-600);
+  font-size: var(--pm-font-size-11);
+}
+
+.actions {
+  display: flex;
+  gap: var(--scp-spacing-sm);
+}
+
+.primary,
+.ghost {
+  height: var(--pm-drawer-button-height);
+  padding: 0 var(--scp-paddings-m);
+  border: 1px solid transparent;
+  border-radius: var(--scp-radius-button);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-12-5);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.primary {
+  background: var(--scp-background-action-brand-primary-default);
+  color: var(--scp-content-constant);
+}
+
+.ghost {
+  border-color: var(--scp-color-neutral-200);
+  background: var(--scp-background-action-brand-secondary-default);
+  color: var(--scp-content-primary);
+}

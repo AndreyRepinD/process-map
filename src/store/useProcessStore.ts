@@ -21,6 +21,14 @@ export interface ProcessState {
   mode: ViewMode;
   /** Toggle «Показать интеграции» (SPEC §4.6). По макету включён по умолчанию. */
   showIntegrations: boolean;
+  /**
+   * id этапа, чья карточка правится на обзоре; null — форма закрыта.
+   *
+   * Отдельно от selectedNodeId: у этапа правятся свои поля (заголовок, короткое
+   * название, ключевые выходы), и переиспользовать выбор узла значило бы, что
+   * одно значение означает две разные вещи в зависимости от уровня.
+   */
+  editingStageId: string | null;
 
   /** Переход на уровень 2. Всегда закрывает Drawer — см. комментарий ниже. */
   navigateToStage: (stageId: string) => void;
@@ -34,6 +42,10 @@ export interface ProcessState {
   toggleIntegrations: () => void;
   /** Просмотр ↔ Редактор. */
   setMode: (mode: ViewMode) => void;
+  /** Открыть форму правки карточки этапа (обзор, режим редактора). */
+  editStage: (stageId: string) => void;
+  /** Закрыть форму правки карточки этапа. */
+  closeStageEditor: () => void;
 }
 
 export interface ProcessUiState {
@@ -41,6 +53,7 @@ export interface ProcessUiState {
   selectedNodeId: string | null;
   mode: ViewMode;
   showIntegrations: boolean;
+  editingStageId: string | null;
 }
 
 /** Начальные значения. Вынесены отдельно, чтобы тесты могли сбрасывать store. */
@@ -50,6 +63,7 @@ export function createInitialState(): ProcessUiState {
     selectedNodeId: null,
     mode: 'view',
     showIntegrations: true,
+    editingStageId: null,
   };
 }
 
@@ -73,4 +87,7 @@ export const useProcessStore = create<ProcessState>()((set) => ({
   // редактора не должен ронять открытую карточку узла.
   toggleIntegrations: () => set((state) => ({ showIntegrations: !state.showIntegrations })),
   setMode: (mode) => set({ mode }),
+
+  editStage: (stageId) => set({ editingStageId: stageId }),
+  closeStageEditor: () => set({ editingStageId: null }),
 }));

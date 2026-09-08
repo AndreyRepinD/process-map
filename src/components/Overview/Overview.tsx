@@ -21,6 +21,7 @@ import { LaneNode } from '../nodes/LaneNode';
 import { StageNode } from '../nodes/StageNode';
 import { SystemsBadge } from '../nodes/SystemsBadge';
 import { NodeDrawer } from '../NodeDrawer';
+import { StageEditForm } from './StageEditForm';
 import { Toolbar } from '../Toolbar';
 import { OverviewHeader } from './OverviewHeader';
 import {
@@ -81,10 +82,18 @@ export function Overview() {
   // объект карты стабильна, пока правок нет, поэтому useMemo ниже не
   // пересчитывается на каждый рендер — см. src/hooks/useProcessMap.ts.
   const mode = useProcessStore((state) => state.mode);
+  const editingStageId = useProcessStore((state) => state.editingStageId);
   const map = useProcessMap();
-  // Положения читаются из тех же overrides, что и правки содержания, поэтому
-  // пересчитываются вместе с картой: commitOverrides обновляет useProcessMap, а
-  // он — этот компонент.
+  const editingStage = map.stages.find((stage) => stage.id === editingStageId);
+  // Положения читаются из тех же overrides, что и правки содержания.
+  //
+  // `map` в зависимостях НАМЕРЕННО, хотя правило исчерпаемости его не видит:
+  // readOverviewPositions читает localStorage, а не пропсы, и пересчитать её
+  // надо ровно тогда, когда правки изменились. Признак этого — новая ссылка на
+  // карту из useProcessMap: её отдаёт тот же commitOverrides, который правки и
+  // записал. Без зависимости перетащенная карточка возвращалась бы на расчётное
+  // место до ближайшей перезагрузки.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const positions = useMemo(() => readOverviewPositions(), [map]);
   const { nodes, edges } = useMemo(
     () => buildOverviewGraph(map, showIntegrations, compact, positions),
@@ -166,6 +175,9 @@ export function Overview() {
             Секции связей здесь нет: она рисуется только при открытом этапе, а
             на обзоре этапа нет по определению. */}
         <NodeDrawer nodes={externalNodes} />
+        {/* Форма правки карточки этапа. Панель не затемняет обзор: выбранная
+            карточка и так подсвечена, а гасить ради этого весь экран незачем. */}
+        {editingStage !== undefined && <StageEditForm key={editingStage.id} stage={editingStage} />}
       </div>
       {/* Легенда — строка ПОД полотном, не поверх него: см. обоснование в
           Legend.module.css (плавающая панель рано или поздно перекрывает

@@ -226,3 +226,28 @@
   font-weight: var(--scp-font-weight-semi-bold);
   gap: var(--pm-space-6);
 }
+
+/* «Править этап» — маленькое действие поверх правого верхнего угла карточки.
+   Поверх, а не внутри: карточка целиком уже кнопка перехода, и вложить в неё
+   вторую кнопку разметка не разрешает. */
+.edit {
+  position: absolute;
+  z-index: 2;
+  top: var(--scp-spacing-xs);
+  right: var(--scp-spacing-xs);
+  padding: 0 var(--scp-spacing-xs);
+  border: 1px solid var(--scp-color-neutral-200);
+  border-radius: var(--scp-radius-button);
+  background: var(--scp-background-primary);
+  color: var(--scp-text-brand-primary);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: var(--pm-font-size-10-5);
+  font-weight: var(--scp-font-weight-semi-bold);
+}
+
+.edit:hover,
+.edit:focus-visible {
+  outline: none;
+  text-decoration: underline;
+}
