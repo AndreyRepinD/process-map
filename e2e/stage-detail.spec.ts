@@ -351,3 +351,55 @@ test('ручной зум колесом по-прежнему позволяе�
 
   expect(await viewportZoom(page)).toBeLessThan(START_ZOOM_MIN);
 });
+
+test('в редакторе блок двигается и сдвиг переживает перезагрузку', async ({ page }) => {
+  // ВОПРОС ВЛАДЕЛЬЦА 08.09.2026: «а сами блоки можно двигать?». Перетаскивание
+  // было заявлено 07.09.2026 (nodesDraggable в режиме «Редактор» + onNodeDragStop
+  // → moveNode), но НЕ РАБОТАЛО: каждому узлу stageGraph.ts проставлял
+  // `draggable: false`, а он перекрывает общий `nodesDraggable`. Теста не было —
+  // соседний проверяет ровно обратное, что в «Просмотре» узел не двигается, и
+  // оставался зелёным при полностью сломанной правке.
+  //
+  // СРАВНИВАЕТСЯ style.transform, а НЕ boundingBox. Оба соседних теста этого
+  // файла уже объясняют половину причины: протаскивание панорамирует полотно.
+  // Вторая половина видна только здесь: после перезагрузки габарит карты стал
+  // другим (узел уехал), StartViewport выбирает другой масштаб, и ЭКРАННЫЕ
+  // расстояния масштабируются вместе с ним. transform живёт в координатах схемы
+  // и от масштаба не зависит.
+  //
+  // Узел ВНУТРИ ГРУППЫ выбран намеренно: React Flow отдаёт его position
+  // относительно контейнера, а в overrides координаты абсолютные. На узле без
+  // группы обе величины совпадают, и ошибка приведения координат осталась бы
+  // невидимой ровно там, где она есть.
+  const MOVED = 'sohranenie-predyduschih-versiy-planov';
+
+  await page.goto('/?stage=1');
+  await waitForStageDetailReady(page);
+  const moved = page.locator(`.react-flow__node-step[data-id="${MOVED}"]`);
+  await expect(moved).toBeVisible();
+
+  const transform = async (): Promise<string> =>
+    moved.evaluate((el) => (el as HTMLElement).style.transform);
+
+  const before = await transform();
+
+  const editor = page.getByRole('button', { name: 'Редактор', exact: true });
+  await editor.click();
+  await expect(editor).toHaveAttribute('aria-pressed', 'true');
+
+  // Настоящая последовательность мыши с промежуточными шагами: React Flow тащит
+  // узел по pointermove и «мгновенный» переход из точки в точку игнорирует.
+  const box = await moved.boundingBox();
+  await page.mouse.move((box?.x ?? 0) + 20, (box?.y ?? 0) + 8);
+  await page.mouse.down();
+  await page.mouse.move((box?.x ?? 0) + 140, (box?.y ?? 0) + 180, { steps: 12 });
+  await page.mouse.up();
+
+  const after = await transform();
+  expect(after, 'карточка не сдвинулась в режиме «Редактор»').not.toBe(before);
+
+  // Сдвиг обязан пережить перезагрузку: правки живут в overrides localStorage.
+  await page.reload();
+  await waitForStageDetailReady(page);
+  expect(await transform(), 'сдвиг не пережил перезагрузку').toBe(after);
+});
