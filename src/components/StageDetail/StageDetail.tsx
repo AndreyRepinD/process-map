@@ -138,7 +138,24 @@ export function StageDetail() {
               // пересчёт координат конвейером их не затирает.
               nodesDraggable={mode === 'edit'}
               onNodeDragStop={(_, dragged) => {
-                commitOverrides(() => moveNode(dragged.id, dragged.position));
+                // КООРДИНАТА ПРИВОДИТСЯ К АБСОЛЮТНОЙ. Узел внутри группы —
+                // ребёнок контейнера (parentId в stageGraph.ts), и React Flow
+                // отдаёт его позицию ОТНОСИТЕЛЬНО родителя. В process.json и в
+                // overrides координаты абсолютные, и запись относительной
+                // означала бы, что при следующем открытии карточка уедет на
+                // смещение группы — тем дальше, чем правее группа.
+                const parent =
+                  dragged.parentId === undefined
+                    ? undefined
+                    : graph.nodes.find((node) => node.id === dragged.parentId);
+                const position =
+                  parent === undefined
+                    ? dragged.position
+                    : {
+                        x: dragged.position.x + parent.position.x,
+                        y: dragged.position.y + parent.position.y,
+                      };
+                commitOverrides(() => moveNode(dragged.id, position));
               }}
               nodesConnectable={false}
               elementsSelectable={false}

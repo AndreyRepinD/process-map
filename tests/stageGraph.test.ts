@@ -373,7 +373,15 @@ describe('buildStageGraph', () => {
         } else {
           expect(node.style?.pointerEvents).toBeUndefined();
         }
-        expect(node.draggable).toBe(false);
+        // ПЕРЕТАСКИВАНИЕ: у карточек СВОЕГО значения нет — они подчиняются
+        // общему `nodesDraggable` полотна, включённому только в режиме
+        // «Редактор» (StageDetail.tsx). Раньше здесь стояло `draggable: false` у
+        // всех, и оно ПЕРЕКРЫВАЛО `nodesDraggable`: перетаскивание, заведённое
+        // решением владельца 07.09.2026, не работало ни разу. Контейнеры групп и
+        // колонок своё `false` сохраняют — таскать рамку смысла нет.
+        expect(node.draggable, `${node.id}: draggable`).toBe(
+          dataIds.has(node.id) ? undefined : false,
+        );
         expect(node.connectable).toBe(false);
         expect(node.focusable).toBe(false);
       }
