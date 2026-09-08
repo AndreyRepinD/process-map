@@ -1664,7 +1664,8 @@
       "title": "Оценка эффектов",
       "shortTitle": "Оценка эффектов",
       "keyOutputs": [
-        "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев"
+        "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев",
+        "Опубликованные нормативы запасов в SNP"
       ],
       "groups": [
         {
@@ -1684,7 +1685,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 198
+            "y": 206
           },
           "slidePosition": {
             "x": 831,
@@ -1738,7 +1739,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 55
+            "y": 63
           },
           "slidePosition": {
             "x": 1069,
@@ -1764,7 +1765,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 139
+            "y": 147
           },
           "slidePosition": {
             "x": 1069,
@@ -1790,7 +1791,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 223
+            "y": 231
           },
           "slidePosition": {
             "x": 1069,
@@ -1816,11 +1817,38 @@
           "owner": "Планер запасов совместно с финансами",
           "position": {
             "x": 710,
-            "y": 174
+            "y": 172
           },
           "slidePosition": {
             "x": 1069,
             "y": 507
+          }
+        },
+        {
+          "id": "peredacha-normativov-po-zapasam-v-snp",
+          "type": "step",
+          "label": "Передача нормативов по запасам в SNP",
+          "description": "Публикация утверждённых нормативов запаса в SNP: уровни по эшелонам, точка заказа и целевой уровень сервиса с датой вступления в силу.\n\nЭТИМ ШАГОМ ЗАМЫКАЕТСЯ КОНТУР. До него карта заканчивалась отчётом, то есть описывала расчёт, у результата которого нет получателя: параметры оставались внутри модуля, а планирование поставок продолжало работать на прежних. Алгоритм передачи в платформе существовал всё это время — пробел был у карты, а не у продукта.\n\nУтверждение результатов — предшествующее решение владельца процесса, а не действие модуля: публикуются согласованные значения, а не всё посчитанное. Отдельным шагом утверждение на карте пока не выделено.",
+          "group": "itog",
+          "inputs": [
+            "Утверждённые уровни запасов по эшелонам",
+            "Точка заказа и рекомендованный уровень сервиса",
+            "Горизонт и дата вступления в силу"
+          ],
+          "outputs": [
+            "Опубликованные нормативы запасов в SNP"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Передача нормативов по запасам в SNP"
+          ],
+          "position": {
+            "x": 1124,
+            "y": 116
+          },
+          "slidePosition": {
+            "x": 1069,
+            "y": 669
           }
         },
         {
@@ -1829,12 +1857,27 @@
           "label": "Оценка эффектов и рекомендации",
           "direction": "out",
           "position": {
-            "x": 1124,
-            "y": 221
+            "x": 1183,
+            "y": 385
           },
           "slidePosition": {
             "x": 1069,
-            "y": 669
+            "y": 866
+          }
+        },
+        {
+          "id": "normativy-zapasov-v-snp",
+          "type": "data",
+          "label": "Нормативы запасов в SNP",
+          "direction": "out",
+          "system": "INPLAN",
+          "position": {
+            "x": 1538,
+            "y": 36
+          },
+          "slidePosition": {
+            "x": 1069,
+            "y": 947
           }
         },
         {
@@ -1843,12 +1886,26 @@
           "label": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев",
           "direction": "out",
           "position": {
-            "x": 1124,
-            "y": 53
+            "x": 1183,
+            "y": 297
           },
           "slidePosition": {
             "x": 1297,
             "y": 103
+          }
+        },
+        {
+          "id": "opublikovannye-normativy-zapasov-v-snp",
+          "type": "data",
+          "label": "Опубликованные нормативы запасов в SNP",
+          "direction": "out",
+          "position": {
+            "x": 1538,
+            "y": 172
+          },
+          "slidePosition": {
+            "x": 1297,
+            "y": 176
           }
         }
       ],
@@ -1872,9 +1929,21 @@
           "kind": "process"
         },
         {
+          "id": "e-ocenka-effektov--peredacha-normativov-po-zapasam-v-snp",
+          "source": "ocenka-effektov",
+          "target": "peredacha-normativov-po-zapasam-v-snp",
+          "kind": "process"
+        },
+        {
           "id": "e-ocenka-effektov--ocenka-effektov-i-rekomendacii",
           "source": "ocenka-effektov",
           "target": "ocenka-effektov-i-rekomendacii",
+          "kind": "process"
+        },
+        {
+          "id": "e-peredacha-normativov-po-zapasam-v-snp--normativy-zapasov-v-snp",
+          "source": "peredacha-normativov-po-zapasam-v-snp",
+          "target": "normativy-zapasov-v-snp",
           "kind": "process"
         },
         {
@@ -1900,10 +1969,23 @@
           "source": "ocenka-effektov",
           "target": "kompleksnaya-ocenka-effektov-i-parametrov-postavok-na-osnove-treh",
           "kind": "process"
+        },
+        {
+          "id": "e-peredacha-normativov-po-zapasam-v-snp--opublikovannye-normativy-zapasov-v-snp",
+          "source": "peredacha-normativov-po-zapasam-v-snp",
+          "target": "opublikovannye-normativy-zapasov-v-snp",
+          "kind": "process"
         }
       ],
       "inputs": [],
-      "outputs": []
+      "outputs": [
+        {
+          "system": "INPLAN",
+          "label": "Нормативы запасов в SNP",
+          "stage": 5,
+          "direction": "out"
+        }
+      ]
     }
   ],
   "overviewEdges": [
@@ -1971,6 +2053,12 @@
       "id": "ov-stage-4-raschet-i-analiz--MRP",
       "source": "stage-4-raschet-i-analiz",
       "target": "MRP",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-stage-5-ocenka-effektov--INPLAN",
+      "source": "stage-5-ocenka-effektov",
+      "target": "INPLAN",
       "kind": "integration"
     }
   ]
