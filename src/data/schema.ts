@@ -64,7 +64,17 @@ export const EventDefinitionSchema = z.enum([
 ]);
 export type EventDefinition = z.infer<typeof EventDefinitionSchema>;
 
-export const SystemCodeSchema = z.enum(['DP', 'PS', 'IO', 'ERP', 'MRP', 'INPLAN', 'BI', 'EPM']);
+export const SystemCodeSchema = z.enum([
+  'DP',
+  'PS',
+  'IO',
+  'ERP',
+  'MRP',
+  'SNP',
+  'INPLAN',
+  'BI',
+  'EPM',
+]);
 export type SystemCode = z.infer<typeof SystemCodeSchema>;
 
 export const ScreenLinkSchema = z.object({

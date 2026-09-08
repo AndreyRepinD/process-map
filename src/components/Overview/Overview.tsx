@@ -10,8 +10,9 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { useFrameSize } from '../../hooks/useFrameSize';
-import { useProcessMap } from '../../hooks/useProcessMap';
+import { commitOverrides, useProcessMap } from '../../hooks/useProcessMap';
 import { ru } from '../../i18n/ru';
+import { moveOverviewNode, readOverviewPositions } from '../../data/loader';
 import { useProcessStore } from '../../store/useProcessStore';
 import { EdgeMarkers, IntegrationEdge, ProcessEdge } from '../edges';
 import { Legend } from '../Legend';
@@ -79,10 +80,15 @@ export function Overview() {
   // ссылка обязана появиться сразу, без перезагрузки страницы. Ссылка на
   // объект карты стабильна, пока правок нет, поэтому useMemo ниже не
   // пересчитывается на каждый рендер — см. src/hooks/useProcessMap.ts.
+  const mode = useProcessStore((state) => state.mode);
   const map = useProcessMap();
+  // Положения читаются из тех же overrides, что и правки содержания, поэтому
+  // пересчитываются вместе с картой: commitOverrides обновляет useProcessMap, а
+  // он — этот компонент.
+  const positions = useMemo(() => readOverviewPositions(), [map]);
   const { nodes, edges } = useMemo(
-    () => buildOverviewGraph(map, showIntegrations, compact),
-    [map, showIntegrations, compact],
+    () => buildOverviewGraph(map, showIntegrations, compact, positions),
+    [map, showIntegrations, compact, positions],
   );
 
   // Узлы, доступные панели на обзоре, — ТОЛЬКО те, что стоят за внешними
@@ -122,7 +128,13 @@ export function Overview() {
               edges={edges}
               nodeTypes={nodeTypes}
               edgeTypes={edgeTypes}
-              nodesDraggable={false}
+              // ПЕРЕТАСКИВАНИЕ ТОЛЬКО В РЕДАКТОРЕ — как и на уровне 2. Читателю
+              // вики двигать нечего, а сдвинутая карточка выглядела бы сломанной
+              // вёрсткой; владельцу раскладка обзора нужна своя.
+              nodesDraggable={mode === 'edit'}
+              onNodeDragStop={(_, dragged) => {
+                commitOverrides(() => moveOverviewNode(dragged.id, dragged.position));
+              }}
               nodesConnectable={false}
               elementsSelectable={false}
               // Фокус несут <button> карточек этапов; собственные tabIndex узлов и

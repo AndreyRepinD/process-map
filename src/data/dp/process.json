@@ -106,7 +106,7 @@
           "type": "data",
           "label": "План производства собственной переработки из SNP и PS",
           "direction": "in",
-          "system": "INPLAN",
+          "system": "SNP",
           "position": {
             "x": 291,
             "y": 226
@@ -229,7 +229,7 @@
           "direction": "in"
         },
         {
-          "system": "INPLAN",
+          "system": "SNP",
           "label": "План производства собственной переработки из SNP и PS",
           "stage": 1,
           "direction": "in"
@@ -1059,7 +1059,7 @@
           "type": "data",
           "label": "Получение ограниченного прогноза из модуля SNP",
           "direction": "in",
-          "system": "INPLAN",
+          "system": "SNP",
           "position": {
             "x": 355,
             "y": 0
@@ -1074,7 +1074,7 @@
           "type": "data",
           "label": "Передача неограниченного плана спроса в SNP и MEIO",
           "direction": "out",
-          "system": "INPLAN",
+          "system": "SNP",
           "position": {
             "x": 769,
             "y": 333
@@ -1211,7 +1211,7 @@
       ],
       "inputs": [
         {
-          "system": "INPLAN",
+          "system": "SNP",
           "label": "Получение ограниченного прогноза из модуля SNP",
           "stage": 5,
           "direction": "in"
@@ -1219,7 +1219,7 @@
       ],
       "outputs": [
         {
-          "system": "INPLAN",
+          "system": "SNP",
           "label": "Передача неограниченного плана спроса в SNP и MEIO",
           "stage": 5,
           "direction": "out"
@@ -1271,8 +1271,8 @@
       "kind": "integration"
     },
     {
-      "id": "ov-INPLAN--stage-1-podgotovka-istorii",
-      "source": "INPLAN",
+      "id": "ov-SNP--stage-1-podgotovka-istorii",
+      "source": "SNP",
       "target": "stage-1-podgotovka-istorii",
       "kind": "integration"
     },
@@ -1289,15 +1289,15 @@
       "kind": "integration"
     },
     {
-      "id": "ov-INPLAN--stage-5-publikaciya-i-kontrol-tochnosti",
-      "source": "INPLAN",
+      "id": "ov-SNP--stage-5-publikaciya-i-kontrol-tochnosti",
+      "source": "SNP",
       "target": "stage-5-publikaciya-i-kontrol-tochnosti",
       "kind": "integration"
     },
     {
-      "id": "ov-stage-5-publikaciya-i-kontrol-tochnosti--INPLAN",
+      "id": "ov-stage-5-publikaciya-i-kontrol-tochnosti--SNP",
       "source": "stage-5-publikaciya-i-kontrol-tochnosti",
-      "target": "INPLAN",
+      "target": "SNP",
       "kind": "integration"
     },
     {

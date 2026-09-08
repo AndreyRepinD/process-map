@@ -366,7 +366,20 @@ export function buildOverviewGraph(
   map: ProcessMap,
   showIntegrations: boolean,
   compact = false,
+  /**
+   * Положения, переставленные владельцем: id узла обзора → координата.
+   *
+   * Обзор считает раскладку сам (у Stage и ExternalIO нет поля position в
+   * схеме), поэтому правка живёт не в карте, а рядом — в overrides браузера, и
+   * подставляется здесь. Отсутствие записи — норма: узел встаёт на расчётное
+   * место, как и раньше.
+   */
+  positions: Readonly<Record<string, { x: number; y: number }>> = {},
 ): OverviewGraph {
+  /** Расчётное место узла, если владелец его не переставлял. */
+  const placed = (id: string, fallback: { x: number; y: number }): { x: number; y: number } =>
+    positions[id] ?? fallback;
+
   const stageSize = compact ? STAGE_NODE_SIZE_COMPACT : STAGE_NODE_SIZE;
 
   const stageCount = map.stages.length;
@@ -437,9 +450,11 @@ export function buildOverviewGraph(
           id: systemNodeId(lane.direction, item.system),
           type: 'system',
           // Координаты ребёнка group-узла — относительно родителя.
-          position: { x: xs[index] ?? LANE_PADDING_X, y: IO_OFFSET_Y },
+          position: placed(systemNodeId(lane.direction, item.system), {
+            x: xs[index] ?? LANE_PADDING_X,
+            y: IO_OFFSET_Y,
+          }),
           parentId: lane.id,
-          extent: 'parent',
           data: {
             system: item.system,
             label: item.label,
@@ -452,7 +467,6 @@ export function buildOverviewGraph(
           // Подписи систем в данных длиннее макетных и обрезаются, полный текст
           // лежит в title — без pointer-events подсказка недостижима мышью.
           style: INTERACTIVE_NODE_STYLE,
-          draggable: false,
           selectable: false,
           connectable: false,
           focusable: false,
@@ -485,12 +499,16 @@ export function buildOverviewGraph(
     nodes.push({
       id: stage.id,
       type: 'stage',
-      position: grid.positionOf(index),
+      position: placed(stage.id, grid.positionOf(index)),
       data: { stage, compact },
       width: stageSize.width,
       height: stageSize.height,
       style: INTERACTIVE_NODE_STYLE,
-      draggable: false,
+      // `draggable` не задаётся: карточкой распоряжается общий `nodesDraggable`
+      // полотна, включённый только в режиме «Редактор» (Overview.tsx). Своё
+      // значение перекрыло бы общее — ровно так перетаскивание на уровне 2 и
+      // не работало (см. stageGraph.ts).
+
       selectable: false,
       connectable: false,
       // Фокус несёт сам <button> внутри карточки, дублировать его обёрткой

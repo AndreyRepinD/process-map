@@ -126,7 +126,8 @@ describe('карта MRP: содержание слайда 8', () => {
         .flatMap((stage) => stage.inputs)
         .map((io) => io.system)
         .sort(),
-    ).toEqual(['ERP', 'INPLAN', 'IO', 'PS']);
+      // КОД SNP, А НЕ INPLAN: с 08.09.2026 у модуля свой код, псевдоним снят.
+    ).toEqual(['ERP', 'IO', 'PS', 'SNP']);
     expect(map.stages.flatMap((stage) => stage.outputs)).toEqual([]);
     expect(map.stages[0]?.inputs).toHaveLength(4);
 
@@ -137,7 +138,7 @@ describe('карта MRP: содержание слайда 8', () => {
       .filter((io) => io.label === 'Плановые заказы из SNP, PS')
       .map((io) => io.system)
       .sort();
-    expect(fromOneLabel).toEqual(['INPLAN', 'PS']);
+    expect(fromOneLabel).toEqual(['PS', 'SNP']);
   });
 
   it('каждая внешняя система связана с этапом на обзоре', () => {

@@ -502,6 +502,34 @@ export function resizeNode(nodeId: string, size: { width: number; height: number
   return next;
 }
 
+/**
+ * Префикс правок ОБЗОРА.
+ *
+ * Обзор считает раскладку сам: ни у Stage, ни у ExternalIO поля position в
+ * схеме нет. Чтобы переставленная карточка пережила перезагрузку, её координата
+ * кладётся в те же overrides — под ключом с префиксом, чтобы никогда не совпасть
+ * с id узла этапа. Без префикса правка карточки этапа с тем же id молча
+ * применилась бы к узлу карты.
+ */
+const OVERVIEW_PREFIX = 'ov:';
+
+/** Переставленные владельцем карточки обзора: id узла обзора → координата. */
+export function readOverviewPositions(): Record<string, { x: number; y: number }> {
+  const stored = readStoredOverrides();
+  const result: Record<string, { x: number; y: number }> = {};
+  for (const [key, entry] of Object.entries(stored)) {
+    if (key.startsWith(OVERVIEW_PREFIX) && entry.position !== undefined) {
+      result[key.slice(OVERVIEW_PREFIX.length)] = entry.position;
+    }
+  }
+  return result;
+}
+
+/** Запоминает новое место карточки обзора. */
+export function moveOverviewNode(nodeId: string, position: { x: number; y: number }): Overrides {
+  return moveNode(`${OVERVIEW_PREFIX}${nodeId}`, position);
+}
+
 export function moveNode(nodeId: string, position: { x: number; y: number }): Overrides {
   const current = readStoredOverrides();
   // Округление до целого: React Flow отдаёт дробные координаты, а лишние знаки

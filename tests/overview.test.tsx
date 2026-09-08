@@ -188,12 +188,36 @@ describe('buildOverviewGraph', () => {
     expect(laneIndex).toBeLessThan(childIndex);
   });
 
-  it('ни один узел не перетаскивается и не соединяется', () => {
+  it('перетаскиваются только карточки — рамки свимлейнов держат раскладку', () => {
+    // ПЕРЕТАСКИВАНИЕ НА ОБЗОРЕ (решение владельца 08.09.2026: «на центральной
+    // странице хочу двигать блоки также»). Карточка ЭТАПА и карточка ВНЕШНЕЙ
+    // СИСТЕМЫ своего `draggable` не задают — ими распоряжается общий
+    // `nodesDraggable` полотна, включённый только в редакторе (Overview.tsx).
+    // Своё значение перекрыло бы общее: ровно так перетаскивание на уровне 2 и
+    // не работало ни разу.
+    //
+    // Рамки свимлейнов, полоса потока и сводный бейдж остаются неподвижными: они
+    // не содержание, а раскладка, и таскать их незачем.
     const { nodes } = buildOverviewGraph(map, true);
+    const movable = new Set(['stage', 'system']);
     for (const node of nodes) {
-      expect(node.draggable).toBe(false);
+      expect(node.draggable, `${node.id}: draggable`).toBe(
+        movable.has(node.type ?? '') ? undefined : false,
+      );
       expect(node.connectable).toBe(false);
     }
+  });
+
+  it('переставленное владельцем место побеждает расчётное', () => {
+    const { nodes } = buildOverviewGraph(map, true, false, {
+      [map.stages[0]?.id ?? '']: { x: 777, y: 555 },
+    });
+    const moved = nodes.find((node) => node.id === map.stages[0]?.id);
+    expect(moved?.position).toEqual({ x: 777, y: 555 });
+
+    // Узел без записи встаёт на расчётное место — отсутствие правки норма.
+    const untouched = nodes.find((node) => node.id === map.stages[1]?.id);
+    expect(untouched?.position).not.toEqual({ x: 777, y: 555 });
   });
 
   it('переводит overviewEdges в process- и integration-рёбра с валидными концами', () => {
