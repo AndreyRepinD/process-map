@@ -135,8 +135,8 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('сорок три входа и семнадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(60);
+  it('сорок восемь входов и семнадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(65);
     for (const label of INPUTS) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
@@ -146,7 +146,7 @@ describe('карта MEIO: содержание', () => {
     for (const label of OUTPUTS) {
       expect(labels(data.filter((node) => node.direction === 'out'))).toContain(label);
     }
-    expect(data.filter((node) => node.direction === 'in')).toHaveLength(43);
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(48);
     expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
       'Мощности хранения по температурным режимам',
     );
@@ -163,8 +163,8 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(5);
   });
 
-  it('рёбра внутри этапов: 14 + 25 + 9 + 17 + 16', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([14, 25, 9, 17, 16]);
+  it('рёбра внутри этапов: 19 + 25 + 9 + 17 + 16', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([19, 25, 9, 17, 16]);
   });
 
   it('ни один узел не висит без связей', () => {
@@ -618,5 +618,44 @@ describe('карта MEIO: адресные входы', () => {
     // нет. Карта не должна обещать функциональности, которой в модуле нет.
     expect(step('Отчёт по OTIF')?.algorithms).toBeUndefined();
     expect(step('Отчёт по OTIF')?.description).toContain('в реестре модуля нет');
+  });
+});
+
+describe('карта MEIO: входные данные пятью категориями', () => {
+  // Перечень владельца от 08.09.2026: сорок позиций в пяти категориях. Сорок
+  // отдельных плашек на полотне нечитаемы, поэтому на карте категория, а полный
+  // состав — в описании карточки, видимом по клику.
+  const CATEGORIES: Record<string, number> = {
+    'Основные данные': 10,
+    'Данные о спросе': 6,
+    'Источники поставки': 7,
+    'Производственные данные': 8,
+    'Данные о планировании': 9,
+  };
+
+  it('пять карточек-категорий на этапе 1, у каждой полный перечень внутри', () => {
+    const stage = map.stages[0];
+    for (const [label, count] of Object.entries(CATEGORIES)) {
+      const card = stage?.nodes.find((node) => node.label === label);
+      expect(card, label).toBeDefined();
+      expect(card?.type).toBe('data');
+      expect(card?.direction).toBe('in');
+      // Позиции перечислены маркерами: их число — и есть содержание категории.
+      expect((card?.description ?? '').split('·').length - 1, `позиции «${label}»`).toBe(count);
+    }
+  });
+
+  it('всего сорок позиций — столько и передал владелец', () => {
+    expect(Object.values(CATEGORIES).reduce((sum, n) => sum + n, 0)).toBe(40);
+  });
+
+  it('каждая категория связана с шагом подготовки данных', () => {
+    const stage = map.stages[0];
+    const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
+    for (const label of Object.keys(CATEGORIES)) {
+      const id = stage?.nodes.find((node) => node.label === label)?.id;
+      const target = stage?.edges.find((edge) => edge.source === id)?.target;
+      expect(labelOf.get(target ?? ''), label).toBe('Подготовка данных');
+    }
   });
 });

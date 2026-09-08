@@ -179,7 +179,7 @@ MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-08"
-MAP_DATA_FINGERPRINT_MEIO = "5debf11a08518161e456f1d60624f8356eb00c1b5738b1735715ef4583be8803"
+MAP_DATA_FINGERPRINT_MEIO = "10e712bbcdc2c22d1274c1ec23a908691bbfc01c9df76c51921dc822c83d9bd0"
 
 
 @dataclass(frozen=True)
@@ -2100,6 +2100,11 @@ STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
             "Календари пополнения и производственные календари",
             "Мощности хранения по температурным режимам",
             "Незакрытый спрос и списания за период",
+            "Основные данные",
+            "Данные о спросе",
+            "Источники поставки",
+            "Производственные данные",
+            "Данные о планировании",
         ),
         "stage-2-podgotovka-k-raschetu": (
             "Валидированные данные для расчёта",
@@ -2151,6 +2156,26 @@ STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
 # ПЕРВЫЙ его шаг, результаты производит ПОСЛЕДНИЙ. Там, где это неверно — у
 # этапа несколько шагов и каждый даёт свой результат, — производитель назван
 # поимённо в outputsFrom.
+# Описание карточки входных данных: полный перечень того, что за ней стоит.
+#
+# ЗАЧЕМ ОТДЕЛЬНОЙ ТАБЛИЦЕЙ, А НЕ ВТОРЫМ ЭЛЕМЕНТОМ В STAGE_INPUT_CARDS. Перечень
+# входных данных MEIO, переданный владельцем 08.09.2026, — это сорок позиций в
+# пяти категориях. Сорок плашек на полотне нечитаемы, пять — читаемы, но пять
+# без содержимого ничего не сообщают. Поэтому на карте категория, а перечень —
+# в описании, видимом по клику. Таблица отдельная, чтобы форма STAGE_INPUT_CARDS
+# (кортеж подписей) осталась прежней: её разбирают и тесты, и slidegen.verify.
+STAGE_INPUT_CARD_DETAILS: dict[str, dict[str, str]] = {
+    "meio": {
+        "stage-1-poluchenie-dannyh": {
+            "Основные данные": "Основные данные для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Продукт\n· Локация\n· Продукт-Локация\n· Групповой клиент, источники для гр. клиента\n· Транспортные отношения\n· Производственная спецификация\n· Компоненты производственной спецификации\n· Поставщик, источники поставщика\n· Валюта, курсы обмена\n· Единицы измерения, коэффициенты пересчёта",
+            "Данные о спросе": "Данные о спросе для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Целевой уровень сервиса\n· Тип уровня сервиса\n· История прогноза спроса и история расхода\n· Будущий прогноз спроса\n· СКО ошибки прогноза\n· Замороженный период",
+            "Источники поставки": "Источники поставки для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Транспортный лидтайм\n· СКО транспортного лидтайма\n· Минимальный размер партии транспортировки\n· Округление партии транспортировки\n· Размер партии транспортировки в днях\n· Транспортные квоты\n· Замороженный период",
+            "Производственные данные": "Производственные данные для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Производственный лидтайм\n· СКО производственного лидтайма\n· Минимальный размер партии выпуска\n· Округление партии выпуска\n· Размер партии выпуска в днях\n· Производственные квоты\n· Выходной коэффициент готового продукта\n· Коэффициент компонента",
+            "Данные о планировании": "Данные о планировании для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Цикл планирования (DBNR)\n· Тип узла (хранимый, не хранимый)\n· Политика страхового запаса (гибридные узлы)\n· Мин. / макс. внутренний уровень сервиса\n· Мин. / макс. страховой запас в днях или ЕИ\n· Минимально необходимый запас\n· Максимальный доступный запас (On-Hand)\n· Штраф за превышение максимального запаса\n· Удельные затраты на содержание запаса",
+        },
+    },
+}
+
 STAGE_WIRING: dict[str, dict[str, dict[str, object]]] = {
     "dp": {
         "stage-1-podgotovka-istorii": {
@@ -2176,6 +2201,13 @@ STAGE_WIRING: dict[str, dict[str, dict[str, object]]] = {
     },
     "meio": {
         "stage-1-poluchenie-dannyh": {
+            "inputsTo": {
+                "Основные данные": "podgotovka-dannyh",
+                "Данные о спросе": "podgotovka-dannyh",
+                "Источники поставки": "podgotovka-dannyh",
+                "Производственные данные": "podgotovka-dannyh",
+                "Данные о планировании": "podgotovka-dannyh",
+            },
             "outputsFrom": {
                 "Модель данных для расчёта": "podgotovka-dannyh",
                 "Отчёт по мастер-данным": "proverka-master-dannyh",
@@ -2513,6 +2545,7 @@ def input_cards(
     slide_no: int,
     consumers: dict[str, str],
     default_consumer: str | None,
+    details: dict[str, str],
 ) -> tuple[list[dict], list[dict]]:
     """
     Входные данные этапа отдельными карточками — зеркало result_nodes.
@@ -2540,16 +2573,20 @@ def input_cards(
         left = max(container.box.left - 2_200_000, 0)
         top = container.box.top + index * 500_000
         position = {"x": round(left / EMU_PER_PX), "y": round(top / EMU_PER_PX)}
-        nodes.append(
-            {
-                "id": node_id,
-                "type": "data",
-                "label": label,
-                "direction": "in",
-                "position": dict(position),
-                "slidePosition": position,
-            }
-        )
+        node = {
+            "id": node_id,
+            "type": "data",
+            "label": label,
+            "direction": "in",
+            "position": dict(position),
+            "slidePosition": position,
+        }
+        detail = details.get(label)
+        if detail is not None:
+            # Порядок ключей узла обязан совпасть с NODE_KEY_ORDER: описание
+            # идёт сразу за подписью, как и в zod-схеме.
+            node = reorder_keys({**node, "description": detail}, NODE_KEY_ORDER)
+        nodes.append(node)
         consumer = consumers.get(label, default_consumer)
         if consumer is not None:
             edges.append(
@@ -3003,6 +3040,7 @@ def build_single_slide_map(
     # id узла из IdFactory, поэтому читать её рано безопасно.
     key_outputs_table = STAGE_KEY_OUTPUTS.get(spec.key)
     input_cards_table = STAGE_INPUT_CARDS.get(spec.key, {})
+    input_card_details = STAGE_INPUT_CARD_DETAILS.get(spec.key, {})
     wiring_table = STAGE_WIRING.get(spec.key, {})
     if descriptions:
         known = {d.node_id for d in drafts}
@@ -3091,6 +3129,7 @@ def build_single_slide_map(
             slide_no,
             consumers,
             default_consumer,
+            input_card_details.get(stage_id, {}),
         )
         if key_outputs_table is None:
             key_outputs = [d.label for d in members if d.direction == "out"][:MAX_KEY_OUTPUTS]

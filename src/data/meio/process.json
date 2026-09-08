@@ -33,7 +33,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 616
+            "y": 1056
           },
           "slidePosition": {
             "x": 0,
@@ -47,7 +47,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 176
           },
           "slidePosition": {
             "x": 0,
@@ -61,7 +61,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 440
+            "y": 792
           },
           "slidePosition": {
             "x": 0,
@@ -75,7 +75,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 704
+            "y": 1144
           },
           "slidePosition": {
             "x": 0,
@@ -89,7 +89,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 88
+            "y": 352
           },
           "slidePosition": {
             "x": 0,
@@ -103,7 +103,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 176
+            "y": 440
           },
           "slidePosition": {
             "x": 0,
@@ -117,7 +117,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 264
+            "y": 528
           },
           "slidePosition": {
             "x": 0,
@@ -131,11 +131,86 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 352
+            "y": 616
           },
           "slidePosition": {
             "x": 0,
             "y": 470
+          }
+        },
+        {
+          "id": "osnovnye-dannye",
+          "type": "data",
+          "label": "Основные данные",
+          "description": "Основные данные для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Продукт\n· Локация\n· Продукт-Локация\n· Групповой клиент, источники для гр. клиента\n· Транспортные отношения\n· Производственная спецификация\n· Компоненты производственной спецификации\n· Поставщик, источники поставщика\n· Валюта, курсы обмена\n· Единицы измерения, коэффициенты пересчёта",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 704
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 523
+          }
+        },
+        {
+          "id": "dannye-o-sprose",
+          "type": "data",
+          "label": "Данные о спросе",
+          "description": "Данные о спросе для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Целевой уровень сервиса\n· Тип уровня сервиса\n· История прогноза спроса и история расхода\n· Будущий прогноз спроса\n· СКО ошибки прогноза\n· Замороженный период",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 88
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 575
+          }
+        },
+        {
+          "id": "istochniki-postavki",
+          "type": "data",
+          "label": "Источники поставки",
+          "description": "Источники поставки для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Транспортный лидтайм\n· СКО транспортного лидтайма\n· Минимальный размер партии транспортировки\n· Округление партии транспортировки\n· Размер партии транспортировки в днях\n· Транспортные квоты\n· Замороженный период",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 264
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 628
+          }
+        },
+        {
+          "id": "proizvodstvennye-dannye",
+          "type": "data",
+          "label": "Производственные данные",
+          "description": "Производственные данные для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Производственный лидтайм\n· СКО производственного лидтайма\n· Минимальный размер партии выпуска\n· Округление партии выпуска\n· Размер партии выпуска в днях\n· Производственные квоты\n· Выходной коэффициент готового продукта\n· Коэффициент компонента",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 880
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 680
+          }
+        },
+        {
+          "id": "dannye-o-planirovanii",
+          "type": "data",
+          "label": "Данные о планировании",
+          "description": "Данные о планировании для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Цикл планирования (DBNR)\n· Тип узла (хранимый, не хранимый)\n· Политика страхового запаса (гибридные узлы)\n· Мин. / макс. внутренний уровень сервиса\n· Мин. / макс. страховой запас в днях или ЕИ\n· Минимально необходимый запас\n· Максимальный доступный запас (On-Hand)\n· Штраф за превышение максимального запаса\n· Удельные затраты на содержание запаса",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 733
           }
         },
         {
@@ -146,7 +221,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 528
+            "y": 968
           },
           "slidePosition": {
             "x": 10,
@@ -176,7 +251,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 354
+            "y": 574
           },
           "slidePosition": {
             "x": 204,
@@ -205,7 +280,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 303
+            "y": 523
           },
           "slidePosition": {
             "x": 204,
@@ -234,7 +309,7 @@
           ],
           "position": {
             "x": 1124,
-            "y": 295
+            "y": 515
           },
           "slidePosition": {
             "x": 204,
@@ -248,7 +323,7 @@
           "direction": "out",
           "position": {
             "x": 769,
-            "y": 687
+            "y": 1127
           },
           "slidePosition": {
             "x": 431,
@@ -262,7 +337,7 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 403
+            "y": 623
           },
           "slidePosition": {
             "x": 431,
@@ -276,7 +351,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 293
+            "y": 513
           },
           "slidePosition": {
             "x": 431,
@@ -348,6 +423,36 @@
         {
           "id": "e-nezakrytyy-spros-i-spisaniya-za-period--podgotovka-dannyh",
           "source": "nezakrytyy-spros-i-spisaniya-za-period",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-osnovnye-dannye--podgotovka-dannyh",
+          "source": "osnovnye-dannye",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-dannye-o-sprose--podgotovka-dannyh",
+          "source": "dannye-o-sprose",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-istochniki-postavki--podgotovka-dannyh",
+          "source": "istochniki-postavki",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-proizvodstvennye-dannye--podgotovka-dannyh",
+          "source": "proizvodstvennye-dannye",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-dannye-o-planirovanii--podgotovka-dannyh",
+          "source": "dannye-o-planirovanii",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
