@@ -327,8 +327,14 @@ export function mergeOverrides(map: ProcessMap, overrides: Overrides): ProcessMa
       ...addedNodesFor(stage, overrides),
     ];
     const withGroups = applyGroupOverrides(stage, nodes, overrides);
+    // Правка самой карточки этапа: заголовок, короткое название, ключевые
+    // выходы. Отсутствие записи — норма, тогда остаётся то, что дал конвейер.
+    const own = overrides[`${STAGE_PREFIX}${stage.id}`];
     return {
       ...withGroups,
+      ...(own?.title === undefined ? {} : { title: own.title }),
+      ...(own?.shortTitle === undefined ? {} : { shortTitle: own.shortTitle }),
+      ...(own?.keyOutputs === undefined ? {} : { keyOutputs: own.keyOutputs }),
       inputs: renameIo(stage, stage.inputs, overrides),
       outputs: renameIo(stage, stage.outputs, overrides),
     };
@@ -512,6 +518,24 @@ export function resizeNode(nodeId: string, size: { width: number; height: number
  * применилась бы к узлу карты.
  */
 const OVERVIEW_PREFIX = 'ov:';
+
+/**
+ * Префикс правок ЭТАПА. Тот же довод, что у OVERVIEW_PREFIX: хранилище общее, и
+ * без префикса правка этапа с id, совпавшим с id узла, применилась бы к узлу.
+ */
+const STAGE_PREFIX = 'st:';
+
+/** Поля карточки этапа, правимые на обзоре. */
+export type StagePatch = Pick<OverrideEntry, 'title' | 'shortTitle' | 'keyOutputs'>;
+
+/** Записывает правку карточки этапа. */
+export function patchStage(stageId: string, patch: StagePatch): Overrides {
+  const current = readStoredOverrides();
+  const key = `${STAGE_PREFIX}${stageId}`;
+  const next: Overrides = { ...current, [key]: { ...current[key], ...patch } };
+  writeStoredOverrides(next);
+  return next;
+}
 
 /** Переставленные владельцем карточки обзора: id узла обзора → координата. */
 export function readOverviewPositions(): Record<string, { x: number; y: number }> {

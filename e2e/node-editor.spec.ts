@@ -277,3 +277,37 @@ test('на обзоре карточки двигаются в редактор�
   await page.waitForSelector('.react-flow__node-stage');
   expect(await transform(), 'сдвиг не пережил перезагрузку').toBe(after);
 });
+
+test('карточка этапа правится с обзора и правка переживает перезагрузку', async ({ page }) => {
+  // Владелец 08.09.2026: «этапы могу двигать, но их корректировать не могу».
+  //
+  // Правка — ОТДЕЛЬНАЯ кнопка на карточке, а не клик по ней: карточка ведёт на
+  // уровень 2, и отбирать переход в редакторе значило бы лишить владельца
+  // навигации ровно тогда, когда он правит карту.
+  await page.goto('/');
+  await page.waitForSelector('.react-flow__node-stage');
+
+  const editor = page.getByRole('button', { name: 'Редактор', exact: true });
+  await editor.click();
+  await expect(editor).toHaveAttribute('aria-pressed', 'true');
+
+  await page
+    .getByRole('button', { name: /^Править этап: / })
+    .first()
+    .click();
+  const form = page.getByRole('dialog', { name: 'Карточка этапа' });
+  await expect(form).toBeVisible();
+
+  await form.getByLabel('Короткое название').fill('Этап владельца');
+  await form.getByLabel('Ключевые выходы, по одному в строке').fill('Первый выход\nВторой выход');
+  await form.getByRole('button', { name: 'Сохранить', exact: true }).click();
+
+  // Видно на самой карточке обзора.
+  await expect(page.getByText('Этап владельца')).toBeVisible();
+  await expect(page.getByText('Первый выход')).toBeVisible();
+
+  await page.reload();
+  await page.waitForSelector('.react-flow__node-stage');
+  await expect(page.getByText('Этап владельца')).toBeVisible();
+  await expect(page.getByText('Первый выход')).toBeVisible();
+});

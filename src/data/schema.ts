@@ -316,6 +316,18 @@ export const OverrideEntrySchema = z.object({
    * группы делает merge (loader.ts::applyGroupOverrides).
    */
   group: z.string().nullable().optional(),
+  /**
+   * Поля ЭТАПА, а не узла: правка карточки этапа на обзоре.
+   *
+   * Живут в той же записи, потому что хранилище одно — Record<ключ, правка>, — а
+   * ключ этапа отличается префиксом `st:` (loader.ts). Отдельные имена, а не
+   * переиспользование `label`/`outputs`: у этапа заголовок, короткое название и
+   * ключевые выходы, и называть их полями узла значило бы врать в двух местах
+   * сразу — в схеме и в форме.
+   */
+  title: z.string().optional(),
+  shortTitle: z.string().optional(),
+  keyOutputs: z.array(z.string()).max(4).optional(),
   label: z.string().optional(),
   description: z.string().nullable().optional(),
   inputs: z.array(z.string()).nullable().optional(),
