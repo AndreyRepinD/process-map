@@ -152,15 +152,49 @@ export function systemNodeId(direction: 'in' | 'out', system: SystemCode): strin
  * данных у этапа 2 дважды IO) — в карточке показываем первую подпись,
  * полный список уходит в title.
  */
-function collectSystems(ios: ExternalIO[]): { system: SystemCode; label: string; full: string }[] {
+/**
+ * id карточки этапа, стоящей за подписью внешнего входа/выхода.
+ *
+ * ЗАЧЕМ. Плашка внешней системы существует дважды: на экране этапа это обычный
+ * data-узел, на обзоре — запись ExternalIO. Править её владелец должен и
+ * отсюда, а весь механизм правок адресуется по id узла — значит обзору нужен
+ * тот же адрес. Сопоставление по подписи и направлению: именно так импортёр и
+ * порождает обе записи из одной фигуры слайда.
+ *
+ * undefined — норма: у сводной карточки компактного режима за подписью может
+ * стоять несколько записей, и однозначного узла у неё нет.
+ */
+export function externalIoNodeId(map: ProcessMap, io: ExternalIO): string | undefined {
+  const stage = map.stages.find((item) => item.number === io.stage);
+  // Сопоставление по ПОДПИСИ, а не по типу узла: у карты MEIO внешняя плашка —
+  // карточка данных, а у SNP тот же по смыслу обмен нарисован обычным шагом и
+  // становится узлом-интеграцией (импортёр выводит тип из кода системы).
+  // Требование `type === 'data'` отсекало бы вторую половину карт молча.
+  //
+  // Направление сверяется, только если у узла оно есть: у интеграций его нет.
+  return stage?.nodes.find(
+    (node) =>
+      node.label === io.label && (node.direction === undefined || node.direction === io.direction),
+  )?.id;
+}
+
+function collectSystems(
+  ios: ExternalIO[],
+  map?: ProcessMap,
+): { system: SystemCode; label: string; full: string; nodeId?: string }[] {
   const order: SystemCode[] = [];
   const labels = new Map<SystemCode, string[]>();
+  // Адрес карточки этапа берётся у ПЕРВОЙ записи системы — она же даёт подпись,
+  // видимую на обзоре. Править вторую и третью отсюда нельзя: их подписи в
+  // карточку не попали, и клик означал бы правку невидимого.
+  const first = new Map<SystemCode, ExternalIO>();
 
   for (const io of ios) {
     const existing = labels.get(io.system);
     if (existing === undefined) {
       order.push(io.system);
       labels.set(io.system, [io.label]);
+      first.set(io.system, io);
     } else if (!existing.includes(io.label)) {
       existing.push(io.label);
     }
@@ -168,7 +202,9 @@ function collectSystems(ios: ExternalIO[]): { system: SystemCode; label: string;
 
   return order.map((system) => {
     const list = labels.get(system) ?? [];
-    return { system, label: list[0] ?? system, full: list.join(' · ') };
+    const io = first.get(system);
+    const nodeId = map === undefined || io === undefined ? undefined : externalIoNodeId(map, io);
+    return { system, label: list[0] ?? system, full: list.join(' · '), nodeId };
   });
 }
 
@@ -350,8 +386,14 @@ export function buildOverviewGraph(
   }
 
   if (showIntegrations && !compact) {
-    const inputs = collectSystems(map.stages.flatMap((stage) => stage.inputs));
-    const outputs = collectSystems(map.stages.flatMap((stage) => stage.outputs));
+    const inputs = collectSystems(
+      map.stages.flatMap((stage) => stage.inputs),
+      map,
+    );
+    const outputs = collectSystems(
+      map.stages.flatMap((stage) => stage.outputs),
+      map,
+    );
 
     const lanes = [
       {
@@ -403,6 +445,7 @@ export function buildOverviewGraph(
             label: item.label,
             fullLabel: item.full,
             direction: lane.direction,
+            nodeId: item.nodeId,
           },
           width: IO_WIDTH,
           height: IO_HEIGHT,

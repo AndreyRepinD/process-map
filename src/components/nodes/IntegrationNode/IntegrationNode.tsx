@@ -1,6 +1,8 @@
 // Узел внешней системы (свимлейны уровня 1, SPEC §4.1 / §3 ExternalIO).
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { SystemCode } from '../../../data/schema';
+import { ru } from '../../../i18n/ru';
+import { useProcessStore } from '../../../store/useProcessStore';
 import styles from './IntegrationNode.module.css';
 
 export interface IntegrationNodeData extends Record<string, unknown> {
@@ -20,6 +22,16 @@ export interface IntegrationNodeData extends Record<string, unknown> {
   direction: 'in' | 'out';
   /** Компактный режим: карточка шире (по ширине карточки этапа), см. A4. */
   compact?: boolean;
+  /**
+   * id карточки этапа, стоящей за этой подписью (overviewGraph::externalIoNodeId).
+   *
+   * Нужен, чтобы внешнюю карточку можно было править и с обзора, а не только с
+   * экрана этапа (решение владельца 08.09.2026: «внешние карточки я тоже хочу
+   * править… и снаружи»). undefined — сводная карточка компактного режима: за
+   * ней стоит несколько записей, однозначного адреса у неё нет, и кнопкой она
+   * не становится.
+   */
+  nodeId?: string;
 }
 
 export type IntegrationNodeType = Node<IntegrationNodeData, 'system'>;
@@ -32,6 +44,8 @@ export const SYSTEM_HANDLE = {
 } as const;
 
 export function IntegrationNode({ data }: NodeProps<IntegrationNodeType>) {
+  const editable = useProcessStore((state) => state.mode === 'edit');
+  const selectNode = useProcessStore((state) => state.selectNode);
   const codeText = (data.codes ?? [data.system]).join(' · ');
 
   /*
@@ -72,13 +86,31 @@ export function IntegrationNode({ data }: NodeProps<IntegrationNodeType>) {
           isConnectable={false}
         />
       )}
-      <div
-        className={data.compact === true ? `${styles.card} ${styles.compact}` : styles.card}
-        title={tooltip}
-      >
-        <span className={styles.code}>{codeText}</span>
-        {showLabel && <span className={styles.label}>{data.label}</span>}
-      </div>
+      {/* В редакторе карточка — КНОПКА: она открывает ту же панель правки, что и
+          на экране этапа, потому что правит тот же самый узел. В просмотре
+          остаётся неинтерактивным div: читателю вики жать не на что. */}
+      {editable && data.nodeId !== undefined ? (
+        <button
+          type="button"
+          className={data.compact === true ? `${styles.card} ${styles.compact}` : styles.card}
+          title={tooltip}
+          aria-label={ru.overview.editExternal(data.label.trim() === '' ? codeText : data.label)}
+          onClick={() => {
+            selectNode(data.nodeId ?? '');
+          }}
+        >
+          <span className={styles.code}>{codeText}</span>
+          {showLabel && <span className={styles.label}>{data.label}</span>}
+        </button>
+      ) : (
+        <div
+          className={data.compact === true ? `${styles.card} ${styles.compact}` : styles.card}
+          title={tooltip}
+        >
+          <span className={styles.code}>{codeText}</span>
+          {showLabel && <span className={styles.label}>{data.label}</span>}
+        </div>
+      )}
       {data.direction === 'in' && (
         <Handle
           type="source"

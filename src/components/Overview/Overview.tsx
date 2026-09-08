@@ -19,6 +19,7 @@ import { IntegrationNode } from '../nodes/IntegrationNode';
 import { LaneNode } from '../nodes/LaneNode';
 import { StageNode } from '../nodes/StageNode';
 import { SystemsBadge } from '../nodes/SystemsBadge';
+import { NodeDrawer } from '../NodeDrawer';
 import { Toolbar } from '../Toolbar';
 import { OverviewHeader } from './OverviewHeader';
 import {
@@ -84,6 +85,20 @@ export function Overview() {
     [map, showIntegrations, compact],
   );
 
+  // Узлы, доступные панели на обзоре, — ТОЛЬКО те, что стоят за внешними
+  // карточками. Отдать ей все узлы карты значило бы, что deep-link ?node= на
+  // любой шаг откроет панель поверх обзора, где этого шага не видно вовсе:
+  // подсветки нет, возвращать фокус некуда. Тот же довод, что на экране этапа,
+  // где панели отдаются только нарисованные узлы.
+  const externalNodes = useMemo(() => {
+    const ids = new Set(
+      nodes.flatMap((node) =>
+        node.type === 'system' && typeof node.data.nodeId === 'string' ? [node.data.nodeId] : [],
+      ),
+    );
+    return map.stages.flatMap((stage) => stage.nodes.filter((node) => ids.has(node.id)));
+  }, [map, nodes]);
+
   return (
     <div className={compact ? `${styles.root} ${styles.compact}` : styles.root} ref={rootRef}>
       <OverviewHeader
@@ -132,6 +147,13 @@ export function Overview() {
               повторяет исходный вид. */}
           <Toolbar fitViewOptions={fitViewOptions} compact={compact} />
         </ReactFlowProvider>
+        {/* Панель правки внешней карточки. На обзоре у неё те же поля, что и на
+            экране этапа, потому что правится ТОТ ЖЕ узел: плашка внешней
+            системы существует на карте дважды, и вторая её копия — запись
+            ExternalIO — идёт за подписью следом (loader.ts::renameIo).
+            Секции связей здесь нет: она рисуется только при открытом этапе, а
+            на обзоре этапа нет по определению. */}
+        <NodeDrawer nodes={externalNodes} />
       </div>
       {/* Легенда — строка ПОД полотном, не поверх него: см. обоснование в
           Legend.module.css (плавающая панель рано или поздно перекрывает
