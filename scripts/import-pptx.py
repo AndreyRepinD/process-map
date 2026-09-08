@@ -179,7 +179,7 @@ MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-08"
-MAP_DATA_FINGERPRINT_MEIO = "6a3058accf29b24ee941455f0e5b234cdd7ac28fbf39c0b131137afde7e9267f"
+MAP_DATA_FINGERPRINT_MEIO = "5debf11a08518161e456f1d60624f8356eb00c1b5738b1735715ef4583be8803"
 
 
 @dataclass(frozen=True)
@@ -2039,6 +2039,7 @@ STEP_DESCRIPTIONS: dict[str, dict[str, str]] = {
         "otchet-po-oshibke-prognoza": "Отчёт по расхождению прогноза и факта: FA, BIAS и σ по горизонту.\n\nЭто ВТОРОЙ ИСТОЧНИК базы неопределённости — тот, которым модуль пользуется, когда готовой оценки из DP нет (см. «Расчёт волатильности спроса», этап 2). Поэтому шаг стоит не только в конце цикла: посчитанная здесь ошибка уходит во вход следующего прогона, и на этом контур замыкается.\n\nАлгоритм в платформе ЕСТЬ — значит ошибка прогноза модулю доступна, и её отсутствие на прежней версии карты было пробелом карты, а не продукта.",
         "otchet-po-segmentacii": "Распределение номенклатуры по сегментам и его изменение от цикла к циклу.\n\nСмена сегмента — причина смены политики пополнения, поэтому отчёт читается не как статистика, а как перечень позиций, у которых поменяются нормативы.",
         "otchet-po-strahovym-zapasam": "Рассчитанные страховые запасы в разрезах, в которых их принимает бизнес: по узлам, категориям и сегментам, в днях покрытия и в деньгах.",
+        "otchet-po-otif": "Фактический уровень сервиса по метрике OTIF (в срок и в полном объёме) — по клиентам, каналам и сетям, против целевого значения.\n\nЭТО ЗАМЕР ФАКТА, А НЕ РАСЧЁТА. Остальные отчёты этапа читают то, что модуль посчитал; этот читает то, что получилось у бизнеса на нормативах ПРОШЛОГО цикла. Поэтому у него свои входы — заказы клиентов и фактические отгрузки с датами и количествами, — и без них отчёт неотличим от отчёта о рекомендациях.\n\nОтсюда же обратная связь: расхождение фактического OTIF с целевым — основание пересмотреть уровни сервиса и страховые запасы на следующем прогоне. Целевой OTIF у федеральных сетей контрактный и со штрафами, то есть внешнее ограничение, а не результат расчёта.\n\nОтдельного алгоритма под этот отчёт в реестре модуля нет: замер OTIF выходит за периметр MEIO и берётся готовым. Помечено намеренно, чтобы карта не обещала функциональности, которой в модуле нет.",
         "ocenka-effektov": "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев, формирование рекомендаций для бизнеса.\n\nBPMN: IO-040 — Отчетность: проверка соответствия рассчитанных запасов бюджетным значениям",
         "peredacha-normativov-po-zapasam-v-snp": "Публикация утверждённых нормативов запаса в SNP: уровни по эшелонам, точка заказа и целевой уровень сервиса с датой вступления в силу.\n\nЭТИМ ШАГОМ ЗАМЫКАЕТСЯ КОНТУР. До него карта заканчивалась отчётом, то есть описывала расчёт, у результата которого нет получателя: параметры оставались внутри модуля, а планирование поставок продолжало работать на прежних. Алгоритм передачи в платформе существовал всё это время — пробел был у карты, а не у продукта.\n\nУтверждение результатов — предшествующее решение владельца процесса, а не действие модуля: публикуются согласованные значения, а не всё посчитанное. Отдельным шагом утверждение на карте пока не выделено.",
     },
@@ -2105,6 +2106,12 @@ STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
             "Квоты и приоритеты источников",
             "Затраты на хранение",
             "Минимальная партия и кратность",
+            "История отгрузок за период",
+            "Собственная история прогноза и факта",
+            "Плановые и фактические длительности поставок",
+            "Отклонения по дугам сети",
+            "Плановые и фактические длительности производства",
+            "Отклонения по производственным заказам",
         ),
         "stage-3-segmentaciya": (
             "История потребления за период",
@@ -2125,6 +2132,10 @@ STAGE_INPUT_CARDS: dict[str, dict[str, tuple[str, ...]]] = {
             "Три сценария",
             "Рекомендованные уровни запасов по эшелонам",
             "Сегментация по пяти признакам",
+            "Заказы клиентов: даты и количества",
+            "Фактические отгрузки: даты и количества",
+            "Целевой OTIF по каналам и сетям",
+            "Опубликованные нормативы прошлого цикла",
         ),
     },
 }
@@ -2171,6 +2182,14 @@ STAGE_WIRING: dict[str, dict[str, dict[str, object]]] = {
             },
         },
         "stage-2-podgotovka-k-raschetu": {
+            "inputsTo": {
+                "История отгрузок за период": "raschet-volatilnosti-sprosa",
+                "Собственная история прогноза и факта": "raschet-volatilnosti-sprosa",
+                "Плановые и фактические длительности поставок": "raschet-cv-dlitelnosti-postavok",
+                "Отклонения по дугам сети": "raschet-cv-dlitelnosti-postavok",
+                "Плановые и фактические длительности производства": "raschet-cv-dlitelnosti-proizvodstva",
+                "Отклонения по производственным заказам": "raschet-cv-dlitelnosti-proizvodstva",
+            },
             "outputsFrom": {
                 "Настроенные параметры расчёта": "nastroyka-parametrov-rascheta",
                 "Скорректированный CV спроса": "korrektirovka-cv-sprosa",
@@ -2192,6 +2211,12 @@ STAGE_WIRING: dict[str, dict[str, dict[str, object]]] = {
             },
         },
         "stage-5-ocenka-effektov": {
+            "inputsTo": {
+                "Заказы клиентов: даты и количества": "otchet-po-otif",
+                "Фактические отгрузки: даты и количества": "otchet-po-otif",
+                "Целевой OTIF по каналам и сетям": "otchet-po-otif",
+                "Опубликованные нормативы прошлого цикла": "otchet-po-otif",
+            },
             "outputsFrom": {
                 "Комплексная оценка эффектов и параметров поставок на основе трёх сценариев": "ocenka-effektov",
                 "Опубликованные нормативы запасов в SNP": "peredacha-normativov-po-zapasam-v-snp",
@@ -2332,6 +2357,10 @@ STEP_OUTPUTS: dict[str, dict[str, tuple[str, ...]]] = {
         "otchet-po-strahovym-zapasam": (
             "Отчёт по страховым запасам",
         ),
+        "otchet-po-otif": (
+            "Фактический OTIF по клиентам и каналам",
+            "Отклонения от целевого OTIF",
+        ),
         "ocenka-effektov": (
             "Комплексная оценка эффектов",
             "Рекомендации для бизнеса",
@@ -2380,7 +2409,7 @@ STAGE_GROUPS: dict[str, dict[str, tuple[tuple[str, tuple[str, ...]], ...]]] = {
             ("Анализ", ("scenarnoe-modelirovanie", "sravnenie-so-strahovymi-zapasami", "analiz-preduprezhdeniy-rascheta", )),
         ),
         "stage-5-ocenka-effektov": (
-            ("Отчёты", ("otchet-po-oshibke-prognoza", "otchet-po-segmentacii", "otchet-po-strahovym-zapasam", )),
+            ("Отчёты", ("otchet-po-oshibke-prognoza", "otchet-po-segmentacii", "otchet-po-strahovym-zapasam", "otchet-po-otif", )),
             ("Итог", ("ocenka-effektov", "peredacha-normativov-po-zapasam-v-snp", )),
         ),
     },
@@ -2481,7 +2510,8 @@ def input_cards(
     meta: dict,
     ids: IdFactory,
     slide_no: int,
-    consumer: str | None,
+    consumers: dict[str, str],
+    default_consumer: str | None,
 ) -> tuple[list[dict], list[dict]]:
     """
     Входные данные этапа отдельными карточками — зеркало result_nodes.
@@ -2489,6 +2519,14 @@ def input_cards(
     Подпись, уже занятая плашкой-артефактом этого этапа, второй раз не заводится:
     иначе «Структура текущих запасов … из ERP» задвоилась бы с карточкой того же
     смысла. Системы у карточек нет — она есть у плашки.
+
+    ПОТРЕБИТЕЛЬ У КАЖДОЙ КАРТОЧКИ СВОЙ (решение владельца 08.09.2026: «для CV
+    длительности производства и CV длительности поставок нужно указать свои
+    входы»). Раньше `inputsTo` задавал ОДНОГО потребителя на весь этап, и все
+    карточки сходились к первому шагу: на этапе с одним шагом это верно, а на
+    этапе из семи — неправда, которую видно глазами. Умолчание сохранено:
+    подпись, для которой потребитель не назван, идёт к default_consumer, как и
+    раньше. Правило симметрично result_nodes: там producers/default_producer.
     """
     existing = {d.label for d in members if d.direction == "in"}
     nodes: list[dict] = []
@@ -2511,6 +2549,7 @@ def input_cards(
                 "slidePosition": position,
             }
         )
+        consumer = consumers.get(label, default_consumer)
         if consumer is not None:
             edges.append(
                 {
@@ -3031,8 +3070,14 @@ def build_single_slide_map(
             )
         ]
         wiring = wiring_table.get(stage_id, {})
+        # `inputsTo` — либо строка (один потребитель на все карточки этапа, как
+        # было), либо словарь «подпись → шаг» для адресных привязок. Умолчание
+        # для неназванных подписей — первый шаг потока.
         raw_consumer = wiring.get("inputsTo")
-        consumer = raw_consumer if isinstance(raw_consumer, str) else (flow[0] if flow else None)
+        consumers: dict[str, str] = raw_consumer if isinstance(raw_consumer, dict) else {}
+        default_consumer = (
+            raw_consumer if isinstance(raw_consumer, str) else (flow[0] if flow else None)
+        )
         raw_producers = wiring.get("outputsFrom")
         producers = raw_producers if isinstance(raw_producers, dict) else {}
         default_producer = flow[-1] if flow else None
@@ -3043,7 +3088,8 @@ def build_single_slide_map(
             meta,
             ids,
             slide_no,
-            consumer,
+            consumers,
+            default_consumer,
         )
         if key_outputs_table is None:
             key_outputs = [d.label for d in members if d.direction == "out"][:MAX_KEY_OUTPUTS]

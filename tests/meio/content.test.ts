@@ -63,6 +63,7 @@ const STEPS_BY_STAGE: string[][] = [
     'Отчёт по ошибке прогноза',
     'Отчёт по сегментации',
     'Отчёт по страховым запасам',
+    'Отчёт по OTIF',
     'Оценка эффектов',
     'Передача нормативов по запасам в SNP',
   ],
@@ -124,8 +125,8 @@ describe('карта MEIO: пять этапов', () => {
 });
 
 describe('карта MEIO: содержание', () => {
-  it('двадцать четыре шага, по этапам, дословно', () => {
-    expect(steps).toHaveLength(24);
+  it('двадцать пять шагов, по этапам, дословно', () => {
+    expect(steps).toHaveLength(25);
     for (const [index, stage] of map.stages.entries()) {
       expect(
         labels(stage.nodes.filter((node) => node.type !== 'data')),
@@ -134,8 +135,8 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('тридцать три входа и семнадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(50);
+  it('сорок три входа и семнадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(60);
     for (const label of INPUTS) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
@@ -145,7 +146,7 @@ describe('карта MEIO: содержание', () => {
     for (const label of OUTPUTS) {
       expect(labels(data.filter((node) => node.direction === 'out'))).toContain(label);
     }
-    expect(data.filter((node) => node.direction === 'in')).toHaveLength(33);
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(43);
     expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
       'Мощности хранения по температурным режимам',
     );
@@ -162,8 +163,8 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(5);
   });
 
-  it('рёбра внутри этапов: 14 + 19 + 9 + 17 + 11', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([14, 19, 9, 17, 11]);
+  it('рёбра внутри этапов: 14 + 25 + 9 + 17 + 16', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([14, 25, 9, 17, 16]);
   });
 
   it('ни один узел не висит без связей', () => {
@@ -387,8 +388,8 @@ describe('карта MEIO: содержание', () => {
       expect(item.outputs, `шаг «${item.id}» без выходов`).toBeTruthy();
       expect(item.owner, `шаг «${item.id}» без ответственного`).toBeTruthy();
     }
-    expect(steps.filter((item) => item.outputs !== undefined)).toHaveLength(24);
-    expect(steps.filter((item) => item.owner !== undefined)).toHaveLength(24);
+    expect(steps.filter((item) => item.outputs !== undefined)).toHaveLength(25);
+    expect(steps.filter((item) => item.owner !== undefined)).toHaveLength(25);
 
     expect(step('Мультиэшелонная оптимизация')?.outputs).toEqual([
       'Рекомендованные уровни запасов по эшелонам',
@@ -401,7 +402,7 @@ describe('карта MEIO: содержание', () => {
   it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
     // Импортёру запрещено отдавать owner (самопроверка serialize_node), поэтому
     // поле живёт в этом файле и восстанавливается carry_over_manual_fields.
-    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(24);
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(25);
   });
 
   it('warningsCount не проставлен', () => {
@@ -431,10 +432,11 @@ describe('карта MEIO: привязка к алгоритмам платфо
         'Корректировка CV длительности поставок',
         'Корректировка CV длительности производства',
         'Анализ предупреждений расчёта',
+        'Отчёт по OTIF',
         'Оценка эффектов',
       ].sort(),
     );
-    expect(manual).toHaveLength(7);
+    expect(manual).toHaveLength(8);
   });
 
   it('один алгоритм — один блок: повторов между блоками нет', () => {
@@ -550,5 +552,71 @@ describe('карта MEIO: привязка к алгоритмам платфо
       expect(inputLabels, label).toContain(label);
     }
     expect(inputLabels).not.toContain('Плановые лидтаймы и отклонения');
+  });
+});
+
+describe('карта MEIO: адресные входы', () => {
+  it('у каждого расчёта CV свои карточки входов, а не общая колонка этапа', () => {
+    // Правка владельца 08.09.2026: «для CV длительности производства и CV
+    // длительности поставок нужно указать свои входы». Раньше ВСЕ карточки
+    // входов этапа сходились к первому шагу — на этапе с одним шагом это верно,
+    // на этапе из семи это неправда, которую видно глазами.
+    const stage = map.stages[1];
+    const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
+    const consumerOf = (card: string): string | undefined => {
+      const id = stage?.nodes.find((node) => node.label === card)?.id;
+      return labelOf.get(stage?.edges.find((edge) => edge.source === id)?.target ?? '');
+    };
+
+    const expected: [string, string][] = [
+      ['История отгрузок за период', 'Расчёт волатильности спроса'],
+      ['Собственная история прогноза и факта', 'Расчёт волатильности спроса'],
+      ['Плановые и фактические длительности поставок', 'Расчёт CV длительности поставок'],
+      ['Отклонения по дугам сети', 'Расчёт CV длительности поставок'],
+      ['Плановые и фактические длительности производства', 'Расчёт CV длительности производства'],
+      ['Отклонения по производственным заказам', 'Расчёт CV длительности производства'],
+    ];
+    for (const [card, consumer] of expected) {
+      expect(consumerOf(card), card).toBe(consumer);
+    }
+
+    // Умолчание сохранено: подпись, для которой потребитель не назван, идёт к
+    // первому шагу потока.
+    expect(consumerOf('Затраты на хранение')).toBe('Настройка параметров расчёта');
+  });
+
+  it('отчёт по OTIF — замер факта со своими входами', () => {
+    // Правка владельца 08.09.2026: «нужно показать входы для отчетов по OTIF».
+    // Остальные отчёты этапа читают то, что модуль посчитал; этот — то, что
+    // получилось у бизнеса на нормативах прошлого цикла, и без собственных
+    // входов он неотличим от отчёта о рекомендациях.
+    const otif = step('Отчёт по OTIF');
+    expect(otif).toBeDefined();
+    expect(otif?.outputs).toEqual([
+      'Фактический OTIF по клиентам и каналам',
+      'Отклонения от целевого OTIF',
+    ]);
+
+    const stage = map.stages[4];
+    const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
+    const consumerOf = (card: string): string | undefined => {
+      const id = stage?.nodes.find((node) => node.label === card)?.id;
+      return labelOf.get(stage?.edges.find((edge) => edge.source === id)?.target ?? '');
+    };
+    for (const card of [
+      'Заказы клиентов: даты и количества',
+      'Фактические отгрузки: даты и количества',
+      'Целевой OTIF по каналам и сетям',
+      'Опубликованные нормативы прошлого цикла',
+    ]) {
+      expect(consumerOf(card), card).toBe('Отчёт по OTIF');
+    }
+  });
+
+  it('у отчёта по OTIF алгоритма НЕТ, и это сказано прямо', () => {
+    // Замер OTIF выходит за периметр MEIO: в реестре модуля такого алгоритма
+    // нет. Карта не должна обещать функциональности, которой в модуле нет.
+    expect(step('Отчёт по OTIF')?.algorithms).toBeUndefined();
+    expect(step('Отчёт по OTIF')?.description).toContain('в реестре модуля нет');
   });
 });

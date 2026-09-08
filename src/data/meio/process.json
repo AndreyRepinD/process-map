@@ -409,7 +409,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 440
+            "y": 612
           },
           "slidePosition": {
             "x": 183,
@@ -423,7 +423,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 264
+            "y": 788
           },
           "slidePosition": {
             "x": 183,
@@ -437,7 +437,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 0
+            "y": 1052
           },
           "slidePosition": {
             "x": 183,
@@ -451,7 +451,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 528
+            "y": 524
           },
           "slidePosition": {
             "x": 183,
@@ -465,11 +465,95 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 88
+            "y": 964
           },
           "slidePosition": {
             "x": 183,
             "y": 313
+          }
+        },
+        {
+          "id": "istoriya-otgruzok-za-period",
+          "type": "data",
+          "label": "История отгрузок за период",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 264
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 365
+          }
+        },
+        {
+          "id": "sobstvennaya-istoriya-prognoza-i-fakta",
+          "type": "data",
+          "label": "Собственная история прогноза и факта",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 88
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 418
+          }
+        },
+        {
+          "id": "planovye-i-fakticheskie-dlitelnosti-postavok",
+          "type": "data",
+          "label": "Плановые и фактические длительности поставок",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 352
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 470
+          }
+        },
+        {
+          "id": "otkloneniya-po-dugam-seti",
+          "type": "data",
+          "label": "Отклонения по дугам сети",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 440
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 523
+          }
+        },
+        {
+          "id": "planovye-i-fakticheskie-dlitelnosti-proizvodstva",
+          "type": "data",
+          "label": "Плановые и фактические длительности производства",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 1120
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 575
+          }
+        },
+        {
+          "id": "otkloneniya-po-proizvodstvennym-zakazam",
+          "type": "data",
+          "label": "Отклонения по производственным заказам",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 1208
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 628
           }
         },
         {
@@ -492,7 +576,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 266
+            "y": 790
           },
           "slidePosition": {
             "x": 420,
@@ -507,7 +591,7 @@
           "system": "DP",
           "position": {
             "x": 355,
-            "y": 596
+            "y": 0
           },
           "slidePosition": {
             "x": 10,
@@ -522,7 +606,7 @@
           "system": "DP",
           "position": {
             "x": 355,
-            "y": 684
+            "y": 176
           },
           "slidePosition": {
             "x": 10,
@@ -550,7 +634,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 615
+            "y": 178
           },
           "slidePosition": {
             "x": 420,
@@ -565,7 +649,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 176
+            "y": 876
           },
           "slidePosition": {
             "x": 10,
@@ -580,7 +664,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 352
+            "y": 700
           },
           "slidePosition": {
             "x": 10,
@@ -605,7 +689,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 1124,
-            "y": 615
+            "y": 178
           },
           "slidePosition": {
             "x": 420,
@@ -631,7 +715,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 268
+            "y": 460
           },
           "slidePosition": {
             "x": 420,
@@ -655,7 +739,7 @@
           "owner": "Закупки совместно с планером запасов",
           "position": {
             "x": 1124,
-            "y": 268
+            "y": 460
           },
           "slidePosition": {
             "x": 420,
@@ -681,7 +765,7 @@
           ],
           "position": {
             "x": 710,
-            "y": 486
+            "y": 843
           },
           "slidePosition": {
             "x": 420,
@@ -705,7 +789,7 @@
           "owner": "Производственный планер совместно с планером запасов",
           "position": {
             "x": 1124,
-            "y": 486
+            "y": 843
           },
           "slidePosition": {
             "x": 420,
@@ -719,7 +803,7 @@
           "direction": "out",
           "position": {
             "x": 769,
-            "y": 0
+            "y": 1148
           },
           "slidePosition": {
             "x": 648,
@@ -733,7 +817,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 613
+            "y": 176
           },
           "slidePosition": {
             "x": 648,
@@ -747,7 +831,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 266
+            "y": 458
           },
           "slidePosition": {
             "x": 648,
@@ -761,7 +845,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 484
+            "y": 841
           },
           "slidePosition": {
             "x": 648,
@@ -858,6 +942,42 @@
           "id": "e-minimalnaya-partiya-i-kratnost--nastroyka-parametrov-rascheta",
           "source": "minimalnaya-partiya-i-kratnost",
           "target": "nastroyka-parametrov-rascheta",
+          "kind": "process"
+        },
+        {
+          "id": "e-istoriya-otgruzok-za-period--raschet-volatilnosti-sprosa",
+          "source": "istoriya-otgruzok-za-period",
+          "target": "raschet-volatilnosti-sprosa",
+          "kind": "process"
+        },
+        {
+          "id": "e-sobstvennaya-istoriya-prognoza-i-fakta--raschet-volatilnosti-sprosa",
+          "source": "sobstvennaya-istoriya-prognoza-i-fakta",
+          "target": "raschet-volatilnosti-sprosa",
+          "kind": "process"
+        },
+        {
+          "id": "e-planovye-i-fakticheskie-dlitelnosti-postavok--raschet-cv-dlitelnosti-postavok",
+          "source": "planovye-i-fakticheskie-dlitelnosti-postavok",
+          "target": "raschet-cv-dlitelnosti-postavok",
+          "kind": "process"
+        },
+        {
+          "id": "e-otkloneniya-po-dugam-seti--raschet-cv-dlitelnosti-postavok",
+          "source": "otkloneniya-po-dugam-seti",
+          "target": "raschet-cv-dlitelnosti-postavok",
+          "kind": "process"
+        },
+        {
+          "id": "e-planovye-i-fakticheskie-dlitelnosti-proizvodstva--raschet-cv-dlitelnosti-proizvodstva",
+          "source": "planovye-i-fakticheskie-dlitelnosti-proizvodstva",
+          "target": "raschet-cv-dlitelnosti-proizvodstva",
+          "kind": "process"
+        },
+        {
+          "id": "e-otkloneniya-po-proizvodstvennym-zakazam--raschet-cv-dlitelnosti-proizvodstva",
+          "source": "otkloneniya-po-proizvodstvennym-zakazam",
+          "target": "raschet-cv-dlitelnosti-proizvodstva",
           "kind": "process"
         },
         {
@@ -1685,7 +1805,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 206
+            "y": 176
           },
           "slidePosition": {
             "x": 831,
@@ -1718,6 +1838,62 @@
           "slidePosition": {
             "x": 831,
             "y": 208
+          }
+        },
+        {
+          "id": "zakazy-klientov-daty-i-kolichestva",
+          "type": "data",
+          "label": "Заказы клиентов: даты и количества",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 541
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 260
+          }
+        },
+        {
+          "id": "fakticheskie-otgruzki-daty-i-kolichestva",
+          "type": "data",
+          "label": "Фактические отгрузки: даты и количества",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 352
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 313
+          }
+        },
+        {
+          "id": "celevoy-otif-po-kanalam-i-setyam",
+          "type": "data",
+          "label": "Целевой OTIF по каналам и сетям",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 264
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 365
+          }
+        },
+        {
+          "id": "opublikovannye-normativy-proshlogo-cikla",
+          "type": "data",
+          "label": "Опубликованные нормативы прошлого цикла",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 453
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 418
           }
         },
         {
@@ -1765,7 +1941,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 147
+            "y": 455
           },
           "slidePosition": {
             "x": 1069,
@@ -1791,11 +1967,37 @@
           ],
           "position": {
             "x": 296,
-            "y": 231
+            "y": 539
           },
           "slidePosition": {
             "x": 1069,
             "y": 362
+          }
+        },
+        {
+          "id": "otchet-po-otif",
+          "type": "step",
+          "label": "Отчёт по OTIF",
+          "description": "Фактический уровень сервиса по метрике OTIF (в срок и в полном объёме) — по клиентам, каналам и сетям, против целевого значения.\n\nЭТО ЗАМЕР ФАКТА, А НЕ РАСЧЁТА. Остальные отчёты этапа читают то, что модуль посчитал; этот читает то, что получилось у бизнеса на нормативах ПРОШЛОГО цикла. Поэтому у него свои входы — заказы клиентов и фактические отгрузки с датами и количествами, — и без них отчёт неотличим от отчёта о рекомендациях.\n\nОтсюда же обратная связь: расхождение фактического OTIF с целевым — основание пересмотреть уровни сервиса и страховые запасы на следующем прогоне. Целевой OTIF у федеральных сетей контрактный и со штрафами, то есть внешнее ограничение, а не результат расчёта.\n\nОтдельного алгоритма под этот отчёт в реестре модуля нет: замер OTIF выходит за периметр MEIO и берётся готовым. Помечено намеренно, чтобы карта не обещала функциональности, которой в модуле нет.",
+          "group": "otchety",
+          "inputs": [
+            "Заказы клиентов: даты и количества",
+            "Фактические отгрузки: даты и количества",
+            "Целевой OTIF по каналам и сетям",
+            "Опубликованные нормативы прошлого цикла"
+          ],
+          "outputs": [
+            "Фактический OTIF по клиентам и каналам",
+            "Отклонения от целевого OTIF"
+          ],
+          "owner": "Планер запасов совместно с логистикой",
+          "position": {
+            "x": 296,
+            "y": 371
+          },
+          "slidePosition": {
+            "x": 1069,
+            "y": 507
           }
         },
         {
@@ -1817,11 +2019,11 @@
           "owner": "Планер запасов совместно с финансами",
           "position": {
             "x": 710,
-            "y": 172
+            "y": 440
           },
           "slidePosition": {
             "x": 1069,
-            "y": 507
+            "y": 721
           }
         },
         {
@@ -1844,11 +2046,11 @@
           ],
           "position": {
             "x": 1124,
-            "y": 116
+            "y": 99
           },
           "slidePosition": {
             "x": 1069,
-            "y": 669
+            "y": 883
           }
         },
         {
@@ -1858,11 +2060,11 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 385
+            "y": 693
           },
           "slidePosition": {
             "x": 1069,
-            "y": 866
+            "y": 1081
           }
         },
         {
@@ -1873,11 +2075,11 @@
           "system": "INPLAN",
           "position": {
             "x": 1538,
-            "y": 36
+            "y": 53
           },
           "slidePosition": {
             "x": 1069,
-            "y": 947
+            "y": 1161
           }
         },
         {
@@ -1887,7 +2089,7 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 297
+            "y": 605
           },
           "slidePosition": {
             "x": 1297,
@@ -1901,7 +2103,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 172
+            "y": 321
           },
           "slidePosition": {
             "x": 1297,
@@ -1925,6 +2127,12 @@
         {
           "id": "e-otchet-po-strahovym-zapasam--ocenka-effektov",
           "source": "otchet-po-strahovym-zapasam",
+          "target": "ocenka-effektov",
+          "kind": "process"
+        },
+        {
+          "id": "e-otchet-po-otif--ocenka-effektov",
+          "source": "otchet-po-otif",
           "target": "ocenka-effektov",
           "kind": "process"
         },
@@ -1962,6 +2170,30 @@
           "id": "e-segmentaciya-po-pyati-priznakam-1-800502--otchet-po-oshibke-prognoza",
           "source": "segmentaciya-po-pyati-priznakam-1-800502",
           "target": "otchet-po-oshibke-prognoza",
+          "kind": "process"
+        },
+        {
+          "id": "e-zakazy-klientov-daty-i-kolichestva--otchet-po-otif",
+          "source": "zakazy-klientov-daty-i-kolichestva",
+          "target": "otchet-po-otif",
+          "kind": "process"
+        },
+        {
+          "id": "e-fakticheskie-otgruzki-daty-i-kolichestva--otchet-po-otif",
+          "source": "fakticheskie-otgruzki-daty-i-kolichestva",
+          "target": "otchet-po-otif",
+          "kind": "process"
+        },
+        {
+          "id": "e-celevoy-otif-po-kanalam-i-setyam--otchet-po-otif",
+          "source": "celevoy-otif-po-kanalam-i-setyam",
+          "target": "otchet-po-otif",
+          "kind": "process"
+        },
+        {
+          "id": "e-opublikovannye-normativy-proshlogo-cikla--otchet-po-otif",
+          "source": "opublikovannye-normativy-proshlogo-cikla",
+          "target": "otchet-po-otif",
           "kind": "process"
         },
         {
