@@ -9,9 +9,9 @@
 // и правка руками была бы затёрта. Рёбер: связь принадлежит этапу, а не узлу,
 // и в Record<nodeId, …> её не выразить. Типа узла: смена типа меняет и вид, и
 // колонку, и смысл — это не правка подписи, а другой блок.
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { patchNodeContent, removeNode } from '../../data/loader';
-import type { ProcessNode } from '../../data/schema';
+import { SystemCodeSchema, type ProcessNode, type SystemCode } from '../../data/schema';
 import { ru } from '../../i18n/ru';
 import { commitOverrides } from '../../hooks/useProcessMap';
 import styles from './NodeDrawer.module.css';
@@ -19,6 +19,35 @@ import styles from './NodeDrawer.module.css';
 export interface NodeContentFormProps {
   node: ProcessNode;
   onClose: () => void;
+  /**
+   * Группы ЭТОГО этапа парами «id — заголовок».
+   *
+   * Пары, а не одни заголовки: в узле лежит id, а правится подпись, и без
+   * обратного перевода форма показывала бы пустое поле у карточки, которая на
+   * самом деле в группе, — а сохранение молча вывело бы её из рамки.
+   *
+   * Подсказка списком, а не выбором: владелец должен мочь завести новую рамку,
+   * набрав название, которого ещё нет. На обзоре групп нет вовсе, поэтому поле
+   * там не показывается — список пуст.
+   */
+  groups?: readonly { id: string; label: string }[];
+}
+
+/** Коды систем из схемы: второй список разошёлся бы с первым (SystemCodeSchema). */
+const SYSTEM_CODES: readonly SystemCode[] = SystemCodeSchema.options;
+
+/**
+ * Заголовок группы узла.
+ *
+ * В узле лежит id, а в форме правится подпись — перевод делается по списку
+ * заголовков этапа. Узел без группы и группа, которой в списке нет (такого быть
+ * не должно, но данные приходят и из чужих файлов), дают пустое поле.
+ */
+function groupLabelOf(node: ProcessNode, groups: readonly { id: string; label: string }[]): string {
+  if (node.group === undefined) {
+    return '';
+  }
+  return groups.find((group) => group.id === node.group)?.label ?? '';
 }
 
 /** Список из textarea: пустые строки отбрасываются, порядок сохраняется. */
@@ -29,7 +58,10 @@ function parseList(text: string): string[] {
     .filter((line) => line !== '');
 }
 
-export function NodeContentForm({ node, onClose }: NodeContentFormProps) {
+export function NodeContentForm({ node, onClose, groups = [] }: NodeContentFormProps) {
+  const groupsId = useId();
+  const [system, setSystem] = useState<string>(node.system ?? '');
+  const [group, setGroup] = useState(groupLabelOf(node, groups));
   const [label, setLabel] = useState(node.label);
   const [description, setDescription] = useState(node.description ?? '');
   const [inputs, setInputs] = useState((node.inputs ?? []).join('\n'));
@@ -58,6 +90,8 @@ export function NodeContentForm({ node, onClose }: NodeContentFormProps) {
         inputs: nextInputs.length === 0 ? null : nextInputs,
         outputs: nextOutputs.length === 0 ? null : nextOutputs,
         owner: nextOwner === '' ? null : nextOwner,
+        system: system === '' ? null : (system as SystemCode),
+        group: group.trim() === '' ? null : group.trim(),
       }),
     );
     onClose();
@@ -124,6 +158,44 @@ export function NodeContentForm({ node, onClose }: NodeContentFormProps) {
           onChange={(event) => setOwner(event.target.value)}
         />
       </label>
+
+      <label className={styles.formLabel}>
+        {ru.nodeEditor.systemField}
+        <select
+          className={styles.formInput}
+          value={system}
+          onChange={(event) => {
+            setSystem(event.target.value);
+          }}
+        >
+          <option value="">{ru.nodeEditor.systemNone}</option>
+          {SYSTEM_CODES.map((code) => (
+            <option key={code} value={code}>
+              {code}
+            </option>
+          ))}
+        </select>
+      </label>
+      {/* Группы нет на обзоре: там рамок вокруг карточек не рисуют вовсе. */}
+      {groups.length > 0 || node.group !== undefined ? (
+        <label className={styles.formLabel}>
+          {ru.nodeEditor.groupField}
+          <input
+            className={styles.formInput}
+            list={groupsId}
+            value={group}
+            onChange={(event) => {
+              setGroup(event.target.value);
+            }}
+          />
+          <datalist id={groupsId}>
+            {groups.map((item) => (
+              <option key={item.id} value={item.label} />
+            ))}
+          </datalist>
+          <span className={styles.formHint}>{ru.nodeEditor.groupHint}</span>
+        </label>
+      ) : null}
 
       <div className={styles.formActions}>
         <button type="submit" className={styles.formPrimary}>

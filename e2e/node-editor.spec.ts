@@ -201,3 +201,36 @@ test('внешняя карточка правится с ОБЗОРА, и по�
   await page.waitForSelector(STEP_CARD);
   await expect(page.getByText('Внешний вход, правка с обзора').first()).toBeVisible();
 });
+
+test('подпись системы и белая рамка группы правятся из панели', async ({ page }) => {
+  // Вопросы владельца 08.09.2026: «белый фон также можно добавить? и подпись к
+  // нему? там где шаг идёт» и «под серыми плашками у тебя ещё подпись есть DP
+  // например — как её добавить?».
+  //
+  // Оба — поля УЗЛА, которых просто не было в форме: код системы (подпись под
+  // карточкой) и группа (белая рамка с заголовком вокруг карточек этапа).
+  await openInEditor(page, NODE);
+  const dialog = page.getByRole('dialog');
+  await dialog.getByRole('button', { name: 'Править блок' }).click();
+
+  await dialog.getByLabel('Код системы под карточкой').selectOption('ERP');
+  await dialog.getByLabel('Группа (белая рамка с заголовком)').fill('Новая рамка владельца');
+  await dialog.getByRole('button', { name: 'Сохранить', exact: true }).click();
+
+  // Рамка с заголовком появилась на полотне, и карточка внутри неё.
+  await expect(page.getByText('Новая рамка владельца')).toBeVisible();
+
+  await page.reload();
+  await page.waitForSelector(STEP_CARD);
+  await expect(page.getByText('Новая рамка владельца')).toBeVisible();
+
+  // Подпись системы переживает перезагрузку вместе с рамкой.
+  const editor = page.getByRole('button', { name: 'Редактор', exact: true });
+  await editor.click();
+  await ensureDrawer(page, NODE);
+  await page.getByRole('dialog').getByRole('button', { name: 'Править блок' }).click();
+  await expect(page.getByRole('dialog').getByLabel('Код системы под карточкой')).toHaveValue('ERP');
+  await expect(
+    page.getByRole('dialog').getByLabel('Группа (белая рамка с заголовком)'),
+  ).toHaveValue('Новая рамка владельца');
+});
