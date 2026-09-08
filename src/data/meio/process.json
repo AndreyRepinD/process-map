@@ -27,13 +27,14 @@
       ],
       "nodes": [
         {
-          "id": "struktura-tekuschih-zapasov-po-uzlam-i-partiyam",
+          "id": "produkt",
           "type": "data",
-          "label": "Структура текущих запасов по узлам и партиям",
+          "label": "Продукт",
+          "description": "Основные данные",
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 1056
+            "y": 1672
           },
           "slidePosition": {
             "x": 0,
@@ -41,108 +42,10 @@
           }
         },
         {
-          "id": "fakticheskie-otgruzki-za-period",
+          "id": "lokaciya",
           "type": "data",
-          "label": "Фактические отгрузки за период",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 176
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 155
-          }
-        },
-        {
-          "id": "ostatki-na-rukah-v-zakaze-i-v-puti",
-          "type": "data",
-          "label": "Остатки на руках, в заказе и в пути",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 792
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 208
-          }
-        },
-        {
-          "id": "svyazki-produkt-lokaciya-i-eshelony-seti",
-          "type": "data",
-          "label": "Связки продукт-локация и эшелоны сети",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 1144
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 260
-          }
-        },
-        {
-          "id": "istochniki-postavki-kvoty-i-marshruty",
-          "type": "data",
-          "label": "Источники поставки, квоты и маршруты",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 352
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 313
-          }
-        },
-        {
-          "id": "kalendari-popolneniya-i-proizvodstvennye-kalendari",
-          "type": "data",
-          "label": "Календари пополнения и производственные календари",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 440
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 365
-          }
-        },
-        {
-          "id": "moschnosti-hraneniya-po-temperaturnym-rezhimam",
-          "type": "data",
-          "label": "Мощности хранения по температурным режимам",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 528
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 418
-          }
-        },
-        {
-          "id": "nezakrytyy-spros-i-spisaniya-za-period",
-          "type": "data",
-          "label": "Незакрытый спрос и списания за период",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 616
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 470
-          }
-        },
-        {
-          "id": "osnovnye-dannye",
-          "type": "data",
-          "label": "Основные данные",
-          "description": "Основные данные для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Продукт\n· Локация\n· Продукт-Локация\n· Групповой клиент, источники для гр. клиента\n· Транспортные отношения\n· Производственная спецификация\n· Компоненты производственной спецификации\n· Поставщик, источники поставщика\n· Валюта, курсы обмена\n· Единицы измерения, коэффициенты пересчёта",
+          "label": "Локация",
+          "description": "Основные данные",
           "direction": "in",
           "position": {
             "x": 0,
@@ -150,29 +53,119 @@
           },
           "slidePosition": {
             "x": 0,
+            "y": 155
+          }
+        },
+        {
+          "id": "produkt-lokaciya",
+          "type": "data",
+          "label": "Продукт-Локация",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1760
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 208
+          }
+        },
+        {
+          "id": "gruppovoy-klient-istochniki-dlya-gr-klienta",
+          "type": "data",
+          "label": "Групповой клиент, источники для гр. клиента",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 352
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 260
+          }
+        },
+        {
+          "id": "transportnye-otnosheniya",
+          "type": "data",
+          "label": "Транспортные отношения",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2992
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 313
+          }
+        },
+        {
+          "id": "proizvodstvennaya-specifikaciya",
+          "type": "data",
+          "label": "Производственная спецификация",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1848
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 365
+          }
+        },
+        {
+          "id": "komponenty-proizvodstvennoy-specifikacii",
+          "type": "data",
+          "label": "Компоненты производственной спецификации",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 616
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 418
+          }
+        },
+        {
+          "id": "postavschik-istochniki-postavschika",
+          "type": "data",
+          "label": "Поставщик, источники поставщика",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1584
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 470
+          }
+        },
+        {
+          "id": "valyuta-kursy-obmena",
+          "type": "data",
+          "label": "Валюта, курсы обмена",
+          "description": "Основные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 3256
+          },
+          "slidePosition": {
+            "x": 0,
             "y": 523
           }
         },
         {
-          "id": "dannye-o-sprose",
+          "id": "edinicy-izmereniya-koefficienty-perescheta",
           "type": "data",
-          "label": "Данные о спросе",
-          "description": "Данные о спросе для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Целевой уровень сервиса\n· Тип уровня сервиса\n· История прогноза спроса и история расхода\n· Будущий прогноз спроса\n· СКО ошибки прогноза\n· Замороженный период",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 88
-          },
-          "slidePosition": {
-            "x": 0,
-            "y": 575
-          }
-        },
-        {
-          "id": "istochniki-postavki",
-          "type": "data",
-          "label": "Источники поставки",
-          "description": "Источники поставки для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Транспортный лидтайм\n· СКО транспортного лидтайма\n· Минимальный размер партии транспортировки\n· Округление партии транспортировки\n· Размер партии транспортировки в днях\n· Транспортные квоты\n· Замороженный период",
+          "label": "Единицы измерения, коэффициенты пересчёта",
+          "description": "Основные данные",
           "direction": "in",
           "position": {
             "x": 0,
@@ -180,18 +173,33 @@
           },
           "slidePosition": {
             "x": 0,
+            "y": 575
+          }
+        },
+        {
+          "id": "celevoy-uroven-servisa",
+          "type": "data",
+          "label": "Целевой уровень сервиса",
+          "description": "Данные о спросе",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 88
+          },
+          "slidePosition": {
+            "x": 0,
             "y": 628
           }
         },
         {
-          "id": "proizvodstvennye-dannye",
+          "id": "tip-urovnya-servisa",
           "type": "data",
-          "label": "Производственные данные",
-          "description": "Производственные данные для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Производственный лидтайм\n· СКО производственного лидтайма\n· Минимальный размер партии выпуска\n· Округление партии выпуска\n· Размер партии выпуска в днях\n· Производственные квоты\n· Выходной коэффициент готового продукта\n· Коэффициент компонента",
+          "label": "Тип уровня сервиса",
+          "description": "Данные о спросе",
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 880
+            "y": 2728
           },
           "slidePosition": {
             "x": 0,
@@ -199,10 +207,25 @@
           }
         },
         {
-          "id": "dannye-o-planirovanii",
+          "id": "istoriya-prognoza-sprosa-i-istoriya-rashoda",
           "type": "data",
-          "label": "Данные о планировании",
-          "description": "Данные о планировании для расчёта MEIO — перечень владельца от 08.09.2026:\n\n· Цикл планирования (DBNR)\n· Тип узла (хранимый, не хранимый)\n· Политика страхового запаса (гибридные узлы)\n· Мин. / макс. внутренний уровень сервиса\n· Мин. / макс. страховой запас в днях или ЕИ\n· Минимально необходимый запас\n· Максимальный доступный запас (On-Hand)\n· Штраф за превышение максимального запаса\n· Удельные затраты на содержание запаса",
+          "label": "История прогноза спроса и история расхода",
+          "description": "Данные о спросе",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 440
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 733
+          }
+        },
+        {
+          "id": "buduschiy-prognoz-sprosa",
+          "type": "data",
+          "label": "Будущий прогноз спроса",
+          "description": "Данные о спросе",
           "direction": "in",
           "position": {
             "x": 0,
@@ -210,7 +233,397 @@
           },
           "slidePosition": {
             "x": 0,
-            "y": 733
+            "y": 785
+          }
+        },
+        {
+          "id": "sko-oshibki-prognoza",
+          "type": "data",
+          "label": "СКО ошибки прогноза",
+          "description": "Данные о спросе",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2376
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 838
+          }
+        },
+        {
+          "id": "zamorozhennyy-period-sprosa",
+          "type": "data",
+          "label": "Замороженный период спроса",
+          "description": "Данные о спросе",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 3432
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 890
+          }
+        },
+        {
+          "id": "transportnyy-lidtaym",
+          "type": "data",
+          "label": "Транспортный лидтайм",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 3080
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 943
+          }
+        },
+        {
+          "id": "sko-transportnogo-lidtayma",
+          "type": "data",
+          "label": "СКО транспортного лидтайма",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2552
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 995
+          }
+        },
+        {
+          "id": "minimalnyy-razmer-partii-transportirovki",
+          "type": "data",
+          "label": "Минимальный размер партии транспортировки",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1144
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1048
+          }
+        },
+        {
+          "id": "okruglenie-partii-transportirovki",
+          "type": "data",
+          "label": "Округление партии транспортировки",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1320
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1100
+          }
+        },
+        {
+          "id": "razmer-partii-transportirovki-v-dnyah",
+          "type": "data",
+          "label": "Размер партии транспортировки в днях",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2112
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1153
+          }
+        },
+        {
+          "id": "transportnye-kvoty",
+          "type": "data",
+          "label": "Транспортные квоты",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2904
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1205
+          }
+        },
+        {
+          "id": "zamorozhennyy-period-transportirovki",
+          "type": "data",
+          "label": "Замороженный период транспортировки",
+          "description": "Источники поставки",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 3520
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1258
+          }
+        },
+        {
+          "id": "proizvodstvennyy-lidtaym",
+          "type": "data",
+          "label": "Производственный лидтайм",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2024
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1310
+          }
+        },
+        {
+          "id": "sko-proizvodstvennogo-lidtayma",
+          "type": "data",
+          "label": "СКО производственного лидтайма",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2464
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1363
+          }
+        },
+        {
+          "id": "minimalnyy-razmer-partii-vypuska",
+          "type": "data",
+          "label": "Минимальный размер партии выпуска",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1232
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1415
+          }
+        },
+        {
+          "id": "okruglenie-partii-vypuska",
+          "type": "data",
+          "label": "Округление партии выпуска",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1408
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1468
+          }
+        },
+        {
+          "id": "razmer-partii-vypuska-v-dnyah",
+          "type": "data",
+          "label": "Размер партии выпуска в днях",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2200
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1520
+          }
+        },
+        {
+          "id": "proizvodstvennye-kvoty",
+          "type": "data",
+          "label": "Производственные квоты",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1936
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1573
+          }
+        },
+        {
+          "id": "vyhodnoy-koefficient-gotovogo-produkta",
+          "type": "data",
+          "label": "Выходной коэффициент готового продукта",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 3344
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1625
+          }
+        },
+        {
+          "id": "koefficient-komponenta",
+          "type": "data",
+          "label": "Коэффициент компонента",
+          "description": "Производственные данные",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 528
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1678
+          }
+        },
+        {
+          "id": "cikl-planirovaniya-dbnr",
+          "type": "data",
+          "label": "Цикл планирования (DBNR)",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 176
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1730
+          }
+        },
+        {
+          "id": "tip-uzla-hranimyy-ne-hranimyy",
+          "type": "data",
+          "label": "Тип узла (хранимый, не хранимый)",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2816
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1783
+          }
+        },
+        {
+          "id": "politika-strahovogo-zapasa-gibridnye-uzly",
+          "type": "data",
+          "label": "Политика страхового запаса (гибридные узлы)",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1496
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1835
+          }
+        },
+        {
+          "id": "min-maks-vnutrenniy-uroven-servisa",
+          "type": "data",
+          "label": "Мин. / макс. внутренний уровень сервиса",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 968
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1888
+          }
+        },
+        {
+          "id": "min-maks-strahovoy-zapas-v-dnyah-ili-ei",
+          "type": "data",
+          "label": "Мин. / макс. страховой запас в днях или ЕИ",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 880
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1940
+          }
+        },
+        {
+          "id": "minimalno-neobhodimyy-zapas",
+          "type": "data",
+          "label": "Минимально необходимый запас",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 1056
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 1993
+          }
+        },
+        {
+          "id": "maksimalnyy-dostupnyy-zapas-on-hand",
+          "type": "data",
+          "label": "Максимальный доступный запас (On-Hand)",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 792
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 2045
+          }
+        },
+        {
+          "id": "shtraf-za-prevyshenie-maksimalnogo-zapasa",
+          "type": "data",
+          "label": "Штраф за превышение максимального запаса",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 2288
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 2098
+          }
+        },
+        {
+          "id": "udelnye-zatraty-na-soderzhanie-zapasa",
+          "type": "data",
+          "label": "Удельные затраты на содержание запаса",
+          "description": "Данные о планировании",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 3168
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 2150
           }
         },
         {
@@ -221,7 +634,7 @@
           "system": "ERP",
           "position": {
             "x": 0,
-            "y": 968
+            "y": 2640
           },
           "slidePosition": {
             "x": 10,
@@ -235,14 +648,46 @@
           "description": "Сбор и приведение исходных данных к модели, на которой считает оптимизатор: структура текущих запасов по узлам и партиям, фактические отгрузки за период, остатки на руках, в заказе и в пути. Сюда же — устройство сети: связки продукт-локация и эшелоны, источники поставки, квоты и маршруты, календари пополнения и производства.\n\nМощности хранения по температурным режимам берутся здесь же: для охлаждённой и замороженной продукции холод — конечный ресурс, и уровень запаса, который в него не помещается, нереализуем. Незакрытый спрос и списания нужны, чтобы отличать фактическую отгрузку от фактического спроса.\n\nBPMN: IO-010 — Настройка параметров для расчёта уровней запасов (IO)",
           "group": "sbor-dannyh",
           "inputs": [
-            "Структура текущих запасов по узлам и партиям",
-            "Фактические отгрузки за период",
-            "Остатки на руках, в заказе и в пути",
-            "Связки продукт-локация и эшелоны сети",
-            "Источники поставки, квоты и маршруты",
-            "Календари пополнения и производственные календари",
-            "Мощности хранения по температурным режимам",
-            "Незакрытый спрос и списания за период"
+            "Продукт",
+            "Локация",
+            "Продукт-Локация",
+            "Групповой клиент, источники для гр. клиента",
+            "Транспортные отношения",
+            "Производственная спецификация",
+            "Компоненты производственной спецификации",
+            "Поставщик, источники поставщика",
+            "Валюта, курсы обмена",
+            "Единицы измерения, коэффициенты пересчёта",
+            "Целевой уровень сервиса",
+            "Тип уровня сервиса",
+            "История прогноза спроса и история расхода",
+            "Будущий прогноз спроса",
+            "СКО ошибки прогноза",
+            "Замороженный период спроса",
+            "Транспортный лидтайм",
+            "СКО транспортного лидтайма",
+            "Минимальный размер партии транспортировки",
+            "Округление партии транспортировки",
+            "Размер партии транспортировки в днях",
+            "Транспортные квоты",
+            "Замороженный период транспортировки",
+            "Производственный лидтайм",
+            "СКО производственного лидтайма",
+            "Минимальный размер партии выпуска",
+            "Округление партии выпуска",
+            "Размер партии выпуска в днях",
+            "Производственные квоты",
+            "Выходной коэффициент готового продукта",
+            "Коэффициент компонента",
+            "Цикл планирования (DBNR)",
+            "Тип узла (хранимый, не хранимый)",
+            "Политика страхового запаса (гибридные узлы)",
+            "Мин. / макс. внутренний уровень сервиса",
+            "Мин. / макс. страховой запас в днях или ЕИ",
+            "Минимально необходимый запас",
+            "Максимальный доступный запас (On-Hand)",
+            "Штраф за превышение максимального запаса",
+            "Удельные затраты на содержание запаса"
           ],
           "outputs": [
             "Модель данных для расчёта",
@@ -251,7 +696,7 @@
           "owner": "Планер запасов",
           "position": {
             "x": 296,
-            "y": 574
+            "y": 1762
           },
           "slidePosition": {
             "x": 204,
@@ -280,11 +725,11 @@
           ],
           "position": {
             "x": 710,
-            "y": 523
+            "y": 1711
           },
           "slidePosition": {
             "x": 204,
-            "y": 465
+            "y": 1188
           }
         },
         {
@@ -309,11 +754,11 @@
           ],
           "position": {
             "x": 1124,
-            "y": 515
+            "y": 1703
           },
           "slidePosition": {
             "x": 204,
-            "y": 662
+            "y": 1385
           }
         },
         {
@@ -323,7 +768,7 @@
           "direction": "out",
           "position": {
             "x": 769,
-            "y": 1127
+            "y": 3503
           },
           "slidePosition": {
             "x": 431,
@@ -337,7 +782,7 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 623
+            "y": 1811
           },
           "slidePosition": {
             "x": 431,
@@ -351,7 +796,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 513
+            "y": 1701
           },
           "slidePosition": {
             "x": 431,
@@ -379,80 +824,242 @@
           "kind": "process"
         },
         {
-          "id": "e-struktura-tekuschih-zapasov-po-uzlam-i-partiyam--podgotovka-dannyh",
-          "source": "struktura-tekuschih-zapasov-po-uzlam-i-partiyam",
+          "id": "e-produkt--podgotovka-dannyh",
+          "source": "produkt",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-fakticheskie-otgruzki-za-period--podgotovka-dannyh",
-          "source": "fakticheskie-otgruzki-za-period",
+          "id": "e-lokaciya--podgotovka-dannyh",
+          "source": "lokaciya",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-ostatki-na-rukah-v-zakaze-i-v-puti--podgotovka-dannyh",
-          "source": "ostatki-na-rukah-v-zakaze-i-v-puti",
+          "id": "e-produkt-lokaciya--podgotovka-dannyh",
+          "source": "produkt-lokaciya",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-svyazki-produkt-lokaciya-i-eshelony-seti--podgotovka-dannyh",
-          "source": "svyazki-produkt-lokaciya-i-eshelony-seti",
+          "id": "e-gruppovoy-klient-istochniki-dlya-gr-klienta--podgotovka-dannyh",
+          "source": "gruppovoy-klient-istochniki-dlya-gr-klienta",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-istochniki-postavki-kvoty-i-marshruty--podgotovka-dannyh",
-          "source": "istochniki-postavki-kvoty-i-marshruty",
+          "id": "e-transportnye-otnosheniya--podgotovka-dannyh",
+          "source": "transportnye-otnosheniya",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-kalendari-popolneniya-i-proizvodstvennye-kalendari--podgotovka-dannyh",
-          "source": "kalendari-popolneniya-i-proizvodstvennye-kalendari",
+          "id": "e-proizvodstvennaya-specifikaciya--podgotovka-dannyh",
+          "source": "proizvodstvennaya-specifikaciya",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-moschnosti-hraneniya-po-temperaturnym-rezhimam--podgotovka-dannyh",
-          "source": "moschnosti-hraneniya-po-temperaturnym-rezhimam",
+          "id": "e-komponenty-proizvodstvennoy-specifikacii--podgotovka-dannyh",
+          "source": "komponenty-proizvodstvennoy-specifikacii",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-nezakrytyy-spros-i-spisaniya-za-period--podgotovka-dannyh",
-          "source": "nezakrytyy-spros-i-spisaniya-za-period",
+          "id": "e-postavschik-istochniki-postavschika--podgotovka-dannyh",
+          "source": "postavschik-istochniki-postavschika",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-osnovnye-dannye--podgotovka-dannyh",
-          "source": "osnovnye-dannye",
+          "id": "e-valyuta-kursy-obmena--podgotovka-dannyh",
+          "source": "valyuta-kursy-obmena",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-dannye-o-sprose--podgotovka-dannyh",
-          "source": "dannye-o-sprose",
+          "id": "e-edinicy-izmereniya-koefficienty-perescheta--podgotovka-dannyh",
+          "source": "edinicy-izmereniya-koefficienty-perescheta",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-istochniki-postavki--podgotovka-dannyh",
-          "source": "istochniki-postavki",
+          "id": "e-celevoy-uroven-servisa--podgotovka-dannyh",
+          "source": "celevoy-uroven-servisa",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-proizvodstvennye-dannye--podgotovka-dannyh",
-          "source": "proizvodstvennye-dannye",
+          "id": "e-tip-urovnya-servisa--podgotovka-dannyh",
+          "source": "tip-urovnya-servisa",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-dannye-o-planirovanii--podgotovka-dannyh",
-          "source": "dannye-o-planirovanii",
+          "id": "e-istoriya-prognoza-sprosa-i-istoriya-rashoda--podgotovka-dannyh",
+          "source": "istoriya-prognoza-sprosa-i-istoriya-rashoda",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-buduschiy-prognoz-sprosa--podgotovka-dannyh",
+          "source": "buduschiy-prognoz-sprosa",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-sko-oshibki-prognoza--podgotovka-dannyh",
+          "source": "sko-oshibki-prognoza",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-zamorozhennyy-period-sprosa--podgotovka-dannyh",
+          "source": "zamorozhennyy-period-sprosa",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-transportnyy-lidtaym--podgotovka-dannyh",
+          "source": "transportnyy-lidtaym",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-sko-transportnogo-lidtayma--podgotovka-dannyh",
+          "source": "sko-transportnogo-lidtayma",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-minimalnyy-razmer-partii-transportirovki--podgotovka-dannyh",
+          "source": "minimalnyy-razmer-partii-transportirovki",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-okruglenie-partii-transportirovki--podgotovka-dannyh",
+          "source": "okruglenie-partii-transportirovki",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-razmer-partii-transportirovki-v-dnyah--podgotovka-dannyh",
+          "source": "razmer-partii-transportirovki-v-dnyah",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-transportnye-kvoty--podgotovka-dannyh",
+          "source": "transportnye-kvoty",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-zamorozhennyy-period-transportirovki--podgotovka-dannyh",
+          "source": "zamorozhennyy-period-transportirovki",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-proizvodstvennyy-lidtaym--podgotovka-dannyh",
+          "source": "proizvodstvennyy-lidtaym",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-sko-proizvodstvennogo-lidtayma--podgotovka-dannyh",
+          "source": "sko-proizvodstvennogo-lidtayma",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-minimalnyy-razmer-partii-vypuska--podgotovka-dannyh",
+          "source": "minimalnyy-razmer-partii-vypuska",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-okruglenie-partii-vypuska--podgotovka-dannyh",
+          "source": "okruglenie-partii-vypuska",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-razmer-partii-vypuska-v-dnyah--podgotovka-dannyh",
+          "source": "razmer-partii-vypuska-v-dnyah",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-proizvodstvennye-kvoty--podgotovka-dannyh",
+          "source": "proizvodstvennye-kvoty",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-vyhodnoy-koefficient-gotovogo-produkta--podgotovka-dannyh",
+          "source": "vyhodnoy-koefficient-gotovogo-produkta",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-koefficient-komponenta--podgotovka-dannyh",
+          "source": "koefficient-komponenta",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-cikl-planirovaniya-dbnr--podgotovka-dannyh",
+          "source": "cikl-planirovaniya-dbnr",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-tip-uzla-hranimyy-ne-hranimyy--podgotovka-dannyh",
+          "source": "tip-uzla-hranimyy-ne-hranimyy",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-politika-strahovogo-zapasa-gibridnye-uzly--podgotovka-dannyh",
+          "source": "politika-strahovogo-zapasa-gibridnye-uzly",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-min-maks-vnutrenniy-uroven-servisa--podgotovka-dannyh",
+          "source": "min-maks-vnutrenniy-uroven-servisa",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-min-maks-strahovoy-zapas-v-dnyah-ili-ei--podgotovka-dannyh",
+          "source": "min-maks-strahovoy-zapas-v-dnyah-ili-ei",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-minimalno-neobhodimyy-zapas--podgotovka-dannyh",
+          "source": "minimalno-neobhodimyy-zapas",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-maksimalnyy-dostupnyy-zapas-on-hand--podgotovka-dannyh",
+          "source": "maksimalnyy-dostupnyy-zapas-on-hand",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-shtraf-za-prevyshenie-maksimalnogo-zapasa--podgotovka-dannyh",
+          "source": "shtraf-za-prevyshenie-maksimalnogo-zapasa",
+          "target": "podgotovka-dannyh",
+          "kind": "process"
+        },
+        {
+          "id": "e-udelnye-zatraty-na-soderzhanie-zapasa--podgotovka-dannyh",
+          "source": "udelnye-zatraty-na-soderzhanie-zapasa",
           "target": "podgotovka-dannyh",
           "kind": "process"
         },

@@ -135,8 +135,8 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('сорок восемь входов и семнадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(65);
+  it('семьдесят пять входов и семнадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(92);
     for (const label of INPUTS) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
@@ -146,9 +146,9 @@ describe('карта MEIO: содержание', () => {
     for (const label of OUTPUTS) {
       expect(labels(data.filter((node) => node.direction === 'out'))).toContain(label);
     }
-    expect(data.filter((node) => node.direction === 'in')).toHaveLength(48);
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(75);
     expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
-      'Мощности хранения по температурным режимам',
+      'Цикл планирования (DBNR)',
     );
     expect(data.filter((node) => node.direction === 'out')).toHaveLength(17);
 
@@ -163,8 +163,8 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(5);
   });
 
-  it('рёбра внутри этапов: 19 + 25 + 9 + 17 + 16', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([19, 25, 9, 17, 16]);
+  it('рёбра внутри этапов: 46 + 25 + 9 + 17 + 16', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([46, 25, 9, 17, 16]);
   });
 
   it('ни один узел не висит без связей', () => {
@@ -621,11 +621,14 @@ describe('карта MEIO: адресные входы', () => {
   });
 });
 
-describe('карта MEIO: входные данные пятью категориями', () => {
-  // Перечень владельца от 08.09.2026: сорок позиций в пяти категориях. Сорок
-  // отдельных плашек на полотне нечитаемы, поэтому на карте категория, а полный
-  // состав — в описании карточки, видимом по клику.
-  const CATEGORIES: Record<string, number> = {
+describe('карта MEIO: входные данные', () => {
+  // Решение владельца 08.09.2026, в два захода. Сначала перечень из сорока
+  // позиций был свёрнут в пять карточек-категорий с составом в описании —
+  // владелец потребовал обратного: «оставь только мои блоки, что я тебе
+  // прислал», «выдели это всё в карточки». Прежние восемь карточек этапа сняты,
+  // каждая позиция перечня стала своей карточкой, а категория осталась
+  // описанием — приписку про «перечень владельца» он велел убрать.
+  const BY_CATEGORY: Record<string, number> = {
     'Основные данные': 10,
     'Данные о спросе': 6,
     'Источники поставки': 7,
@@ -633,29 +636,50 @@ describe('карта MEIO: входные данные пятью категор
     'Данные о планировании': 9,
   };
 
-  it('пять карточек-категорий на этапе 1, у каждой полный перечень внутри', () => {
-    const stage = map.stages[0];
-    for (const [label, count] of Object.entries(CATEGORIES)) {
-      const card = stage?.nodes.find((node) => node.label === label);
-      expect(card, label).toBeDefined();
-      expect(card?.type).toBe('data');
-      expect(card?.direction).toBe('in');
-      // Позиции перечислены маркерами: их число — и есть содержание категории.
-      expect((card?.description ?? '').split('·').length - 1, `позиции «${label}»`).toBe(count);
+  const stage = map.stages[0];
+  const inputCards = (stage?.nodes ?? []).filter(
+    (node) => node.type === 'data' && node.direction === 'in',
+  );
+
+  it('сорок карточек перечня плюс одна плашка внешней системы', () => {
+    // Плашка ERP — интеграция уровня свимлейнов, а не позиция перечня, и
+    // остаётся: без неё у этапа не было бы внешнего входа вовсе.
+    expect(inputCards).toHaveLength(41);
+    expect(labels(inputCards)).toContain('Структура текущих запасов и фактические отгрузки из ERP');
+  });
+
+  it('прежних восьми карточек не осталось — перечень владельца заменил их', () => {
+    for (const gone of [
+      'Структура текущих запасов по узлам и партиям',
+      'Остатки на руках, в заказе и в пути',
+      'Календари пополнения и производственные календари',
+      'Мощности хранения по температурным режимам',
+    ]) {
+      expect(labels(inputCards), gone).not.toContain(gone);
     }
   });
 
-  it('всего сорок позиций — столько и передал владелец', () => {
-    expect(Object.values(CATEGORIES).reduce((sum, n) => sum + n, 0)).toBe(40);
+  it('каждая позиция подписана своей категорией и ничем больше', () => {
+    const counts: Record<string, number> = {};
+    for (const card of inputCards) {
+      const category = card.description;
+      if (category === undefined) {
+        continue;
+      }
+      // Описание — РОВНО имя категории: никаких приписок про перечень и дату.
+      expect(Object.keys(BY_CATEGORY), card.label).toContain(category);
+      counts[category] = (counts[category] ?? 0) + 1;
+    }
+    expect(counts).toEqual(BY_CATEGORY);
   });
 
-  it('каждая категория связана с шагом подготовки данных', () => {
-    const stage = map.stages[0];
+  it('все сорок связаны с шагом подготовки данных', () => {
     const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
-    for (const label of Object.keys(CATEGORIES)) {
-      const id = stage?.nodes.find((node) => node.label === label)?.id;
-      const target = stage?.edges.find((edge) => edge.source === id)?.target;
-      expect(labelOf.get(target ?? ''), label).toBe('Подготовка данных');
+    const withCategory = inputCards.filter((card) => card.description !== undefined);
+    expect(withCategory).toHaveLength(40);
+    for (const card of withCategory) {
+      const target = stage?.edges.find((edge) => edge.source === card.id)?.target;
+      expect(labelOf.get(target ?? ''), card.label).toBe('Подготовка данных');
     }
   });
 });
