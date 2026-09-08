@@ -201,7 +201,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--scp-content-action-brand);
+  color: var(--scp-text-brand-primary);
   cursor: pointer;
   font-family: inherit;
   font-size: var(--pm-font-size-12-5);
@@ -370,7 +370,7 @@
   padding: 0;
   border: 0;
   background: none;
-  color: var(--scp-content-action-brand);
+  color: var(--scp-text-brand-primary);
   cursor: pointer;
   font-family: inherit;
   font-size: var(--pm-font-size-11);

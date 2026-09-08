@@ -42,7 +42,7 @@
   border: 0;
   margin-top: var(--scp-spacing-xs);
   background: none;
-  color: var(--scp-content-brand);
+  color: var(--scp-text-brand-primary);
   cursor: pointer;
   font-family: inherit;
   font-size: var(--pm-font-size-12-5);
@@ -56,8 +56,8 @@
 }
 
 .icon {
-  width: var(--pm-icon-12);
-  height: var(--pm-icon-12);
+  width: var(--pm-node-icon-size);
+  height: var(--pm-node-icon-size);
 }
 
 /* Пояснение, почему переход у всех узлов один и тот же. */
@@ -73,7 +73,7 @@
   border: 0;
   margin-top: var(--scp-spacing-xs);
   background: none;
-  color: var(--scp-content-brand);
+  color: var(--scp-text-brand-primary);
   cursor: pointer;
   font-family: inherit;
   font-size: var(--pm-font-size-12-5);
