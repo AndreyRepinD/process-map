@@ -163,3 +163,41 @@ test('размер блока меняется и переживает пере�
   await page.waitForSelector(STEP_CARD);
   expect(await widthOf(), 'размер не пережил перезагрузку').toBeCloseTo(after, 0);
 });
+
+test('внешняя карточка правится с ОБЗОРА, и подпись меняется в обоих местах', async ({ page }) => {
+  // Решение владельца 08.09.2026: «внешние карточки я тоже хочу править — не
+  // только то, что внутри этапов, но и снаружи».
+  //
+  // Плашка внешней системы существует на карте ДВАЖДЫ: на экране этапа это
+  // обычный data-узел, на обзоре — запись ExternalIO в свимлейне. Правится один
+  // и тот же узел, поэтому проверяется именно СВЯЗЬ: переименовали с обзора —
+  // изменилось и там, и на этапе.
+  await page.goto('/');
+  await page.waitForSelector('.react-flow__node-stage');
+
+  const editor = page.getByRole('button', { name: 'Редактор', exact: true });
+  await editor.click();
+  await expect(editor).toHaveAttribute('aria-pressed', 'true');
+
+  // В просмотре карточка не кнопка — читателю вики жать не на что; в редакторе
+  // становится кнопкой с доступным именем.
+  const card = page.getByRole('button', { name: /^Править внешнюю карточку: / }).first();
+  await expect(card).toBeVisible();
+  await card.click();
+
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('button', { name: 'Править блок' }).click();
+  await dialog.getByLabel('Подпись').fill('Внешний вход, правка с обзора');
+  await dialog.getByRole('button', { name: 'Сохранить', exact: true }).click();
+
+  // Подпись видна на самом обзоре, в свимлейне внешних систем.
+  await expect(
+    page.getByRole('button', { name: 'Править внешнюю карточку: Внешний вход, правка с обзора' }),
+  ).toBeVisible();
+
+  // И на экране этапа — та же карточка с той же подписью: узел один.
+  await page.goto('/?stage=1');
+  await page.waitForSelector(STEP_CARD);
+  await expect(page.getByText('Внешний вход, правка с обзора').first()).toBeVisible();
+});

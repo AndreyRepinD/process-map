@@ -26,6 +26,7 @@ import {
   ProcessMapSchema,
   type AddedNode,
   type Edge,
+  type ExternalIO,
   type OverrideEntry,
   type Overrides,
   type ProcessMap,
@@ -223,6 +224,43 @@ function addedNodesFor(stage: Stage, overrides: Overrides): ProcessNode[] {
 }
 
 /**
+ * Подписи внешних входов и выходов этапа — вслед за правкой их карточки.
+ *
+ * ЗАЧЕМ. Плашка внешней системы существует на карте ДВАЖДЫ: на экране этапа она
+ * обычный data-узел (его и правит владелец), а на обзоре — запись ExternalIO,
+ * из которой собирается карточка системы в свимлейне. Пока связи между ними не
+ * было, переименованная на этапе плашка оставалась на обзоре со старой
+ * подписью: одна вещь, два разных имени, и ни одно не помечено как устаревшее.
+ *
+ * Сопоставление по ИСХОДНОЙ подписи и направлению: именно так импортёр и
+ * порождает обе записи из одной фигуры слайда. Правка ищется по базовому имени,
+ * а подставляется новое — поэтому переименование не рвёт связь на втором заходе.
+ */
+function renameIo(stage: Stage, ios: ExternalIO[], overrides: Overrides): ExternalIO[] {
+  if (ios.length === 0) {
+    return ios;
+  }
+  // Ключ — только ПОДПИСЬ: у карты MEIO внешняя плашка это карточка данных с
+  // направлением, а у SNP тот же обмен нарисован шагом и становится узлом
+  // интеграции, у которого направления нет вовсе. Сверять направление можно
+  // лишь там, где оно есть, иначе половина карт молча осталась бы без связи.
+  const renamed = new Map<string, string>();
+  for (const node of stage.nodes) {
+    const next = overrides[node.id]?.label;
+    if (next !== undefined) {
+      renamed.set(node.label, next);
+    }
+  }
+  if (renamed.size === 0) {
+    return ios;
+  }
+  return ios.map((io) => {
+    const label = renamed.get(io.label);
+    return label === undefined ? io : { ...io, label };
+  });
+}
+
+/**
  * Иммутабельно накладывает overrides поверх карты: входная карта не мутируется.
  * Overrides применяются только к узлам этапов (SPEC §3 задаёт значение как
  * Record<nodeId, …>); stage.screen не переопределяется — см. отчёт по задаче.
@@ -232,15 +270,20 @@ export function mergeOverrides(map: ProcessMap, overrides: Overrides): ProcessMa
   if (Object.keys(overrides).length === 0) {
     return map;
   }
-  const stages: Stage[] = map.stages.map((stage) => ({
-    ...stage,
-    nodes: [
+  const stages: Stage[] = map.stages.map((stage) => {
+    const nodes = [
       ...stage.nodes
         .filter((node) => overrides[node.id]?.removed !== true)
         .map((node) => applyNodeOverride(node, overrides)),
       ...addedNodesFor(stage, overrides),
-    ],
-  }));
+    ];
+    return {
+      ...stage,
+      nodes,
+      inputs: renameIo(stage, stage.inputs, overrides),
+      outputs: renameIo(stage, stage.outputs, overrides),
+    };
+  });
   // Рёбра, повисшие на скрытых узлах, выбрасываются: React Flow на ребро в
   // никуда рисует стрелку из угла полотна, а validateIntegrity такой документ
   // и вовсе не пропустит при экспорте.

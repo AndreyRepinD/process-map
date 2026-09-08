@@ -39,7 +39,16 @@ const STAGE_TITLES = [
 ];
 
 const STEPS_BY_STAGE: string[][] = [
-  ['Подготовка данных', 'Проверка мастер-данных', 'Проверка цепочки на связанность'],
+  [
+    'Основные данные',
+    'Данные о спросе',
+    'Источники поставки',
+    'Производственные данные',
+    'Данные о планировании',
+    'Подготовка данных',
+    'Проверка мастер-данных',
+    'Проверка цепочки на связанность',
+  ],
   [
     'Настройка параметров расчёта',
     'Расчёт волатильности спроса',
@@ -125,8 +134,8 @@ describe('карта MEIO: пять этапов', () => {
 });
 
 describe('карта MEIO: содержание', () => {
-  it('двадцать пять шагов, по этапам, дословно', () => {
-    expect(steps).toHaveLength(25);
+  it('тридцать шагов, по этапам, дословно', () => {
+    expect(steps).toHaveLength(30);
     for (const [index, stage] of map.stages.entries()) {
       expect(
         labels(stage.nodes.filter((node) => node.type !== 'data')),
@@ -163,8 +172,8 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(5);
   });
 
-  it('рёбра внутри этапов: 46 + 25 + 9 + 17 + 16', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([46, 25, 9, 17, 16]);
+  it('рёбра внутри этапов: 51 + 25 + 9 + 17 + 16', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([51, 25, 9, 17, 16]);
   });
 
   it('ни один узел не висит без связей', () => {
@@ -388,8 +397,8 @@ describe('карта MEIO: содержание', () => {
       expect(item.outputs, `шаг «${item.id}» без выходов`).toBeTruthy();
       expect(item.owner, `шаг «${item.id}» без ответственного`).toBeTruthy();
     }
-    expect(steps.filter((item) => item.outputs !== undefined)).toHaveLength(25);
-    expect(steps.filter((item) => item.owner !== undefined)).toHaveLength(25);
+    expect(steps.filter((item) => item.outputs !== undefined)).toHaveLength(30);
+    expect(steps.filter((item) => item.owner !== undefined)).toHaveLength(30);
 
     expect(step('Мультиэшелонная оптимизация')?.outputs).toEqual([
       'Рекомендованные уровни запасов по эшелонам',
@@ -402,7 +411,7 @@ describe('карта MEIO: содержание', () => {
   it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
     // Импортёру запрещено отдавать owner (самопроверка serialize_node), поэтому
     // поле живёт в этом файле и восстанавливается carry_over_manual_fields.
-    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(25);
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(30);
   });
 
   it('warningsCount не проставлен', () => {
@@ -426,6 +435,11 @@ describe('карта MEIO: привязка к алгоритмам платфо
     const manual = steps.filter((item) => item.algorithms === undefined);
     expect(labels(manual)).toEqual(
       [
+        'Основные данные',
+        'Данные о спросе',
+        'Источники поставки',
+        'Производственные данные',
+        'Данные о планировании',
         'Подготовка данных',
         'Настройка параметров расчёта',
         'Корректировка CV спроса',
@@ -436,7 +450,7 @@ describe('карта MEIO: привязка к алгоритмам платфо
         'Оценка эффектов',
       ].sort(),
     );
-    expect(manual).toHaveLength(8);
+    expect(manual).toHaveLength(13);
   });
 
   it('один алгоритм — один блок: повторов между блоками нет', () => {
@@ -673,13 +687,55 @@ describe('карта MEIO: входные данные', () => {
     expect(counts).toEqual(BY_CATEGORY);
   });
 
-  it('все сорок связаны с шагом подготовки данных', () => {
+  it('каждая карточка связана с шагом своей категории', () => {
     const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
     const withCategory = inputCards.filter((card) => card.description !== undefined);
     expect(withCategory).toHaveLength(40);
+    // Каждая карточка идёт к шагу СВОЕЙ категории, а не в общий приёмник:
+    // ради этого пять шагов и заведены (решение владельца 08.09.2026, после
+    // того как сорок карточек одной колонкой оказались нечитаемы).
     for (const card of withCategory) {
       const target = stage?.edges.find((edge) => edge.source === card.id)?.target;
-      expect(labelOf.get(target ?? ''), card.label).toBe('Подготовка данных');
+      expect(labelOf.get(target ?? ''), card.label).toBe(card.description);
+    }
+  });
+});
+
+describe('карта MEIO: пять приёмников по категориям', () => {
+  // Решение владельца 08.09.2026. Сорок карточек одной колонкой не читались:
+  // колонка выше экрана втрое, и карта открывалась её серединой. Категории у
+  // позиций были, но только в описании — на полотне их не было видно. Теперь у
+  // каждой категории свой шаг, и карточки висят при нём: пять коротких колонок
+  // вместо одной длинной.
+  const INTAKE = [
+    'Основные данные',
+    'Данные о спросе',
+    'Источники поставки',
+    'Производственные данные',
+    'Данные о планировании',
+  ];
+
+  it('пять приёмников стоят в группе «Сбор данных» и сдают в «Подготовку данных»', () => {
+    const stage = map.stages[0];
+    const labelOf = new Map(stage?.nodes.map((node) => [node.id, node.label]));
+    for (const name of INTAKE) {
+      const intake = step(name);
+      expect(intake, name).toBeDefined();
+      expect(intake?.type, name).toBe('step');
+      const target = (stage?.edges ?? []).find((edge) => edge.source === intake?.id);
+      expect(labelOf.get(target?.target ?? ''), name).toBe('Подготовка данных');
+    }
+  });
+
+  it('«Подготовка данных» принимает ровно то, что сдают приёмники', () => {
+    expect(step('Подготовка данных')?.inputs).toEqual(
+      INTAKE.map((name) => step(name)?.outputs?.[0]),
+    );
+  });
+
+  it('алгоритмов у приёмников нет — это сбор, а не расчёт', () => {
+    for (const name of INTAKE) {
+      expect(step(name)?.algorithms, name).toBeUndefined();
     }
   });
 });
