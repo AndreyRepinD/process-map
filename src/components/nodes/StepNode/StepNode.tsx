@@ -7,6 +7,7 @@
 // integration как карточку шага того же размера 318×52.
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { ProcessNode } from '../../../data/schema';
+import { NodeResizeHandles } from '../NodeResizeHandles';
 import { StepCard, type StepCardVariant } from './StepCard';
 
 export interface StepNodeData extends Record<string, unknown> {
@@ -77,6 +78,7 @@ export function StepHandles() {
 export function StepNode({ data }: NodeProps<StepNodeType>) {
   return (
     <>
+      <NodeResizeHandles nodeId={data.node.id} />
       <StepHandles />
       <StepCard node={data.node} variant={data.variant} />
     </>

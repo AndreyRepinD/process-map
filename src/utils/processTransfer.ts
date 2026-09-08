@@ -94,6 +94,17 @@ function screensEqual(a: ScreenLink | undefined, b: ScreenLink | undefined): boo
  * базовой карты, а добавление узлов v1 не поддерживает.
  */
 /** Совпадают ли два списка построчно. undefined и пустой список — разное. */
+/** Габариты карточек. undefined с обеих сторон — «размер не меняли». */
+function sizesEqual(
+  a: { width: number; height: number } | undefined,
+  b: { width: number; height: number } | undefined,
+): boolean {
+  if (a === undefined || b === undefined) {
+    return a === b;
+  }
+  return a.width === b.width && a.height === b.height;
+}
+
 function listsEqual(a: readonly string[] | undefined, b: readonly string[] | undefined): boolean {
   if (a === undefined || b === undefined) {
     return a === b;
@@ -131,6 +142,9 @@ export function deriveOverrides(base: ProcessMap, imported: ProcessMap): Overrid
       }
       if (!listsEqual(node.algorithms, next.algorithms)) {
         entry.algorithms = next.algorithms ?? null;
+      }
+      if (next.size !== undefined && !sizesEqual(node.size, next.size)) {
+        entry.size = next.size;
       }
       if (node.label !== next.label) {
         entry.label = next.label;
@@ -184,6 +198,9 @@ export function deriveOverrides(base: ProcessMap, imported: ProcessMap): Overrid
     }
     if (node.algorithms !== undefined) {
       entry.algorithms = node.algorithms;
+    }
+    if (node.size !== undefined) {
+      entry.size = node.size;
     }
     overrides[id] = entry;
   }

@@ -10,6 +10,7 @@ import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
 import type { ProcessNode } from '../../../data/schema';
 import { ru } from '../../../i18n/ru';
 import { useProcessStore } from '../../../store/useProcessStore';
+import { NodeResizeHandles } from '../NodeResizeHandles';
 import styles from './DataNode.module.css';
 
 export interface DataNodeData extends Record<string, unknown> {
@@ -30,6 +31,7 @@ export function DataNode({ data }: NodeProps<DataNodeType>) {
 
   return (
     <>
+      <NodeResizeHandles nodeId={node.id} />
       {/* Рёбер к data-узлам в текущих данных нет (все edge.source/target —
           узлы потока), хэндлы объявлены на случай их появления. */}
       <Handle type="target" position={Position.Left} id={DATA_HANDLE.left} isConnectable={false} />

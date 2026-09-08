@@ -6,8 +6,11 @@
 .card {
   display: flex;
   overflow: hidden;
-  width: var(--pm-data-node-width);
-  height: var(--pm-data-node-height);
+  /* 100% узла, а не фиксированный габарит из токена: размер карточки владелец
+     меняет правкой (ProcessNode.size), и фиксированные значения её бы не
+     отпустили. Умолчание задаётся узлу в stageGraph.ts из тех же токенов. */
+  width: 100%;
+  height: 100%;
   box-sizing: border-box;
   flex-direction: column;
   justify-content: center;

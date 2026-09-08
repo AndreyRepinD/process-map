@@ -147,6 +147,17 @@ export const ProcessNodeSchema = z.object({
   // хранить его в каждом узле значило бы размножить одну и ту же строку.
   algorithms: z.array(z.string()).optional(),
   position: z.object({ x: z.number(), y: z.number() }),
+  /**
+   * Габарит карточки, если владелец изменил его правкой (решение 08.09.2026).
+   *
+   * ОТСУТСТВИЕ ПОЛЯ — НОРМА И УМОЛЧАНИЕ: без него карточка рисуется размером из
+   * src/theme/sizes.ts, единственного источника размеров. Поле появляется только
+   * там, где размер меняли руками, поэтому карта, которую никто не растягивал,
+   * остаётся байт в байт прежней.
+   *
+   * Минимум — чтобы карточку нельзя было схлопнуть в точку и потерять на полотне.
+   */
+  size: z.object({ width: z.number().min(80), height: z.number().min(28) }).optional(),
   // Исходная геометрия слайда презентации (левый верхний угол фигуры, px).
   //
   // ЗАЧЕМ ОТДЕЛЬНОЕ ПОЛЕ. `position` — ПРОИЗВОДНАЯ величина: её перезаписывает
@@ -282,6 +293,7 @@ export type AddedNode = z.infer<typeof AddedNodeSchema>;
 export const OverrideEntrySchema = z.object({
   screen: ScreenLinkSchema.nullable().optional(),
   algorithms: z.array(z.string()).nullable().optional(),
+  size: z.object({ width: z.number().min(80), height: z.number().min(28) }).optional(),
   label: z.string().optional(),
   description: z.string().nullable().optional(),
   inputs: z.array(z.string()).nullable().optional(),
