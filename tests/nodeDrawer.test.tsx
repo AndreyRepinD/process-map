@@ -309,10 +309,7 @@ describe('NodeDrawer', () => {
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
     expect(first).toBe(screen.getByRole('button', { name: ru.drawer.close }));
-    // Последняя в футере — «Открыть рядом», а не «Открыть в модуле»: с
-    // 08.09.2026 в футере две кнопки, и панель экрана добавлена ВТОРОЙ,
-    // потому что основной путь (новая вкладка) остаётся прежним.
-    expect(last).toBe(screen.getByRole('button', { name: ru.screenPanel.openBeside }));
+    expect(last).toBe(screen.getByRole('button', { name: ru.drawer.openInModule }));
 
     // Tab с последнего элемента — на первый.
     last?.focus();

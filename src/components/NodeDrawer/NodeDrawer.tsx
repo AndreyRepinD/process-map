@@ -96,7 +96,6 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
     }
   }, [mode]);
 
-  const openEmbedded = useProcessStore((state) => state.openEmbedded);
   const paragraphs = useMemo(() => descriptionParagraphs(node.description), [node.description]);
   const hasDescription = paragraphs.length > 0;
   const screen = node.screen;
@@ -305,23 +304,6 @@ function NodeDrawerPanel({ node, onClose }: NodeDrawerPanelProps) {
             }}
           >
             {ru.drawer.openInModule}
-          </button>
-          {/* «Рядом» — вторая кнопка, а не замена первой. Панель ужимает карту,
-              и когда экран нужен во всю ширину, вкладка по-прежнему уместнее;
-              к тому же фрейм могут запретить политикой платформы, а вкладка от
-              неё не зависит (см. ScreenPanel.tsx). */}
-          <button
-            type="button"
-            className={`${styles.button} ${styles.buttonSecondary}`}
-            disabled={screen === undefined}
-            onClick={() => {
-              if (screen === undefined) {
-                return;
-              }
-              openEmbedded(screen.url, screen.title);
-            }}
-          >
-            {ru.screenPanel.openBeside}
           </button>
         </footer>
       </div>
