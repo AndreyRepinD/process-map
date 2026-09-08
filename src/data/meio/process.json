@@ -2451,7 +2451,7 @@
           "type": "data",
           "label": "Уровни запасов в SNP/PS и MRP",
           "direction": "out",
-          "system": "INPLAN",
+          "system": "SNP",
           "position": {
             "x": 1597,
             "y": 479
@@ -2611,7 +2611,7 @@
       "inputs": [],
       "outputs": [
         {
-          "system": "INPLAN",
+          "system": "SNP",
           "label": "Уровни запасов в SNP/PS и MRP",
           "stage": 4,
           "direction": "out"
@@ -2924,7 +2924,7 @@
           "type": "data",
           "label": "Нормативы запасов в SNP",
           "direction": "out",
-          "system": "INPLAN",
+          "system": "SNP",
           "position": {
             "x": 1538,
             "y": 53
@@ -3064,7 +3064,7 @@
       "inputs": [],
       "outputs": [
         {
-          "system": "INPLAN",
+          "system": "SNP",
           "label": "Нормативы запасов в SNP",
           "stage": 5,
           "direction": "out"
@@ -3122,9 +3122,9 @@
       "kind": "integration"
     },
     {
-      "id": "ov-stage-4-raschet-i-analiz--INPLAN",
+      "id": "ov-stage-4-raschet-i-analiz--SNP",
       "source": "stage-4-raschet-i-analiz",
-      "target": "INPLAN",
+      "target": "SNP",
       "kind": "integration"
     },
     {
@@ -3140,9 +3140,9 @@
       "kind": "integration"
     },
     {
-      "id": "ov-stage-5-ocenka-effektov--INPLAN",
+      "id": "ov-stage-5-ocenka-effektov--SNP",
       "source": "stage-5-ocenka-effektov",
-      "target": "INPLAN",
+      "target": "SNP",
       "kind": "integration"
     }
   ]

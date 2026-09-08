@@ -18,7 +18,7 @@
           "type": "data",
           "label": "Плановые заказы из SNP, PS",
           "direction": "in",
-          "system": "INPLAN",
+          "system": "SNP",
           "position": {
             "x": 0,
             "y": 176
@@ -170,7 +170,7 @@
       ],
       "inputs": [
         {
-          "system": "INPLAN",
+          "system": "SNP",
           "label": "Плановые заказы из SNP, PS",
           "stage": 1,
           "direction": "in"
@@ -440,8 +440,8 @@
       "kind": "process"
     },
     {
-      "id": "ov-INPLAN--stage-1-raschet-potrebnosti",
-      "source": "INPLAN",
+      "id": "ov-SNP--stage-1-raschet-potrebnosti",
+      "source": "SNP",
       "target": "stage-1-raschet-potrebnosti",
       "kind": "integration"
     },

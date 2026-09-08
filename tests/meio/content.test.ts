@@ -231,7 +231,8 @@ describe('карта MEIO: содержание', () => {
     // которое знает словарь систем. Исходная формулировка «Уровни запасов в
     // SP/PS и MRP» дала бы PS и MRP: токена «SP» в SYSTEM_TOKENS нет, а «PS»
     // есть, и INPLAN потерялся бы молча. SNP → INPLAN через SYSTEM_ALIASES.
-    expect(map.stages[3]?.outputs.map((io) => io.system)).toEqual(['INPLAN', 'PS', 'MRP']);
+    // КОД SNP, А НЕ INPLAN: с 08.09.2026 у модуля свой код, псевдоним снят.
+    expect(map.stages[3]?.outputs.map((io) => io.system)).toEqual(['SNP', 'PS', 'MRP']);
     for (const io of map.stages[3]?.outputs ?? []) {
       expect(io.label).toBe('Уровни запасов в SNP/PS и MRP');
     }
@@ -494,7 +495,7 @@ describe('карта MEIO: привязка к алгоритмам платфо
       ),
     ).toBe(true);
     // Нормативы уходят наружу, в SNP: у этапа появился внешний выход.
-    expect(stage?.outputs.map((io) => io.system)).toEqual(['INPLAN']);
+    expect(stage?.outputs.map((io) => io.system)).toEqual(['SNP']);
   });
 
   it('у КАЖДОГО расчёта CV своя корректировка', () => {

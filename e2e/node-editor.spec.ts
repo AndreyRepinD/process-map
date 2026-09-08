@@ -234,3 +234,46 @@ test('подпись системы и белая рамка группы пра
     page.getByRole('dialog').getByLabel('Группа (белая рамка с заголовком)'),
   ).toHaveValue('Новая рамка владельца');
 });
+
+test('на обзоре карточки двигаются в редакторе и остаются на месте', async ({ page }) => {
+  // Владелец 08.09.2026: «на центральной странице хочу двигать блоки также —
+  // сейчас не могу». Обзор считает раскладку сам (у Stage и ExternalIO нет
+  // position в схеме), поэтому переставленное место живёт в тех же правках
+  // браузера и подставляется при сборке графа.
+  await page.goto('/');
+  await page.waitForSelector('.react-flow__node-stage');
+
+  const card = page.locator('.react-flow__node-stage').first();
+  const cardId = await card.getAttribute('data-id');
+  const transform = async (): Promise<string> =>
+    page
+      .locator(`.react-flow__node-stage[data-id="${cardId ?? ''}"]`)
+      .evaluate((el) => (el as HTMLElement).style.transform);
+
+  const before = await transform();
+
+  // В просмотре карточка не двигается — читателю вики двигать нечего.
+  const box = await card.boundingBox();
+  await page.mouse.move((box?.x ?? 0) + 30, (box?.y ?? 0) + 12);
+  await page.mouse.down();
+  await page.mouse.move((box?.x ?? 0) + 160, (box?.y ?? 0) + 120, { steps: 10 });
+  await page.mouse.up();
+  expect(await transform(), 'в просмотре карточка сдвинулась').toBe(before);
+
+  const editor = page.getByRole('button', { name: 'Редактор', exact: true });
+  await editor.click();
+  await expect(editor).toHaveAttribute('aria-pressed', 'true');
+
+  const box2 = await card.boundingBox();
+  await page.mouse.move((box2?.x ?? 0) + 30, (box2?.y ?? 0) + 12);
+  await page.mouse.down();
+  await page.mouse.move((box2?.x ?? 0) + 160, (box2?.y ?? 0) + 120, { steps: 10 });
+  await page.mouse.up();
+
+  const after = await transform();
+  expect(after, 'в редакторе карточка не сдвинулась').not.toBe(before);
+
+  await page.reload();
+  await page.waitForSelector('.react-flow__node-stage');
+  expect(await transform(), 'сдвиг не пережил перезагрузку').toBe(after);
+});

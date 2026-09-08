@@ -171,10 +171,13 @@ describe('карта DP: содержание', () => {
     // словаре систем, и вторых кодов на те же модули не заводят.
     // Зависимый спрос собственной переработки приходит из двух модулей сразу —
     // одна плашка, две записи ExternalIO, как и у выхода этапа 5.
-    expect(map.stages[0]?.inputs.map((io) => io.system)).toEqual(['ERP', 'INPLAN', 'PS']);
+    // КОД SNP, А НЕ INPLAN (решение владельца 08.09.2026). До этого слово «SNP»
+    // в подписи давало общий код платформы: своего кода у модуля не было. Теперь
+    // есть, псевдоним снят, и подпись называет ровно тот модуль, что в тексте.
+    expect(map.stages[0]?.inputs.map((io) => io.system)).toEqual(['ERP', 'SNP', 'PS']);
     expect(map.stages[2]?.inputs.map((io) => io.system)).toEqual(['ERP']);
-    expect(map.stages[4]?.inputs.map((io) => io.system)).toEqual(['INPLAN']);
-    expect(map.stages[4]?.outputs.map((io) => io.system)).toEqual(['INPLAN', 'IO']);
+    expect(map.stages[4]?.inputs.map((io) => io.system)).toEqual(['SNP']);
+    expect(map.stages[4]?.outputs.map((io) => io.system)).toEqual(['SNP', 'IO']);
     for (const io of map.stages[4]?.outputs ?? []) {
       expect(io.label).toBe(OUTPUT);
     }

@@ -162,7 +162,7 @@ MAP_ID_MRP = "mrp"
 MAP_TITLE_MRP = "Процесс планирования потребности в материалах"
 MAP_MODULE_LABEL_MRP = "Модуль MRP"
 MAP_UPDATED_AT_MRP = "2026-09-01"
-MAP_DATA_FINGERPRINT_MRP = "3424993eb21acb89d2b7803a93e4d42926a7bc3464d78c5b12de1ef517c39cff"
+MAP_DATA_FINGERPRINT_MRP = "94d3e46bc07b5c7ce5b1031adcd557ef5579c4ba4f4e1e2023d579c9bbc09d50"
 
 # --- карты DP и MEIO ---------------------------------------------------------
 # Собираются с одиночного слайда, СГЕНЕРИРОВАННОГО из authoring source владельца
@@ -173,13 +173,13 @@ MAP_ID_DP = "dp"
 MAP_TITLE_DP = "Процесс планирования спроса"
 MAP_MODULE_LABEL_DP = "Модуль DP"
 MAP_UPDATED_AT_DP = "2026-09-07"
-MAP_DATA_FINGERPRINT_DP = "349871a0effeee1f547e4c0dfd58626dc21057ecfea5686fbe7a473ea5c6bc6c"
+MAP_DATA_FINGERPRINT_DP = "f73108681709b6ecd3ec636bc6d0701969899cc09cba7ad4220c5e3fa9a9c02c"
 
 MAP_ID_MEIO = "meio"
 MAP_TITLE_MEIO = "Процесс мультиэшелонной оптимизации запасов"
 MAP_MODULE_LABEL_MEIO = "Модуль MEIO"
 MAP_UPDATED_AT_MEIO = "2026-09-08"
-MAP_DATA_FINGERPRINT_MEIO = "fabcdfe7fcaa1385bfa74b632dd91758ab29ca6671d64435887d63a485b146b1"
+MAP_DATA_FINGERPRINT_MEIO = "950c265de50dca0049b8cc0a00115ff0c878c1cb28ee3870de2ec5ce9b94a251"
 
 
 @dataclass(frozen=True)
@@ -327,7 +327,7 @@ STAGE_COUNT = 4                      # число слайдов детализ�
 ARTIFACT_FILL = "scheme:accent2"
 MAX_ID_LENGTH = 72                   # длиннее, чтобы различающая часть текста не срезалась
 
-SYSTEM_CODES = ("DP", "PS", "IO", "ERP", "MRP", "INPLAN", "BI", "EPM")
+SYSTEM_CODES = ("DP", "PS", "IO", "ERP", "MRP", "SNP", "INPLAN", "BI", "EPM")
 
 # --------------------------------------------------------------------------------------
 # Контракт с src/data/schema.ts
@@ -947,7 +947,13 @@ WARNING_ITEM_RE = re.compile(r"^Предупреждени", re.IGNORECASE)
 # Для карты SNP это безопасно и проверено: в её текстах слова «SNP» и «MEIO»
 # как отдельные токены не встречаются ни разу, а сторож — побайтовое совпадение
 # пересобранного файла (process-map-3wh.10).
-SYSTEM_ALIASES = {"MEIO": "IO", "SNP": "INPLAN"}
+# SNP БОЛЬШЕ НЕ ПСЕВДОНИМ (решение владельца 08.09.2026: «SNP ещё надо добавить в
+# код системы под карточкой»). Раньше слово SNP в подписи давало код INPLAN —
+# общий код платформы, потому что своего у модуля не было. Как только SNP стал
+# полноправным кодом, псевдоним обязан уйти: иначе конвейер никогда не выдал бы
+# кода, который интерфейс предлагает выбрать, — ровно тот случай, когда мёртвая
+# константа врёт тише, чем падает.
+SYSTEM_ALIASES = {"MEIO": "IO"}
 
 # Длинные токены раньше коротких: альтернация в регулярке жадна по порядку.
 SYSTEM_TOKENS = tuple(sorted(set(SYSTEM_CODES) | set(SYSTEM_ALIASES), key=len, reverse=True))
