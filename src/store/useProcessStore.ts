@@ -21,6 +21,18 @@ export interface ProcessState {
   mode: ViewMode;
   /** Toggle «Показать интеграции» (SPEC §4.6). По макету включён по умолчанию. */
   showIntegrations: boolean;
+  /**
+   * Экран платформы, открытый ПАНЕЛЬЮ РЯДОМ С КАРТОЙ; null — панель закрыта.
+   *
+   * Решение владельца 08.09.2026: «можно открыть экран не новой ссылкой, а как у
+   * платформы — рядом с картой». Раньше ссылка всегда уводила в новую вкладку, и
+   * карта с экраном оказывались в разных окнах — сверять их приходилось
+   * переключением.
+   *
+   * Здесь, а не в состоянии компонента: панель переживает открытие и закрытие
+   * боковой карточки узла, и её обязаны закрывать переходы между уровнями.
+   */
+  embeddedScreen: { url: string; title: string } | null;
 
   /** Переход на уровень 2. Всегда закрывает Drawer — см. комментарий ниже. */
   navigateToStage: (stageId: string) => void;
@@ -34,6 +46,10 @@ export interface ProcessState {
   toggleIntegrations: () => void;
   /** Просмотр ↔ Редактор. */
   setMode: (mode: ViewMode) => void;
+  /** Открыть экран платформы панелью рядом с картой. */
+  openEmbedded: (url: string, title: string) => void;
+  /** Закрыть панель экрана. */
+  closeEmbedded: () => void;
 }
 
 export interface ProcessUiState {
@@ -41,6 +57,7 @@ export interface ProcessUiState {
   selectedNodeId: string | null;
   mode: ViewMode;
   showIntegrations: boolean;
+  embeddedScreen: { url: string; title: string } | null;
 }
 
 /** Начальные значения. Вынесены отдельно, чтобы тесты могли сбрасывать store. */
@@ -50,6 +67,7 @@ export function createInitialState(): ProcessUiState {
     selectedNodeId: null,
     mode: 'view',
     showIntegrations: true,
+    embeddedScreen: null,
   };
 }
 
@@ -60,10 +78,13 @@ export const useProcessStore = create<ProcessState>()((set) => ({
   // этапу, поэтому при смене уровня выбор всегда сбрасывается.
   // Deep-link ?stage=2&node=x реализуется как navigateToStage(...) → selectNode(...);
   // порядок вызовов важен, обратный порядок закроет Drawer.
-  navigateToStage: (stageId) => set({ currentStageId: stageId, selectedNodeId: null }),
+  // Панель экрана закрывается вместе со сменой уровня: экран открывали ПОД
+  // конкретный блок, и на другом этапе он относится уже не к тому, что на виду.
+  navigateToStage: (stageId) =>
+    set({ currentStageId: stageId, selectedNodeId: null, embeddedScreen: null }),
 
   // На уровне 1 узлов с Drawer нет, поэтому выбор сбрасывается вместе с этапом.
-  back: () => set({ currentStageId: null, selectedNodeId: null }),
+  back: () => set({ currentStageId: null, selectedNodeId: null, embeddedScreen: null }),
 
   // selectNode/closeDrawer меняют только выбор, уровень не трогают.
   selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -73,4 +94,7 @@ export const useProcessStore = create<ProcessState>()((set) => ({
   // редактора не должен ронять открытую карточку узла.
   toggleIntegrations: () => set((state) => ({ showIntegrations: !state.showIntegrations })),
   setMode: (mode) => set({ mode }),
+
+  openEmbedded: (url, title) => set({ embeddedScreen: { url, title } }),
+  closeEmbedded: () => set({ embeddedScreen: null }),
 }));

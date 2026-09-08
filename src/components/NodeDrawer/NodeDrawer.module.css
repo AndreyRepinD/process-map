@@ -185,6 +185,25 @@
   outline: none;
 }
 
+/* Вторая кнопка футера — «Открыть рядом». Вторичная по виду намеренно:
+   основной путь остаётся прежним, панель добавляет способ, а не заменяет его. */
+.buttonSecondary {
+  border: 1px solid var(--scp-color-neutral-200);
+  background: var(--scp-background-action-brand-secondary-default);
+  color: var(--scp-content-primary);
+}
+
+.buttonSecondary:hover:not(:disabled),
+.buttonSecondary:focus-visible:not(:disabled) {
+  background: var(--scp-background-action-brand-secondary-hover);
+  outline: none;
+}
+
+.buttonSecondary:disabled {
+  color: var(--scp-text-neutral-disable);
+  cursor: default;
+}
+
 /* SPEC §4.3: без ссылки кнопка disabled. */
 .buttonPrimary:disabled {
   background: var(--scp-background-action-brand-primary-disable);
