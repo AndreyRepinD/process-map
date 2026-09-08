@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "id": "meio",
-  "updatedAt": "2026-09-07",
+  "updatedAt": "2026-09-08",
   "title": "Процесс мультиэшелонной оптимизации запасов",
   "moduleLabel": "Модуль MEIO",
   "stages": [
@@ -209,7 +209,7 @@
           },
           "slidePosition": {
             "x": 204,
-            "y": 395
+            "y": 465
           }
         },
         {
@@ -238,7 +238,7 @@
           },
           "slidePosition": {
             "x": 204,
-            "y": 574
+            "y": 662
           }
         },
         {
@@ -251,7 +251,7 @@
             "y": 687
           },
           "slidePosition": {
-            "x": 486,
+            "x": 431,
             "y": 103
           }
         },
@@ -265,7 +265,7 @@
             "y": 403
           },
           "slidePosition": {
-            "x": 486,
+            "x": 431,
             "y": 176
           }
         },
@@ -279,7 +279,7 @@
             "y": 293
           },
           "slidePosition": {
-            "x": 486,
+            "x": 431,
             "y": 250
           }
         }
@@ -387,8 +387,9 @@
       "shortTitle": "Подготовка к расчёту",
       "keyOutputs": [
         "Настроенные параметры расчёта",
-        "Скорректированный CV",
-        "Сегментация по пяти признакам"
+        "Скорректированный CV спроса",
+        "Скорректированный CV длительности поставок",
+        "Скорректированный CV длительности производства"
       ],
       "groups": [
         {
@@ -398,10 +399,6 @@
         {
           "id": "raschet-variabelnosti",
           "label": "Расчёт вариабельности"
-        },
-        {
-          "id": "segmentaciya",
-          "label": "Сегментация"
         }
       ],
       "nodes": [
@@ -415,7 +412,7 @@
             "y": 440
           },
           "slidePosition": {
-            "x": 237,
+            "x": 183,
             "y": 103
           }
         },
@@ -429,7 +426,7 @@
             "y": 264
           },
           "slidePosition": {
-            "x": 237,
+            "x": 183,
             "y": 155
           }
         },
@@ -443,7 +440,7 @@
             "y": 0
           },
           "slidePosition": {
-            "x": 237,
+            "x": 183,
             "y": 208
           }
         },
@@ -457,7 +454,7 @@
             "y": 528
           },
           "slidePosition": {
-            "x": 237,
+            "x": 183,
             "y": 260
           }
         },
@@ -471,7 +468,7 @@
             "y": 88
           },
           "slidePosition": {
-            "x": 237,
+            "x": 183,
             "y": 313
           }
         },
@@ -498,7 +495,7 @@
             "y": 266
           },
           "slidePosition": {
-            "x": 474,
+            "x": 420,
             "y": 109
           }
         },
@@ -514,34 +511,7 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 231
-          }
-        },
-        {
-          "id": "raschet-volatilnosti-sprosa",
-          "type": "step",
-          "label": "Расчёт волатильности спроса",
-          "description": "Коэффициент вариации спроса по связке продукт-локация: насколько разбросано потребление вокруг своего среднего.\n\nБаза неопределённости выбирается ПО ПРИОРИТЕТУ, а не двумя источниками разом. Страховой запас защищает от ошибки ПРОГНОЗА за время выполнения, поэтому готовая оценка ошибки (FA, BIAS, σ по горизонту) из DP — источник первого выбора: она уже учитывает смещение прогноза. Если по позиции или горизонту DP её не публикует, модуль считает разброс сам — по собственной истории прогноза и факта, тем же расчётом, что стоит в отчёте по ошибке прогноза на этапе 4.\n\nРазброс исторических ОТГРУЗОК — крайний случай, а не равноправная опция: там, где прогноз смещён, он занижает потребность в защите. Выбор делается по сегментам и остаётся настройкой владельца процесса.",
-          "group": "raschet-variabelnosti",
-          "inputs": [
-            "История отгрузок за период",
-            "Незакрытый спрос и списания",
-            "База неопределённости: ошибка прогноза из DP, при её отсутствии — расчёт в модуле"
-          ],
-          "outputs": [
-            "CV спроса"
-          ],
-          "owner": "Планер запасов",
-          "algorithms": [
-            "MEIO Расчет CV"
-          ],
-          "position": {
-            "x": 710,
-            "y": 615
-          },
-          "slidePosition": {
-            "x": 474,
-            "y": 324
+            "y": 205
           }
         },
         {
@@ -556,7 +526,90 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 359
+            "y": 308
+          }
+        },
+        {
+          "id": "raschet-volatilnosti-sprosa",
+          "type": "step",
+          "label": "Расчёт волатильности спроса",
+          "description": "Коэффициент вариации спроса по связке продукт-локация: насколько разбросано потребление вокруг своего среднего.\n\nИсточник неопределённости выбирается ПО ПРИОРИТЕТУ, а не берётся дважды. Страховой запас защищает от ошибки ПРОГНОЗА за время выполнения, поэтому готовая оценка (FA, BIAS, σ по горизонту) из DP — источник первого выбора: она уже учитывает смещение прогноза. Если по позиции или горизонту DP её не публикует, модуль считает разброс сам по собственной истории прогноза и факта — тем же расчётом, что стоит в отчёте по ошибке прогноза на этапе 5.\n\nРазброс исторических ОТГРУЗОК — крайний случай, а не равноправная опция: там, где прогноз смещён, он занижает потребность в защите.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "История отгрузок за период",
+            "Незакрытый спрос и списания",
+            "Ошибка прогноза по горизонту из DP",
+            "Собственная история прогноза и факта"
+          ],
+          "outputs": [
+            "CV спроса"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Расчет CV"
+          ],
+          "position": {
+            "x": 710,
+            "y": 615
+          },
+          "slidePosition": {
+            "x": 420,
+            "y": 342
+          }
+        },
+        {
+          "id": "parametry-cepochki-iz-erp",
+          "type": "data",
+          "label": "Параметры цепочки из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 176
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 410
+          }
+        },
+        {
+          "id": "sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp",
+          "type": "data",
+          "label": "Сроки годности и требования сетей к остаточному сроку из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 352
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 513
+          }
+        },
+        {
+          "id": "korrektirovka-cv-sprosa",
+          "type": "step",
+          "label": "Корректировка CV спроса",
+          "description": "Правка посчитанного CV спроса там, где история не отражает будущее.\n\nСвоя корректировка у каждого расчёта CV, а не одна общая: разбросы спроса, поставки и производства правятся по РАЗНЫМ основаниям и разными людьми — спрос знает планер, длительность поставки закупщик, длительность производства производственный планер. Общая корректировка скрывала бы, чья именно правка внесена.\n\nШаг ручной: алгоритма в платформе у него нет.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "CV спроса",
+            "Новинки без истории",
+            "Позиции со сменой режима поставки",
+            "Экспертная правка по сегментам"
+          ],
+          "outputs": [
+            "Скорректированный CV спроса"
+          ],
+          "owner": "Планер запасов",
+          "position": {
+            "x": 1124,
+            "y": 615
+          },
+          "slidePosition": {
+            "x": 420,
+            "y": 539
           }
         },
         {
@@ -578,41 +631,35 @@
           ],
           "position": {
             "x": 710,
-            "y": 267
+            "y": 268
           },
           "slidePosition": {
-            "x": 474,
-            "y": 486
+            "x": 420,
+            "y": 718
           }
         },
         {
-          "id": "parametry-cepochki-iz-erp",
-          "type": "data",
-          "label": "Параметры цепочки из ERP",
-          "direction": "in",
-          "system": "ERP",
+          "id": "korrektirovka-cv-dlitelnosti-postavok",
+          "type": "step",
+          "label": "Корректировка CV длительности поставок",
+          "description": "Правка разброса длительности поставки: новый поставщик или маршрут истории не имеет, а согласованное изменение условий делает прошлую статистику неверной с даты вступления в силу.\n\nВладелец правки здесь — закупки: именно они знают о смене условий раньше, чем это проявится в фактических длительностях. Шаг ручной.",
+          "group": "raschet-variabelnosti",
+          "inputs": [
+            "CV длительности поставок",
+            "Новые поставщики и маршруты без истории",
+            "Согласованные изменения условий поставки"
+          ],
+          "outputs": [
+            "Скорректированный CV длительности поставок"
+          ],
+          "owner": "Закупки совместно с планером запасов",
           "position": {
-            "x": 0,
-            "y": 176
+            "x": 1124,
+            "y": 268
           },
           "slidePosition": {
-            "x": 10,
-            "y": 487
-          }
-        },
-        {
-          "id": "sroki-godnosti-i-trebovaniya-setey-k-ostatochnomu-sroku-iz-erp",
-          "type": "data",
-          "label": "Сроки годности и требования сетей к остаточному сроку из ERP",
-          "direction": "in",
-          "system": "ERP",
-          "position": {
-            "x": 0,
-            "y": 352
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 615
+            "x": 420,
+            "y": 863
           }
         },
         {
@@ -634,92 +681,35 @@
           ],
           "position": {
             "x": 710,
-            "y": 457
+            "y": 486
           },
           "slidePosition": {
-            "x": 474,
-            "y": 630
+            "x": 420,
+            "y": 1042
           }
         },
         {
-          "id": "korrektirovka-cv",
+          "id": "korrektirovka-cv-dlitelnosti-proizvodstva",
           "type": "step",
-          "label": "Корректировка CV",
-          "description": "Сведение трёх посчитанных коэффициентов вариации к тому набору, с которым пойдёт оптимизация, и экспертная правка там, где история не отражает будущее.\n\nШаг ручной: алгоритма в платформе у него нет. Он нужен, потому что посчитанный по истории CV врёт в двух известных случаях — новинка без истории и позиция, у которой режим поставки только что изменился. Без явного шага правка всё равно происходит, но невидимо и без следа.",
+          "label": "Корректировка CV длительности производства",
+          "description": "Правка разброса длительности собственного производства.\n\nПлановая остановка или ремонт — известное будущее отклонение, которого в истории нет; смена схемы разделки меняет саму длительность цикла, а не её разброс вокруг прежнего среднего. Шаг ручной.",
           "group": "raschet-variabelnosti",
           "inputs": [
-            "CV спроса",
-            "CV длительности поставок",
             "CV длительности производства",
-            "Экспертная правка по сегментам"
+            "Плановые остановки и ремонты",
+            "Изменения схемы разделки и глубины переработки"
           ],
           "outputs": [
-            "Скорректированный CV"
+            "Скорректированный CV длительности производства"
           ],
-          "owner": "Планер запасов",
+          "owner": "Производственный планер совместно с планером запасов",
           "position": {
             "x": 1124,
-            "y": 351
+            "y": 486
           },
           "slidePosition": {
-            "x": 474,
-            "y": 774
-          }
-        },
-        {
-          "id": "abc-klassifikaciya",
-          "type": "step",
-          "label": "ABC-классификация",
-          "description": "Разнесение номенклатуры по классам A, B и C — по вкладу в оборот и объём.\n\nВынесено отдельным шагом, потому что это отдельный алгоритм платформы и отдельное решение о порогах: класс определяет, какой уровень сервиса позиция вообще заслуживает, и меняется он не тогда же, когда остальные признаки сегментации.",
-          "group": "segmentaciya",
-          "inputs": [
-            "Вклад в оборот",
-            "Вклад в объём",
-            "Пороги классов"
-          ],
-          "outputs": [
-            "Классы ABC"
-          ],
-          "owner": "Планер запасов",
-          "algorithms": [
-            "MEIO ABC - Классификация"
-          ],
-          "position": {
-            "x": 1538,
-            "y": 300
-          },
-          "slidePosition": {
-            "x": 474,
-            "y": 936
-          }
-        },
-        {
-          "id": "segmentaciya",
-          "type": "step",
-          "label": "Сегментация",
-          "description": "Сегментация номенклатуры по пяти признакам: Lifecycle — стадия жизненного цикла; ADI-CV — характер спроса по среднему интервалу между заказами и коэффициенту вариации; ABC — вклад в оборот; FMR — частота обращения; XYZ — стабильность потребления.\n\nОтдельной задачи сегментации в модуле IO модели BPMN нет: шаг существует только на слайде.",
-          "group": "segmentaciya",
-          "inputs": [
-            "Lifecycle",
-            "ADI-CV",
-            "ABC",
-            "FMR",
-            "XYZ"
-          ],
-          "outputs": [
-            "Сегментация по пяти признакам"
-          ],
-          "owner": "Планер запасов",
-          "algorithms": [
-            "MEIO Сегментация"
-          ],
-          "position": {
-            "x": 1952,
-            "y": 300
-          },
-          "slidePosition": {
-            "x": 474,
-            "y": 1081
+            "x": 420,
+            "y": 1204
           }
         },
         {
@@ -732,36 +722,50 @@
             "y": 0
           },
           "slidePosition": {
-            "x": 756,
+            "x": 648,
             "y": 103
           }
         },
         {
-          "id": "skorrektirovannyy-cv-1-900201",
+          "id": "skorrektirovannyy-cv-sprosa-1-900201",
           "type": "data",
-          "label": "Скорректированный CV",
+          "label": "Скорректированный CV спроса",
           "direction": "out",
           "position": {
-            "x": 1597,
-            "y": 667
+            "x": 1538,
+            "y": 613
           },
           "slidePosition": {
-            "x": 756,
+            "x": 648,
             "y": 176
           }
         },
         {
-          "id": "segmentaciya-po-pyati-priznakam-1-900202",
+          "id": "skorrektirovannyy-cv-dlitelnosti-postavok-1-900202",
           "type": "data",
-          "label": "Сегментация по пяти признакам",
+          "label": "Скорректированный CV длительности поставок",
           "direction": "out",
           "position": {
-            "x": 2366,
-            "y": 298
+            "x": 1538,
+            "y": 266
           },
           "slidePosition": {
-            "x": 756,
+            "x": 648,
             "y": 250
+          }
+        },
+        {
+          "id": "skorrektirovannyy-cv-dlitelnosti-proizvodstva-1-900203",
+          "type": "data",
+          "label": "Скорректированный CV длительности производства",
+          "direction": "out",
+          "position": {
+            "x": 1538,
+            "y": 484
+          },
+          "slidePosition": {
+            "x": 648,
+            "y": 323
           }
         }
       ],
@@ -809,33 +813,21 @@
           "kind": "process"
         },
         {
-          "id": "e-raschet-volatilnosti-sprosa--korrektirovka-cv",
+          "id": "e-raschet-volatilnosti-sprosa--korrektirovka-cv-sprosa",
           "source": "raschet-volatilnosti-sprosa",
-          "target": "korrektirovka-cv",
+          "target": "korrektirovka-cv-sprosa",
           "kind": "process"
         },
         {
-          "id": "e-raschet-cv-dlitelnosti-postavok--korrektirovka-cv",
+          "id": "e-raschet-cv-dlitelnosti-postavok--korrektirovka-cv-dlitelnosti-postavok",
           "source": "raschet-cv-dlitelnosti-postavok",
-          "target": "korrektirovka-cv",
+          "target": "korrektirovka-cv-dlitelnosti-postavok",
           "kind": "process"
         },
         {
-          "id": "e-raschet-cv-dlitelnosti-proizvodstva--korrektirovka-cv",
+          "id": "e-raschet-cv-dlitelnosti-proizvodstva--korrektirovka-cv-dlitelnosti-proizvodstva",
           "source": "raschet-cv-dlitelnosti-proizvodstva",
-          "target": "korrektirovka-cv",
-          "kind": "process"
-        },
-        {
-          "id": "e-korrektirovka-cv--abc-klassifikaciya",
-          "source": "korrektirovka-cv",
-          "target": "abc-klassifikaciya",
-          "kind": "process"
-        },
-        {
-          "id": "e-abc-klassifikaciya--segmentaciya",
-          "source": "abc-klassifikaciya",
-          "target": "segmentaciya",
+          "target": "korrektirovka-cv-dlitelnosti-proizvodstva",
           "kind": "process"
         },
         {
@@ -875,15 +867,21 @@
           "kind": "process"
         },
         {
-          "id": "e-korrektirovka-cv--skorrektirovannyy-cv-1-900201",
-          "source": "korrektirovka-cv",
-          "target": "skorrektirovannyy-cv-1-900201",
+          "id": "e-korrektirovka-cv-sprosa--skorrektirovannyy-cv-sprosa-1-900201",
+          "source": "korrektirovka-cv-sprosa",
+          "target": "skorrektirovannyy-cv-sprosa-1-900201",
           "kind": "process"
         },
         {
-          "id": "e-segmentaciya--segmentaciya-po-pyati-priznakam-1-900202",
-          "source": "segmentaciya",
-          "target": "segmentaciya-po-pyati-priznakam-1-900202",
+          "id": "e-korrektirovka-cv-dlitelnosti-postavok--skorrektirovannyy-cv-dlitelnosti-postavok-1-900202",
+          "source": "korrektirovka-cv-dlitelnosti-postavok",
+          "target": "skorrektirovannyy-cv-dlitelnosti-postavok-1-900202",
+          "kind": "process"
+        },
+        {
+          "id": "e-korrektirovka-cv-dlitelnosti-proizvodstva--skorrektirovannyy-cv-dlitelnosti-proizvodstva-1-900203",
+          "source": "korrektirovka-cv-dlitelnosti-proizvodstva",
+          "target": "skorrektirovannyy-cv-dlitelnosti-proizvodstva-1-900203",
           "kind": "process"
         }
       ],
@@ -916,8 +914,260 @@
       "outputs": []
     },
     {
-      "id": "stage-3-raschet-i-analiz",
+      "id": "stage-3-segmentaciya",
       "number": 3,
+      "title": "Сегментация",
+      "shortTitle": "Сегментация",
+      "keyOutputs": [
+        "Классы ABC",
+        "Сегментация по пяти признакам"
+      ],
+      "groups": [
+        {
+          "id": "klassifikaciya",
+          "label": "Классификация"
+        }
+      ],
+      "nodes": [
+        {
+          "id": "istoriya-potrebleniya-za-period",
+          "type": "data",
+          "label": "История потребления за период",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 88
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 103
+          }
+        },
+        {
+          "id": "vklad-v-oborot-i-obem",
+          "type": "data",
+          "label": "Вклад в оборот и объём",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 440
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 155
+          }
+        },
+        {
+          "id": "chastota-obrascheniya-pozicii",
+          "type": "data",
+          "label": "Частота обращения позиции",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 208
+          }
+        },
+        {
+          "id": "stadiya-zhiznennogo-cikla-tovara",
+          "type": "data",
+          "label": "Стадия жизненного цикла товара",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 352
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 260
+          }
+        },
+        {
+          "id": "skorrektirovannyy-cv-sprosa-1-800304",
+          "type": "data",
+          "label": "Скорректированный CV спроса",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 264
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 313
+          }
+        },
+        {
+          "id": "abc-klassifikaciya",
+          "type": "step",
+          "label": "ABC-классификация",
+          "description": "Разнесение номенклатуры по классам A, B и C — по вкладу в оборот и объём.\n\nОтдельный шаг: это отдельный алгоритм платформы и отдельное решение о порогах. Класс определяет, какой уровень сервиса позиция заслуживает, и пересматривается не тогда же, когда остальные признаки.",
+          "group": "klassifikaciya",
+          "inputs": [
+            "Вклад в оборот",
+            "Вклад в объём",
+            "Пороги классов"
+          ],
+          "outputs": [
+            "Классы ABC"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO ABC - Классификация"
+          ],
+          "position": {
+            "x": 296,
+            "y": 222
+          },
+          "slidePosition": {
+            "x": 636,
+            "y": 109
+          }
+        },
+        {
+          "id": "segmentaciya",
+          "type": "step",
+          "label": "Сегментация",
+          "description": "Сегментация номенклатуры по пяти признакам: Lifecycle — стадия жизненного цикла; ADI-CV — характер спроса по среднему интервалу между заказами и коэффициенту вариации; ABC — вклад в оборот; FMR — частота обращения; XYZ — стабильность потребления.\n\nРешение владельца 08.09.2026: сегментация вынесена ОТДЕЛЬНЫМ ЭТАПОМ со своими входами, а не группой внутри подготовки к расчёту. У неё своя периодичность и свои источники: она опирается на историю потребления и посчитанный CV, но не на параметры цепочки, и пересматривается реже, чем настраиваются лидтаймы и квоты.\n\nОтдельной задачи сегментации в модуле IO модели BPMN нет: шаг существует только на слайде.",
+          "group": "klassifikaciya",
+          "inputs": [
+            "Lifecycle: стадия жизненного цикла",
+            "ADI-CV: характер спроса",
+            "ABC: вклад в оборот",
+            "FMR: частота обращения",
+            "XYZ: стабильность потребления"
+          ],
+          "outputs": [
+            "Сегментация по пяти признакам"
+          ],
+          "owner": "Планер запасов",
+          "algorithms": [
+            "MEIO Сегментация"
+          ],
+          "position": {
+            "x": 710,
+            "y": 20
+          },
+          "slidePosition": {
+            "x": 636,
+            "y": 253
+          }
+        },
+        {
+          "id": "master-dannye-nomenklatury-iz-erp",
+          "type": "data",
+          "label": "Мастер-данные номенклатуры из ERP",
+          "direction": "in",
+          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 176
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 615
+          }
+        },
+        {
+          "id": "klassy-abc",
+          "type": "data",
+          "label": "Классы ABC",
+          "direction": "out",
+          "position": {
+            "x": 769,
+            "y": 508
+          },
+          "slidePosition": {
+            "x": 864,
+            "y": 103
+          }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam-1-900301",
+          "type": "data",
+          "label": "Сегментация по пяти признакам",
+          "direction": "out",
+          "position": {
+            "x": 1124,
+            "y": 18
+          },
+          "slidePosition": {
+            "x": 864,
+            "y": 176
+          }
+        }
+      ],
+      "edges": [
+        {
+          "id": "e-master-dannye-nomenklatury-iz-erp--abc-klassifikaciya",
+          "source": "master-dannye-nomenklatury-iz-erp",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-abc-klassifikaciya--segmentaciya",
+          "source": "abc-klassifikaciya",
+          "target": "segmentaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-istoriya-potrebleniya-za-period--abc-klassifikaciya",
+          "source": "istoriya-potrebleniya-za-period",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-vklad-v-oborot-i-obem--abc-klassifikaciya",
+          "source": "vklad-v-oborot-i-obem",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-chastota-obrascheniya-pozicii--abc-klassifikaciya",
+          "source": "chastota-obrascheniya-pozicii",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-stadiya-zhiznennogo-cikla-tovara--abc-klassifikaciya",
+          "source": "stadiya-zhiznennogo-cikla-tovara",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-skorrektirovannyy-cv-sprosa-1-800304--abc-klassifikaciya",
+          "source": "skorrektirovannyy-cv-sprosa-1-800304",
+          "target": "abc-klassifikaciya",
+          "kind": "process"
+        },
+        {
+          "id": "e-abc-klassifikaciya--klassy-abc",
+          "source": "abc-klassifikaciya",
+          "target": "klassy-abc",
+          "kind": "process"
+        },
+        {
+          "id": "e-segmentaciya--segmentaciya-po-pyati-priznakam-1-900301",
+          "source": "segmentaciya",
+          "target": "segmentaciya-po-pyati-priznakam-1-900301",
+          "kind": "process"
+        }
+      ],
+      "inputs": [
+        {
+          "system": "ERP",
+          "label": "Мастер-данные номенклатуры из ERP",
+          "stage": 3,
+          "direction": "in"
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "stage-4-raschet-i-analiz",
+      "number": 4,
       "title": "Расчёт и анализ",
       "shortTitle": "Расчёт и анализ",
       "keyOutputs": [
@@ -937,7 +1187,7 @@
       ],
       "nodes": [
         {
-          "id": "nastroennye-parametry-rascheta-1-800300",
+          "id": "nastroennye-parametry-rascheta-1-800400",
           "type": "data",
           "label": "Настроенные параметры расчёта",
           "direction": "in",
@@ -946,36 +1196,64 @@
             "y": 0
           },
           "slidePosition": {
-            "x": 507,
+            "x": 615,
             "y": 103
           }
         },
         {
-          "id": "skorrektirovannyy-cv-1-800301",
+          "id": "skorrektirovannyy-cv-sprosa-1-800401",
           "type": "data",
-          "label": "Скорректированный CV",
+          "label": "Скорректированный CV спроса",
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 322
+            "y": 479
           },
           "slidePosition": {
-            "x": 507,
+            "x": 615,
             "y": 155
           }
         },
         {
-          "id": "segmentaciya-po-pyati-priznakam-1-800302",
+          "id": "skorrektirovannyy-cv-dlitelnosti-postavok-1-800402",
+          "type": "data",
+          "label": "Скорректированный CV длительности поставок",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 303
+          },
+          "slidePosition": {
+            "x": 615,
+            "y": 208
+          }
+        },
+        {
+          "id": "skorrektirovannyy-cv-dlitelnosti-proizvodstva-1-800403",
+          "type": "data",
+          "label": "Скорректированный CV длительности производства",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 391
+          },
+          "slidePosition": {
+            "x": 615,
+            "y": 260
+          }
+        },
+        {
+          "id": "segmentaciya-po-pyati-priznakam-1-800404",
           "type": "data",
           "label": "Сегментация по пяти признакам",
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 234
+            "y": 176
           },
           "slidePosition": {
-            "x": 507,
-            "y": 208
+            "x": 615,
+            "y": 313
           }
         },
         {
@@ -988,8 +1266,8 @@
             "y": 88
           },
           "slidePosition": {
-            "x": 507,
-            "y": 260
+            "x": 615,
+            "y": 365
           }
         },
         {
@@ -1012,10 +1290,10 @@
           ],
           "position": {
             "x": 296,
-            "y": 178
+            "y": 252
           },
           "slidePosition": {
-            "x": 744,
+            "x": 852,
             "y": 109
           }
         },
@@ -1040,10 +1318,10 @@
           ],
           "position": {
             "x": 710,
-            "y": 178
+            "y": 252
           },
           "slidePosition": {
-            "x": 744,
+            "x": 852,
             "y": 271
           }
         },
@@ -1055,7 +1333,9 @@
           "group": "raschet",
           "inputs": [
             "Настроенные параметры расчёта",
-            "Скорректированный CV",
+            "Скорректированный CV спроса",
+            "Скорректированный CV длительности поставок",
+            "Скорректированный CV длительности производства",
             "Политика пополнения по позиции",
             "Ограничения: мощности, бюджет, срок годности"
           ],
@@ -1071,11 +1351,11 @@
           ],
           "position": {
             "x": 1124,
-            "y": 236
+            "y": 349
           },
           "slidePosition": {
-            "x": 744,
-            "y": 433
+            "x": 852,
+            "y": 451
           }
         },
         {
@@ -1086,7 +1366,9 @@
           "group": "raschet",
           "inputs": [
             "Настроенные параметры расчёта",
-            "Скорректированный CV",
+            "Скорректированный CV спроса",
+            "Скорректированный CV длительности поставок",
+            "Скорректированный CV длительности производства",
             "Политика пополнения по позиции"
           ],
           "outputs": [
@@ -1098,11 +1380,11 @@
           ],
           "position": {
             "x": 1124,
-            "y": 41
+            "y": 115
           },
           "slidePosition": {
-            "x": 744,
-            "y": 612
+            "x": 852,
+            "y": 701
           }
         },
         {
@@ -1131,11 +1413,11 @@
           ],
           "position": {
             "x": 1538,
-            "y": 134
+            "y": 204
           },
           "slidePosition": {
-            "x": 744,
-            "y": 757
+            "x": 852,
+            "y": 915
           }
         },
         {
@@ -1159,11 +1441,11 @@
           ],
           "position": {
             "x": 1952,
-            "y": 50
+            "y": 120
           },
           "slidePosition": {
-            "x": 744,
-            "y": 1042
+            "x": 852,
+            "y": 1218
           }
         },
         {
@@ -1185,11 +1467,11 @@
           "owner": "Планер запасов",
           "position": {
             "x": 1952,
-            "y": 134
+            "y": 208
           },
           "slidePosition": {
-            "x": 744,
-            "y": 1204
+            "x": 852,
+            "y": 1398
           }
         },
         {
@@ -1200,38 +1482,38 @@
           "system": "INPLAN",
           "position": {
             "x": 1597,
-            "y": 322
+            "y": 479
           },
           "slidePosition": {
-            "x": 744,
-            "y": 1436
+            "x": 852,
+            "y": 1630
           }
         },
         {
-          "id": "rekomendovannye-urovni-zapasov-po-eshelonam-1-900300",
+          "id": "rekomendovannye-urovni-zapasov-po-eshelonam-1-900400",
           "type": "data",
           "label": "Рекомендованные уровни запасов по эшелонам",
           "direction": "out",
           "position": {
             "x": 1597,
-            "y": 234
+            "y": 391
           },
           "slidePosition": {
-            "x": 1026,
+            "x": 1080,
             "y": 103
           }
         },
         {
-          "id": "tri-scenariya-1-900301",
+          "id": "tri-scenariya-1-900401",
           "type": "data",
           "label": "Три сценария",
           "direction": "out",
           "position": {
             "x": 2011,
-            "y": 234
+            "y": 308
           },
           "slidePosition": {
-            "x": 1026,
+            "x": 1080,
             "y": 176
           }
         },
@@ -1242,10 +1524,10 @@
           "direction": "out",
           "position": {
             "x": 2366,
-            "y": 132
+            "y": 206
           },
           "slidePosition": {
-            "x": 1026,
+            "x": 1080,
             "y": 250
           }
         }
@@ -1300,20 +1582,32 @@
           "kind": "process"
         },
         {
-          "id": "e-nastroennye-parametry-rascheta-1-800300--opredelenie-strategii-mts-mto",
-          "source": "nastroennye-parametry-rascheta-1-800300",
+          "id": "e-nastroennye-parametry-rascheta-1-800400--opredelenie-strategii-mts-mto",
+          "source": "nastroennye-parametry-rascheta-1-800400",
           "target": "opredelenie-strategii-mts-mto",
           "kind": "process"
         },
         {
-          "id": "e-skorrektirovannyy-cv-1-800301--opredelenie-strategii-mts-mto",
-          "source": "skorrektirovannyy-cv-1-800301",
+          "id": "e-skorrektirovannyy-cv-sprosa-1-800401--opredelenie-strategii-mts-mto",
+          "source": "skorrektirovannyy-cv-sprosa-1-800401",
           "target": "opredelenie-strategii-mts-mto",
           "kind": "process"
         },
         {
-          "id": "e-segmentaciya-po-pyati-priznakam-1-800302--opredelenie-strategii-mts-mto",
-          "source": "segmentaciya-po-pyati-priznakam-1-800302",
+          "id": "e-skorrektirovannyy-cv-dlitelnosti-postavok-1-800402--opredelenie-strategii-mts-mto",
+          "source": "skorrektirovannyy-cv-dlitelnosti-postavok-1-800402",
+          "target": "opredelenie-strategii-mts-mto",
+          "kind": "process"
+        },
+        {
+          "id": "e-skorrektirovannyy-cv-dlitelnosti-proizvodstva-1-800403--opredelenie-strategii-mts-mto",
+          "source": "skorrektirovannyy-cv-dlitelnosti-proizvodstva-1-800403",
+          "target": "opredelenie-strategii-mts-mto",
+          "kind": "process"
+        },
+        {
+          "id": "e-segmentaciya-po-pyati-priznakam-1-800404--opredelenie-strategii-mts-mto",
+          "source": "segmentaciya-po-pyati-priznakam-1-800404",
           "target": "opredelenie-strategii-mts-mto",
           "kind": "process"
         },
@@ -1324,15 +1618,15 @@
           "kind": "process"
         },
         {
-          "id": "e-multieshelonnaya-optimizaciya--rekomendovannye-urovni-zapasov-po-eshelonam-1-900300",
+          "id": "e-multieshelonnaya-optimizaciya--rekomendovannye-urovni-zapasov-po-eshelonam-1-900400",
           "source": "multieshelonnaya-optimizaciya",
-          "target": "rekomendovannye-urovni-zapasov-po-eshelonam-1-900300",
+          "target": "rekomendovannye-urovni-zapasov-po-eshelonam-1-900400",
           "kind": "process"
         },
         {
-          "id": "e-scenarnoe-modelirovanie--tri-scenariya-1-900301",
+          "id": "e-scenarnoe-modelirovanie--tri-scenariya-1-900401",
           "source": "scenarnoe-modelirovanie",
-          "target": "tri-scenariya-1-900301",
+          "target": "tri-scenariya-1-900401",
           "kind": "process"
         },
         {
@@ -1347,26 +1641,26 @@
         {
           "system": "INPLAN",
           "label": "Уровни запасов в SNP/PS и MRP",
-          "stage": 3,
+          "stage": 4,
           "direction": "out"
         },
         {
           "system": "PS",
           "label": "Уровни запасов в SNP/PS и MRP",
-          "stage": 3,
+          "stage": 4,
           "direction": "out"
         },
         {
           "system": "MRP",
           "label": "Уровни запасов в SNP/PS и MRP",
-          "stage": 3,
+          "stage": 4,
           "direction": "out"
         }
       ]
     },
     {
-      "id": "stage-4-ocenka-effektov",
-      "number": 4,
+      "id": "stage-5-ocenka-effektov",
+      "number": 5,
       "title": "Оценка эффектов",
       "shortTitle": "Оценка эффектов",
       "keyOutputs": [
@@ -1384,7 +1678,7 @@
       ],
       "nodes": [
         {
-          "id": "tri-scenariya-1-800400",
+          "id": "tri-scenariya-1-800500",
           "type": "data",
           "label": "Три сценария",
           "direction": "in",
@@ -1393,12 +1687,12 @@
             "y": 198
           },
           "slidePosition": {
-            "x": 777,
+            "x": 831,
             "y": 103
           }
         },
         {
-          "id": "rekomendovannye-urovni-zapasov-po-eshelonam-1-800401",
+          "id": "rekomendovannye-urovni-zapasov-po-eshelonam-1-800501",
           "type": "data",
           "label": "Рекомендованные уровни запасов по эшелонам",
           "direction": "in",
@@ -1407,12 +1701,12 @@
             "y": 0
           },
           "slidePosition": {
-            "x": 777,
+            "x": 831,
             "y": 155
           }
         },
         {
-          "id": "segmentaciya-po-pyati-priznakam-1-800402",
+          "id": "segmentaciya-po-pyati-priznakam-1-800502",
           "type": "data",
           "label": "Сегментация по пяти признакам",
           "direction": "in",
@@ -1421,7 +1715,7 @@
             "y": 88
           },
           "slidePosition": {
-            "x": 777,
+            "x": 831,
             "y": 208
           }
         },
@@ -1447,7 +1741,7 @@
             "y": 55
           },
           "slidePosition": {
-            "x": 1015,
+            "x": 1069,
             "y": 109
           }
         },
@@ -1473,7 +1767,7 @@
             "y": 139
           },
           "slidePosition": {
-            "x": 1015,
+            "x": 1069,
             "y": 236
           }
         },
@@ -1499,7 +1793,7 @@
             "y": 223
           },
           "slidePosition": {
-            "x": 1015,
+            "x": 1069,
             "y": 362
           }
         },
@@ -1525,7 +1819,7 @@
             "y": 174
           },
           "slidePosition": {
-            "x": 1015,
+            "x": 1069,
             "y": 507
           }
         },
@@ -1539,7 +1833,7 @@
             "y": 221
           },
           "slidePosition": {
-            "x": 1015,
+            "x": 1069,
             "y": 669
           }
         },
@@ -1584,20 +1878,20 @@
           "kind": "process"
         },
         {
-          "id": "e-tri-scenariya-1-800400--otchet-po-oshibke-prognoza",
-          "source": "tri-scenariya-1-800400",
+          "id": "e-tri-scenariya-1-800500--otchet-po-oshibke-prognoza",
+          "source": "tri-scenariya-1-800500",
           "target": "otchet-po-oshibke-prognoza",
           "kind": "process"
         },
         {
-          "id": "e-rekomendovannye-urovni-zapasov-po-eshelonam-1-800401--otchet-po-oshibke-prognoza",
-          "source": "rekomendovannye-urovni-zapasov-po-eshelonam-1-800401",
+          "id": "e-rekomendovannye-urovni-zapasov-po-eshelonam-1-800501--otchet-po-oshibke-prognoza",
+          "source": "rekomendovannye-urovni-zapasov-po-eshelonam-1-800501",
           "target": "otchet-po-oshibke-prognoza",
           "kind": "process"
         },
         {
-          "id": "e-segmentaciya-po-pyati-priznakam-1-800402--otchet-po-oshibke-prognoza",
-          "source": "segmentaciya-po-pyati-priznakam-1-800402",
+          "id": "e-segmentaciya-po-pyati-priznakam-1-800502--otchet-po-oshibke-prognoza",
+          "source": "segmentaciya-po-pyati-priznakam-1-800502",
           "target": "otchet-po-oshibke-prognoza",
           "kind": "process"
         },
@@ -1614,21 +1908,27 @@
   ],
   "overviewEdges": [
     {
+      "id": "ov-stage-3-segmentaciya--stage-4-raschet-i-analiz",
+      "source": "stage-3-segmentaciya",
+      "target": "stage-4-raschet-i-analiz",
+      "kind": "process"
+    },
+    {
       "id": "ov-stage-1-poluchenie-dannyh--stage-2-podgotovka-k-raschetu",
       "source": "stage-1-poluchenie-dannyh",
       "target": "stage-2-podgotovka-k-raschetu",
       "kind": "process"
     },
     {
-      "id": "ov-stage-2-podgotovka-k-raschetu--stage-3-raschet-i-analiz",
+      "id": "ov-stage-2-podgotovka-k-raschetu--stage-3-segmentaciya",
       "source": "stage-2-podgotovka-k-raschetu",
-      "target": "stage-3-raschet-i-analiz",
+      "target": "stage-3-segmentaciya",
       "kind": "process"
     },
     {
-      "id": "ov-stage-3-raschet-i-analiz--stage-4-ocenka-effektov",
-      "source": "stage-3-raschet-i-analiz",
-      "target": "stage-4-ocenka-effektov",
+      "id": "ov-stage-4-raschet-i-analiz--stage-5-ocenka-effektov",
+      "source": "stage-4-raschet-i-analiz",
+      "target": "stage-5-ocenka-effektov",
       "kind": "process"
     },
     {
@@ -1650,20 +1950,26 @@
       "kind": "integration"
     },
     {
-      "id": "ov-stage-3-raschet-i-analiz--INPLAN",
-      "source": "stage-3-raschet-i-analiz",
+      "id": "ov-ERP--stage-3-segmentaciya",
+      "source": "ERP",
+      "target": "stage-3-segmentaciya",
+      "kind": "integration"
+    },
+    {
+      "id": "ov-stage-4-raschet-i-analiz--INPLAN",
+      "source": "stage-4-raschet-i-analiz",
       "target": "INPLAN",
       "kind": "integration"
     },
     {
-      "id": "ov-stage-3-raschet-i-analiz--PS",
-      "source": "stage-3-raschet-i-analiz",
+      "id": "ov-stage-4-raschet-i-analiz--PS",
+      "source": "stage-4-raschet-i-analiz",
       "target": "PS",
       "kind": "integration"
     },
     {
-      "id": "ov-stage-3-raschet-i-analiz--MRP",
-      "source": "stage-3-raschet-i-analiz",
+      "id": "ov-stage-4-raschet-i-analiz--MRP",
+      "source": "stage-4-raschet-i-analiz",
       "target": "MRP",
       "kind": "integration"
     }
