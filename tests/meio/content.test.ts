@@ -64,6 +64,7 @@ const STEPS_BY_STAGE: string[][] = [
     'Отчёт по сегментации',
     'Отчёт по страховым запасам',
     'Оценка эффектов',
+    'Передача нормативов по запасам в SNP',
   ],
 ];
 
@@ -101,6 +102,7 @@ const ALGORITHM_BY_STEP: Record<string, string[]> = {
   'Отчёт по ошибке прогноза': ['MEIO отчет по ошибке прогноза'],
   'Отчёт по сегментации': ['MEIO отчет по сегментации'],
   'Отчёт по страховым запасам': ['MEIO отчет по страховым запасам'],
+  'Передача нормативов по запасам в SNP': ['MEIO Передача нормативов по запасам в SNP'],
 };
 
 function labels(list: ProcessNode[]): string[] {
@@ -122,8 +124,8 @@ describe('карта MEIO: пять этапов', () => {
 });
 
 describe('карта MEIO: содержание', () => {
-  it('двадцать три шага, по этапам, дословно', () => {
-    expect(steps).toHaveLength(23);
+  it('двадцать четыре шага, по этапам, дословно', () => {
+    expect(steps).toHaveLength(24);
     for (const [index, stage] of map.stages.entries()) {
       expect(
         labels(stage.nodes.filter((node) => node.type !== 'data')),
@@ -132,8 +134,8 @@ describe('карта MEIO: содержание', () => {
     }
   });
 
-  it('тридцать три входа и пятнадцать выходов, каждый при своём этапе', () => {
-    expect(data).toHaveLength(48);
+  it('тридцать три входа и семнадцать выходов, каждый при своём этапе', () => {
+    expect(data).toHaveLength(50);
     for (const label of INPUTS) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
@@ -147,7 +149,7 @@ describe('карта MEIO: содержание', () => {
     expect(labels(data.filter((node) => node.direction === 'in'))).toContain(
       'Мощности хранения по температурным режимам',
     );
-    expect(data.filter((node) => node.direction === 'out')).toHaveLength(15);
+    expect(data.filter((node) => node.direction === 'out')).toHaveLength(17);
 
     const stageOf = (label: string): number | undefined =>
       map.stages.find((stage) => stage.nodes.some((node) => node.label === label))?.number;
@@ -160,8 +162,8 @@ describe('карта MEIO: содержание', () => {
     expect(stageOf('Оценка эффектов и рекомендации')).toBe(5);
   });
 
-  it('рёбра внутри этапов: 14 + 19 + 9 + 17 + 8', () => {
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([14, 19, 9, 17, 8]);
+  it('рёбра внутри этапов: 14 + 19 + 9 + 17 + 11', () => {
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([14, 19, 9, 17, 11]);
   });
 
   it('ни один узел не висит без связей', () => {
@@ -256,7 +258,10 @@ describe('карта MEIO: содержание', () => {
     // Отчёт для бизнеса: системы в тексте нет, и угадывать её запрещено. Плашка
     // остаётся data-узлом направления out без ExternalIO — поэтому у этапа 4
     // выходов среди внешних систем нет, хотя выходная плашка есть.
-    expect(map.stages[4]?.outputs).toEqual([]);
+    // Внешний выход у этапа теперь ЕСТЬ — но только один, нормативы в SNP;
+    // «Оценка эффектов и рекомендации» в него не попала: системы в тексте нет,
+    // а угадывать её запрещено.
+    expect(map.stages[4]?.outputs.map((io) => io.label)).toEqual(['Нормативы запасов в SNP']);
     expect(data.find((node) => node.label === 'Оценка эффектов и рекомендации')?.direction).toBe(
       'out',
     );
@@ -282,7 +287,10 @@ describe('карта MEIO: содержание', () => {
         'Три сценария',
         'Перечень предупреждений расчёта',
       ],
-      ['Комплексная оценка эффектов и параметров поставок на основе трёх сценариев'],
+      [
+        'Комплексная оценка эффектов и параметров поставок на основе трёх сценариев',
+        'Опубликованные нормативы запасов в SNP',
+      ],
     ]);
   });
 
@@ -379,8 +387,8 @@ describe('карта MEIO: содержание', () => {
       expect(item.outputs, `шаг «${item.id}» без выходов`).toBeTruthy();
       expect(item.owner, `шаг «${item.id}» без ответственного`).toBeTruthy();
     }
-    expect(steps.filter((item) => item.outputs !== undefined)).toHaveLength(23);
-    expect(steps.filter((item) => item.owner !== undefined)).toHaveLength(23);
+    expect(steps.filter((item) => item.outputs !== undefined)).toHaveLength(24);
+    expect(steps.filter((item) => item.owner !== undefined)).toHaveLength(24);
 
     expect(step('Мультиэшелонная оптимизация')?.outputs).toEqual([
       'Рекомендованные уровни запасов по эшелонам',
@@ -393,7 +401,7 @@ describe('карта MEIO: содержание', () => {
   it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
     // Импортёру запрещено отдавать owner (самопроверка serialize_node), поэтому
     // поле живёт в этом файле и восстанавливается carry_over_manual_fields.
-    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(23);
+    expect(nodes.filter((node) => node.owner !== undefined).length).toBe(24);
   });
 
   it('warningsCount не проставлен', () => {
@@ -434,7 +442,7 @@ describe('карта MEIO: привязка к алгоритмам платфо
     // и тот же расчёт нарисован в двух местах процесса.
     const all = steps.flatMap((item) => item.algorithms ?? []);
     expect(new Set(all).size).toBe(all.length);
-    expect(all).toHaveLength(17);
+    expect(all).toHaveLength(18);
   });
 
   it('«Усреднитель» стоит на основном расчёте — единственный блок с двумя именами', () => {
@@ -446,13 +454,31 @@ describe('карта MEIO: привязка к алгоритмам платфо
     expect(step('Мультиэшелонная оптимизация')?.algorithms).toContain('MEIO Усреднитель');
   });
 
-  it('«Передача нормативов в SNP» не привязана — шага под неё на карте нет', () => {
-    // НАМЕРЕННО. Алгоритм в платформе есть, а шага публикации нормативов карта
-    // не содержит: контур MEIO заканчивается отчётом (находка MEIO-1 панели
-    // Fusion). Приписать алгоритм соседнему блоку значило бы спрятать пробел за
-    // видимостью полноты. Решение владельца ожидается.
+  it('весь реестр модуля разобран по блокам — контур замкнут', () => {
+    // Решение владельца 08.09.2026: «давай добавим этот шаг». «MEIO Передача
+    // нормативов по запасам в SNP» оставалась единственным алгоритмом без блока,
+    // потому что карта заканчивалась отчётом — расчётом, у результата которого
+    // нет получателя (находка MEIO-1 панели Fusion). Шаг добавлен, и теперь
+    // привязаны все 18 имён реестра.
     const all = steps.flatMap((item) => item.algorithms ?? []);
-    expect(all).not.toContain('MEIO Передача нормативов по запасам в SNP');
+    expect(all).toContain('MEIO Передача нормативов по запасам в SNP');
+    expect(step('Передача нормативов по запасам в SNP')?.outputs).toEqual([
+      'Опубликованные нормативы запасов в SNP',
+    ]);
+    // Публикация идёт ПОСЛЕ оценки эффектов: публикуются согласованные значения,
+    // а не всё посчитанное.
+    const stage = map.stages[4];
+    const idOf = (label: string): string | undefined =>
+      stage?.nodes.find((node) => node.label === label)?.id;
+    expect(
+      (stage?.edges ?? []).some(
+        (e) =>
+          e.source === idOf('Оценка эффектов') &&
+          e.target === idOf('Передача нормативов по запасам в SNP'),
+      ),
+    ).toBe(true);
+    // Нормативы уходят наружу, в SNP: у этапа появился внешний выход.
+    expect(stage?.outputs.map((io) => io.system)).toEqual(['INPLAN']);
   });
 
   it('у КАЖДОГО расчёта CV своя корректировка', () => {
