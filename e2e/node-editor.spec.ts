@@ -38,13 +38,25 @@ async function ensureDrawer(page: Page, nodeId: string): Promise<void> {
   await expect(dialog).toBeVisible();
 }
 
-/** Открывает этап 1 в режиме «Редактор» и панель нужного узла. */
-async function openInEditor(page: Page, nodeId: string): Promise<void> {
+/** Открывает этап 1 в режиме «Редактор». Панель узла НЕ открывает. */
+async function enterEditor(page: Page): Promise<void> {
   await page.goto('/?stage=1');
   await page.waitForSelector(STEP_CARD);
   const editor = page.getByRole('button', { name: 'Редактор', exact: true });
   await editor.click();
   await expect(editor).toHaveAttribute('aria-pressed', 'true');
+}
+
+/**
+ * Редактор плюс открытая панель узла.
+ *
+ * ОТДЕЛЬНО ОТ enterEditor НАМЕРЕННО: открытая панель затемняет полотно, и
+ * затемнение перехватывает жесты по нему. Тест изменения размера тянет рамку
+ * прямо на полотне и падал именно из-за этого — с диагнозом «карточка не
+ * растянулась», хотя растягивание работало.
+ */
+async function openInEditor(page: Page, nodeId: string): Promise<void> {
+  await enterEditor(page);
   await ensureDrawer(page, nodeId);
 }
 
@@ -113,4 +125,41 @@ test('блок удаляется с карты и не возвращается
   await page.reload();
   await page.waitForSelector(STEP_CARD);
   await expect(page.locator(`[data-id="${NODE}"]`)).toHaveCount(0);
+});
+
+test('размер блока меняется и переживает перезагрузку', async ({ page }) => {
+  // Вопрос владельца 08.09.2026: «размер можно менять блоков?». До правки — нет:
+  // габарит брался из констант темы и ничем не менялся.
+  //
+  // Меряется ШИРИНА самой карточки, а не узла React Flow: карточка обязана
+  // тянуться за узлом. Иначе рамка растянулась бы, а прямоугольник на экране
+  // остался прежним — правка «сработала» бы только в хранилище.
+  // Панель узла НЕ открывается: её затемнение перехватило бы жест по рамке.
+  await enterEditor(page);
+  // Меряется КАРТОЧКА (button), а не узел React Flow: узел растягивается сам по
+  // себе, а видимый прямоугольник обязан идти за ним. Мерить узел значило бы
+  // проверять React Flow, а не карту.
+  const card = page.locator(`[data-id="${NODE}"] button`).first();
+  const widthOf = async (): Promise<number> => (await card.boundingBox())?.width ?? 0;
+  const before = await widthOf();
+
+  // Правая ГРАНЬ рамки, а не угловой маркер: она меняет только ширину, и жест
+  // по ней не смешивает две величины в одном измерении.
+  const handle = page.locator(`[data-id="${NODE}"] .pm-resize-line.right`).first();
+  await expect(handle).toBeVisible();
+  const grip = await handle.boundingBox();
+  const gx = (grip?.x ?? 0) + (grip?.width ?? 0) / 2;
+  const gy = (grip?.y ?? 0) + (grip?.height ?? 0) / 2;
+  await page.mouse.move(gx, gy);
+  await page.mouse.down();
+  await page.mouse.move(gx + 20, gy, { steps: 4 });
+  await page.mouse.move(gx + 120, gy, { steps: 10 });
+  await page.mouse.up();
+
+  const after = await widthOf();
+  expect(after, 'карточка не растянулась').toBeGreaterThan(before + 40);
+
+  await page.reload();
+  await page.waitForSelector(STEP_CARD);
+  expect(await widthOf(), 'размер не пережил перезагрузку').toBeCloseTo(after, 0);
 });

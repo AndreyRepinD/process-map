@@ -359,6 +359,7 @@ NODE_KEY_ORDER = (
     "screen",
     "algorithms",
     "position",
+    "size",
     "slidePosition",
 )
 STAGE_KEY_ORDER = (
@@ -386,7 +387,7 @@ STAGE_KEY_ORDER = (
 # их нет и быть не может: слайд рисует процесс, а не привязку к конкретному
 # стенду. Заявляются в authoring source (`steps[].algorithms`), сверяются
 # slidegen.verify.
-PRESERVED_NODE_FIELDS = ("owner", "screen", "algorithms")
+PRESERVED_NODE_FIELDS = ("owner", "screen", "algorithms", "size")
 PRESERVED_STAGE_FIELDS = ("screen",)
 
 # Остальное импортёр строит сам из презентации.
@@ -3849,6 +3850,18 @@ def is_owner(value: object) -> bool:
     return isinstance(value, str)
 
 
+def is_size(value: object) -> bool:
+    """Габарит карточки: {width, height} с минимумами из schema.ts."""
+    return (
+        isinstance(value, dict)
+        and set(value) == {"width", "height"}
+        and isinstance(value["width"], (int, float))
+        and isinstance(value["height"], (int, float))
+        and value["width"] >= 80
+        and value["height"] >= 28
+    )
+
+
 def is_algorithms(value: object) -> bool:
     """Список непустых имён алгоритмов Менеджера процессов (schema.ts: z.array(z.string()))."""
     return (
@@ -3865,6 +3878,7 @@ FIELD_VALIDATORS = {
     "screen": is_screen_link,
     "owner": is_owner,
     "algorithms": is_algorithms,
+    "size": is_size,
 }
 
 
@@ -4255,6 +4269,9 @@ def run_self_test() -> int:
         "у полей PRESERVED_NODE_FIELDS нет валидатора: "
         f"{sorted(set(PRESERVED_NODE_FIELDS) - set(FIELD_VALIDATORS))}",
     )
+    check(is_size({"width": 318, "height": 52}), "is_size не принял габарит")
+    check(not is_size({"width": 10, "height": 52}), "is_size принял ширину ниже минимума")
+    check(not is_size({"width": 318}), "is_size принял габарит без высоты")
     check(is_algorithms(["MEIO Сегментация"]), "is_algorithms не принял список имён")
     check(not is_algorithms([]), "is_algorithms принял ПУСТОЙ список")
     check(not is_algorithms("MEIO Сегментация"), "is_algorithms принял строку вместо списка")

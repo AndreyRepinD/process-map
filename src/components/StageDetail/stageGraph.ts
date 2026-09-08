@@ -243,7 +243,9 @@ export const COLUMN_IN_ID = 'column:in';
 export const COLUMN_OUT_ID = 'column:out';
 
 function sizeOf(node: ProcessNode): NodeSize {
-  return node.type === 'data' ? DATA_NODE_SIZE : STEP_NODE_SIZE;
+  // Правка размера владельцем перебивает умолчание темы; её отсутствие —
+  // обычный случай, и тогда действует размер из src/theme/sizes.ts.
+  return node.size ?? (node.type === 'data' ? DATA_NODE_SIZE : STEP_NODE_SIZE);
 }
 
 /** Прямоугольник в координатах раскладки (не экрана). */

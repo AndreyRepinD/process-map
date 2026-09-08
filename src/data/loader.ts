@@ -125,6 +125,7 @@ function applyNodeOverride(node: ProcessNode, overrides: Overrides): ProcessNode
   next = patchField(next, 'outputs', entry.outputs);
   next = patchField(next, 'owner', entry.owner);
   next = patchField(next, 'position', entry.position);
+  next = patchField(next, 'size', entry.size);
   return next;
 }
 
@@ -402,6 +403,13 @@ export function addNode(draft: AddedNode, label: string): string {
 }
 
 /** Запоминает координаты, поставленные перетаскиванием. */
+export function resizeNode(nodeId: string, size: { width: number; height: number }): Overrides {
+  const current = readStoredOverrides();
+  const next: Overrides = { ...current, [nodeId]: { ...current[nodeId], size } };
+  writeStoredOverrides(next);
+  return next;
+}
+
 export function moveNode(nodeId: string, position: { x: number; y: number }): Overrides {
   const current = readStoredOverrides();
   // Округление до целого: React Flow отдаёт дробные координаты, а лишние знаки
