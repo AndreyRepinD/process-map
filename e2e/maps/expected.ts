@@ -72,8 +72,9 @@ export const MAP_EXPECTATIONS: Record<string, MapExpectations> = {
   meio: {
     moduleLabel: 'Модуль MEIO',
     pageTitle: 'Процесс мультиэшелонной оптимизации запасов',
-    stageCount: 4,
-    stageBadge: '4 этапа',
+    // Пять этапов с 08.09.2026: сегментация вынесена отдельным процессом.
+    stageCount: 5,
+    stageBadge: '5 этапов',
     algorithmNode: {
       stage: 1,
       node: 'proverka-cepochki-na-svyazannost',
