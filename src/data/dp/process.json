@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "id": "dp",
-  "updatedAt": "2026-09-07",
+  "updatedAt": "2026-09-17",
   "title": "Процесс планирования спроса",
   "moduleLabel": "Модуль DP",
   "stages": [
@@ -23,7 +23,7 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 264
+            "y": 176
           },
           "slidePosition": {
             "x": 0,
@@ -31,9 +31,9 @@
           }
         },
         {
-          "id": "kalendar-oos-i-deficitov",
+          "id": "produktovaya-ierarhiya",
           "type": "data",
-          "label": "Календарь OOS и дефицитов",
+          "label": "Продуктовая иерархия",
           "direction": "in",
           "position": {
             "x": 0,
@@ -45,17 +45,59 @@
           }
         },
         {
+          "id": "logisticheskaya-shema-i-ee-izmeneniya",
+          "type": "data",
+          "label": "Логистическая схема и её изменения",
+          "direction": "in",
+          "position": {
+            "x": 291,
+            "y": 138
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 208
+          }
+        },
+        {
+          "id": "kalendar-oos-i-deficitov",
+          "type": "data",
+          "label": "Календарь OOS и дефицитов",
+          "direction": "in",
+          "position": {
+            "x": 291,
+            "y": 226
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 260
+          }
+        },
+        {
           "id": "kalendar-promo-proshlyh-periodov",
           "type": "data",
           "label": "Календарь промо прошлых периодов",
           "direction": "in",
           "position": {
-            "x": 0,
-            "y": 176
+            "x": 291,
+            "y": 314
           },
           "slidePosition": {
             "x": 0,
-            "y": 208
+            "y": 313
+          }
+        },
+        {
+          "id": "kalendar-sobytiy",
+          "type": "data",
+          "label": "Календарь событий",
+          "direction": "in",
+          "position": {
+            "x": 291,
+            "y": 402
+          },
+          "slidePosition": {
+            "x": 0,
+            "y": 365
           }
         },
         {
@@ -77,9 +119,9 @@
           "id": "proverka-kachestva-dannyh",
           "type": "step",
           "label": "Проверка качества данных",
-          "description": "Гейт качества ДО прогона: полнота истории и пропуски, новые и изменённые DFU и маппинг SKU, единицы измерения, дубли и отрицательные значения. При отказе запуск расчёта блокируется.\n\nСтоит ПЕРЕД очисткой намеренно: очистка уже предполагает, что данные пришли и пригодны. Ошибка маппинга или пропуск месяца, пойманные после прогона, означают выброшенный цикл.\n\nBPMN: DP-010 — Подготовка данных",
+          "description": "Гейт качества ДО прогона: полнота истории Sell-In, Sell-Out, Off-Take и заказов, пропуски, новые и изменённые DFU и маппинг SKU, единицы измерения, дубли и отрицательные значения. При отказе запуск расчёта блокируется.\n\nСтоит ПЕРЕД очисткой намеренно: очистка уже предполагает, что данные пришли и пригодны. Ошибка маппинга или пропуск месяца, пойманные после прогона, означают выброшенный цикл.\n\nBPMN: DP-010 — Подготовка данных",
           "inputs": [
-            "Полнота истории и пропуски",
+            "Полнота истории Sell-In, Sell-Out, Off-Take и пропуски",
             "Новые и изменённые DFU, маппинг SKU",
             "Единицы измерения, дубли, отрицательные значения",
             "Блокировка запуска расчёта при отказе"
@@ -94,7 +136,7 @@
           ],
           "position": {
             "x": 232,
-            "y": 134
+            "y": 54
           },
           "slidePosition": {
             "x": 204,
@@ -102,31 +144,15 @@
           }
         },
         {
-          "id": "plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps",
-          "type": "data",
-          "label": "План производства собственной переработки из SNP и PS",
-          "direction": "in",
-          "system": "SNP",
-          "position": {
-            "x": 291,
-            "y": 226
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 176
-          }
-        },
-        {
           "id": "podgotovka-sopostavimoy-istorii",
           "type": "step",
           "label": "Подготовка сопоставимой истории",
-          "description": "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, промо, ML-очистка. Перенос истории при смене схемы, замена SKU через DFU, исключения планеру.\n\nПотоки спроса разделяются до расчёта: рыночный спрос прогнозируется статистикой, спрос собственной переработки ЗАВИСИМЫЙ и выводится из плана производства, а не из истории отгрузок. Смешение двух природ спроса в одном ряду ломает и методы прогнозирования, и сегментацию ABC/XYZ.\n\nBPMN: DP-020 — Очистка данных",
+          "description": "Очистка и приведение истории продаж к сопоставимому виду: OOS, выбросы, промо, ML-очистка. Перенос истории при смене логистической схемы, замена SKU через DFU, исключения планеру.\n\nОчистка автоматическая и экспертная: модель предлагает правку, спорные случаи уходят планеру исключениями, а не принимаются молча. Для этого шагу нужны календари дефицитов, прошлых промо и событий — без них провал продаж из-за OOS неотличим от падения спроса.\n\nBPMN: DP-020 — Очистка данных",
           "inputs": [
             "OOS, выбросы, промо, ML-очистка",
             "Перенос истории при смене схемы",
             "Замена SKU через DFU",
-            "Исключения планеру",
-            "Разделение потоков: рынок / внутренний передел / экспорт"
+            "Исключения планеру"
           ],
           "outputs": [
             "Сопоставимая история",
@@ -135,11 +161,11 @@
           "owner": "Планер спроса",
           "position": {
             "x": 582,
-            "y": 220
+            "y": 264
           },
           "slidePosition": {
             "x": 204,
-            "y": 324
+            "y": 342
           }
         },
         {
@@ -149,7 +175,7 @@
           "direction": "out",
           "position": {
             "x": 641,
-            "y": 124
+            "y": 36
           },
           "slidePosition": {
             "x": 431,
@@ -163,7 +189,7 @@
           "direction": "out",
           "position": {
             "x": 932,
-            "y": 218
+            "y": 262
           },
           "slidePosition": {
             "x": 431,
@@ -185,27 +211,39 @@
           "kind": "process"
         },
         {
-          "id": "e-plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps--podgotovka-sopostavimoy-istorii",
-          "source": "plan-proizvodstva-sobstvennoy-pererabotki-iz-snp-i-ps",
-          "target": "podgotovka-sopostavimoy-istorii",
-          "kind": "process"
-        },
-        {
           "id": "e-spravochnik-dfu-i-mapping-sku--proverka-kachestva-dannyh",
           "source": "spravochnik-dfu-i-mapping-sku",
           "target": "proverka-kachestva-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-kalendar-oos-i-deficitov--proverka-kachestva-dannyh",
-          "source": "kalendar-oos-i-deficitov",
+          "id": "e-produktovaya-ierarhiya--proverka-kachestva-dannyh",
+          "source": "produktovaya-ierarhiya",
           "target": "proverka-kachestva-dannyh",
           "kind": "process"
         },
         {
-          "id": "e-kalendar-promo-proshlyh-periodov--proverka-kachestva-dannyh",
+          "id": "e-logisticheskaya-shema-i-ee-izmeneniya--podgotovka-sopostavimoy-istorii",
+          "source": "logisticheskaya-shema-i-ee-izmeneniya",
+          "target": "podgotovka-sopostavimoy-istorii",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-oos-i-deficitov--podgotovka-sopostavimoy-istorii",
+          "source": "kalendar-oos-i-deficitov",
+          "target": "podgotovka-sopostavimoy-istorii",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-promo-proshlyh-periodov--podgotovka-sopostavimoy-istorii",
           "source": "kalendar-promo-proshlyh-periodov",
-          "target": "proverka-kachestva-dannyh",
+          "target": "podgotovka-sopostavimoy-istorii",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-sobytiy--podgotovka-sopostavimoy-istorii",
+          "source": "kalendar-sobytiy",
+          "target": "podgotovka-sopostavimoy-istorii",
           "kind": "process"
         },
         {
@@ -225,18 +263,6 @@
         {
           "system": "ERP",
           "label": "История продаж и заказы из ERP / DWH",
-          "stage": 1,
-          "direction": "in"
-        },
-        {
-          "system": "SNP",
-          "label": "План производства собственной переработки из SNP и PS",
-          "stage": 1,
-          "direction": "in"
-        },
-        {
-          "system": "PS",
-          "label": "План производства собственной переработки из SNP и PS",
           "stage": 1,
           "direction": "in"
         }
@@ -270,11 +296,53 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 176
+            "y": 314
           },
           "slidePosition": {
             "x": 183,
             "y": 103
+          }
+        },
+        {
+          "id": "assortimentnaya-matrica",
+          "type": "data",
+          "label": "Ассортиментная матрица",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 590
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 155
+          }
+        },
+        {
+          "id": "dannye-dlya-feature-engineering",
+          "type": "data",
+          "label": "Данные для feature engineering",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 502
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 208
+          }
+        },
+        {
+          "id": "koefficienty-podobiya-i-kannibalizacii",
+          "type": "data",
+          "label": "Коэффициенты подобия и каннибализации",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 102
+          },
+          "slidePosition": {
+            "x": 183,
+            "y": 260
           }
         },
         {
@@ -283,37 +351,24 @@
           "label": "Календарь акций и механик",
           "direction": "in",
           "position": {
-            "x": 0,
-            "y": 0
+            "x": 769,
+            "y": 212
           },
           "slidePosition": {
             "x": 183,
-            "y": 155
-          }
-        },
-        {
-          "id": "profil-podobiya-dlya-novinok",
-          "type": "data",
-          "label": "Профиль подобия для новинок",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 88
-          },
-          "slidePosition": {
-            "x": 183,
-            "y": 208
+            "y": 313
           }
         },
         {
           "id": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
           "type": "step",
           "label": "Сегментация/кластеризация и настройка методов",
-          "description": "Сегментация и кластеризация номенклатуры: ABC/XYZ, непрерывность, тренд, ML-кластеризация, сезонность. Привязка методов и параметров прогнозирования к сегменту.\n\nBPMN: DP-040 — Управление сегментами (семействами)",
+          "description": "Сегментация и кластеризация номенклатуры по признакам рядов: ABC/XYZ, непрерывность, тренд, ML-кластеризация, сезонность. Ряды тестируются, и к сегменту привязываются методы и параметры прогнозирования.\n\nСюда же возвращается ретроспектива точности с этапа 5: сегменты и методы пересматриваются по FA, BIAS и FVA прошлых циклов.\n\nBPMN: DP-040 — Управление сегментами (семействами)",
           "group": "bazovyy-prognoz",
           "inputs": [
             "ABC/XYZ, непрерывность, тренд",
             "ML-кластеризация, сезонность",
+            "Тестирование временных рядов",
             "Привязка методов и параметров к сегменту"
           ],
           "outputs": [
@@ -326,7 +381,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 90
+            "y": 316
           },
           "slidePosition": {
             "x": 420,
@@ -340,23 +395,23 @@
           "direction": "in",
           "position": {
             "x": 769,
-            "y": 252
+            "y": 0
           },
           "slidePosition": {
             "x": 10,
-            "y": 249
+            "y": 188
           }
         },
         {
           "id": "assortiment-metody-i-chempion",
           "type": "step",
           "label": "Ассортимент: методы и чемпион",
-          "description": "Расчёт прогноза по ассортименту: статистика, ансамбли, ML. Выбор чемпиона для серии по backtest. Референс, коэффициент, даты действия.\n\nBPMN: DP-060 — Прогнозирование базовой линии",
+          "description": "Расчёт базового прогноза по ассортименту: статистические методы, ансамбли и многофакторная ML-модель спроса. Модели запускаются по настройкам сегмента и по расписанию; чемпион для каждой серии выбирается по backtest.\n\nПрогноз строится только для позиций действующей ассортиментной матрицы. Базовый прогноз уходит в NRM, чтобы промо-план считался от той же базы.\n\nBPMN: DP-060 — Прогнозирование базовой линии",
           "group": "bazovyy-prognoz",
           "inputs": [
             "Статистика, ансамбли, ML",
             "Backtest, чемпион для серии",
-            "Референс, коэффициент, даты действия"
+            "Запуск по настройкам сегмента и расписанию"
           ],
           "outputs": [
             "Базовый прогноз по ассортименту",
@@ -370,37 +425,42 @@
           ],
           "position": {
             "x": 710,
-            "y": 20
+            "y": 348
           },
           "slidePosition": {
             "x": 420,
-            "y": 271
+            "y": 289
           }
         },
         {
           "id": "novinki-pohozhie-tovary",
           "type": "step",
           "label": "Новинки: похожие товары",
-          "description": "Прогноз новинок по похожим товарам.\n\nBPMN: DP-070-020 — Планирование новинки",
+          "description": "Прогноз новинок по похожим товарам: референс (аналог), коэффициент пересчёта и даты действия связи.\n\nПравило подобия и коэффициенты каннибализации приходят из ML-модели ассортиментной матрицы. Каннибализация снижает прогноз товаров, которые новинка замещает, — иначе запуск добавляет в план спрос, которого нет.\n\nBPMN: DP-070-020 — Планирование новинки",
           "group": "novinki-i-promo",
+          "inputs": [
+            "Референс, коэффициент, даты действия",
+            "Правило подобия",
+            "Коэффициенты каннибализации"
+          ],
           "outputs": [
             "Прогноз новинок по аналогам"
           ],
           "owner": "Планер спроса совместно с категорийным менеджментом",
           "position": {
             "x": 710,
-            "y": 364
+            "y": 104
           },
           "slidePosition": {
             "x": 420,
-            "y": 433
+            "y": 451
           }
         },
         {
           "id": "promo-light-prognoz-promo-obemov-opcionalno",
           "type": "step",
           "label": "Промо light: прогноз промо-объёмов (опционально)",
-          "description": "Прогноз промо-объёмов: календарь акций и механик; промо-объёмы по промо-эффектам из истории или промо-план из TPM/NRM.\n\n«Опционально» означает, что шаг может быть пропущен по содержанию: если промо нет, базовый прогноз проходит этап без изменений. Из потока шаг при этом не выпадает — он единственный выход этапа 2.\n\nBPMN: DP-070-050 — Анализ промо-плана",
+          "description": "Прогноз промо-объёмов: календарь акций и механик; промо-объёмы по промо-эффектам из истории или промо-план из TPM/NRM. В NRM промо-объёмы считает своя ML-модель промо с учётом ценовой эластичности.\n\n«Опционально» означает, что шаг может быть пропущен по содержанию: если промо нет, базовый прогноз проходит этап без изменений. Из потока шаг при этом не выпадает — он единственный выход этапа 2.\n\nBPMN: DP-070-050 — Анализ промо-плана",
           "group": "novinki-i-promo",
           "inputs": [
             "Календарь акций и механик",
@@ -413,11 +473,25 @@
           "owner": "Планер спроса совместно с трейд-маркетингом",
           "position": {
             "x": 1124,
-            "y": 356
+            "y": 112
           },
           "slidePosition": {
             "x": 420,
-            "y": 514
+            "y": 612
+          }
+        },
+        {
+          "id": "peredacha-bazovogo-prognoza-v-nrm",
+          "type": "data",
+          "label": "Передача базового прогноза в NRM",
+          "direction": "out",
+          "position": {
+            "x": 1183,
+            "y": 434
+          },
+          "slidePosition": {
+            "x": 420,
+            "y": 774
           }
         },
         {
@@ -427,7 +501,7 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 9
+            "y": 346
           },
           "slidePosition": {
             "x": 648,
@@ -441,7 +515,7 @@
           "direction": "out",
           "position": {
             "x": 1538,
-            "y": 354
+            "y": 110
           },
           "slidePosition": {
             "x": 648,
@@ -475,6 +549,12 @@
           "kind": "process"
         },
         {
+          "id": "e-assortiment-metody-i-chempion--peredacha-bazovogo-prognoza-v-nrm",
+          "source": "assortiment-metody-i-chempion",
+          "target": "peredacha-bazovogo-prognoza-v-nrm",
+          "kind": "process"
+        },
+        {
           "id": "e-novinki-pohozhie-tovary--promo-light-prognoz-promo-obemov-opcionalno",
           "source": "novinki-pohozhie-tovary",
           "target": "promo-light-prognoz-promo-obemov-opcionalno",
@@ -487,15 +567,27 @@
           "kind": "process"
         },
         {
-          "id": "e-kalendar-akciy-i-mehanik--segmentaciya-klasterizaciya-i-nastroyka-metodov",
-          "source": "kalendar-akciy-i-mehanik",
-          "target": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "id": "e-assortimentnaya-matrica--assortiment-metody-i-chempion",
+          "source": "assortimentnaya-matrica",
+          "target": "assortiment-metody-i-chempion",
           "kind": "process"
         },
         {
-          "id": "e-profil-podobiya-dlya-novinok--segmentaciya-klasterizaciya-i-nastroyka-metodov",
-          "source": "profil-podobiya-dlya-novinok",
-          "target": "segmentaciya-klasterizaciya-i-nastroyka-metodov",
+          "id": "e-dannye-dlya-feature-engineering--assortiment-metody-i-chempion",
+          "source": "dannye-dlya-feature-engineering",
+          "target": "assortiment-metody-i-chempion",
+          "kind": "process"
+        },
+        {
+          "id": "e-koefficienty-podobiya-i-kannibalizacii--novinki-pohozhie-tovary",
+          "source": "koefficienty-podobiya-i-kannibalizacii",
+          "target": "novinki-pohozhie-tovary",
+          "kind": "process"
+        },
+        {
+          "id": "e-kalendar-akciy-i-mehanik--promo-light-prognoz-promo-obemov-opcionalno",
+          "source": "kalendar-akciy-i-mehanik",
+          "target": "promo-light-prognoz-promo-obemov-opcionalno",
           "kind": "process"
         },
         {
@@ -563,6 +655,20 @@
           }
         },
         {
+          "id": "celevoy-zapas-klienta-v-dnyah-pokrytiya",
+          "type": "data",
+          "label": "Целевой запас клиента в днях покрытия",
+          "direction": "in",
+          "position": {
+            "x": 0,
+            "y": 181
+          },
+          "slidePosition": {
+            "x": 399,
+            "y": 208
+          }
+        },
+        {
           "id": "pryamye-kanaly-pryamoy-prognoz-sell-in",
           "type": "step",
           "label": "Прямые каналы: прямой прогноз Sell-In",
@@ -574,7 +680,7 @@
           "owner": "Планер канала",
           "position": {
             "x": 296,
-            "y": 46
+            "y": 29
           },
           "slidePosition": {
             "x": 636,
@@ -585,7 +691,7 @@
           "id": "sell-out-balans-sell-in",
           "type": "step",
           "label": "Sell-Out → баланс → Sell-In",
-          "description": "Пересчёт Sell-Out в Sell-In через материальный баланс: остатки, транзит, открытые заказы, целевой запас; прогнозный остаток и дни покрытия.\n\nШаг работает на данных КЛИЕНТА, а не на собственных отгрузках: рост Sell-In может быть заполнением склада дистрибьютора, а не ростом потребления. Без sell-out, остатков и открытых заказов клиента этап посчитать нельзя.\n\nBPMN: DP-070-070 — Demand Propagation. Автоматизированный расчет Sell-In дистрибутора",
+          "description": "Пересчёт Sell-Out в Sell-In через материальный баланс: остатки, транзит, открытые заказы, целевой запас; прогнозный остаток и дни покрытия.\n\nШаг работает на данных КЛИЕНТА, а не на собственных отгрузках: рост Sell-In может быть заполнением склада дистрибьютора, а не ростом потребления. Sell-Out, остатки, транзит и открытые заказы приходят от сетей и дистрибьюторов (EDI, порталы), а не из собственной ERP; без них этап посчитать нельзя.\n\nBPMN: DP-070-070 — Demand Propagation. Автоматизированный расчет Sell-In дистрибутора",
           "group": "cherez-distributora",
           "inputs": [
             "Остатки, транзит, открытые заказы, целевой запас",
@@ -598,7 +704,7 @@
           "owner": "Планер канала совместно с КАМ",
           "position": {
             "x": 296,
-            "y": 227
+            "y": 271
           },
           "slidePosition": {
             "x": 636,
@@ -606,32 +712,31 @@
           }
         },
         {
-          "id": "sell-out-i-ostatki-klienta-iz-erp",
+          "id": "sell-out-ostatki-i-tranzit-klienta-po-edi",
           "type": "data",
-          "label": "Sell-Out и остатки клиента из ERP",
+          "label": "Sell-Out, остатки и транзит клиента по EDI",
           "direction": "in",
-          "system": "ERP",
+          "position": {
+            "x": 0,
+            "y": 357
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 274
+          }
+        },
+        {
+          "id": "otkrytye-zakazy-setey-i-distribyutorov-po-edi",
+          "type": "data",
+          "label": "Открытые заказы сетей и дистрибьюторов по EDI",
+          "direction": "in",
           "position": {
             "x": 0,
             "y": 269
           },
           "slidePosition": {
             "x": 10,
-            "y": 322
-          }
-        },
-        {
-          "id": "otkrytye-zakazy-i-celevoy-zapas-klienta",
-          "type": "data",
-          "label": "Открытые заказы и целевой запас клиента",
-          "direction": "in",
-          "position": {
-            "x": 0,
-            "y": 181
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 396
+            "y": 359
           }
         },
         {
@@ -655,7 +760,7 @@
           "direction": "out",
           "position": {
             "x": 710,
-            "y": 269
+            "y": 340
           },
           "slidePosition": {
             "x": 864,
@@ -665,14 +770,14 @@
       ],
       "edges": [
         {
-          "id": "e-sell-out-i-ostatki-klienta-iz-erp--sell-out-balans-sell-in",
-          "source": "sell-out-i-ostatki-klienta-iz-erp",
+          "id": "e-sell-out-ostatki-i-tranzit-klienta-po-edi--sell-out-balans-sell-in",
+          "source": "sell-out-ostatki-i-tranzit-klienta-po-edi",
           "target": "sell-out-balans-sell-in",
           "kind": "process"
         },
         {
-          "id": "e-otkrytye-zakazy-i-celevoy-zapas-klienta--sell-out-balans-sell-in",
-          "source": "otkrytye-zakazy-i-celevoy-zapas-klienta",
+          "id": "e-otkrytye-zakazy-setey-i-distribyutorov-po-edi--sell-out-balans-sell-in",
+          "source": "otkrytye-zakazy-setey-i-distribyutorov-po-edi",
           "target": "sell-out-balans-sell-in",
           "kind": "process"
         },
@@ -689,6 +794,12 @@
           "kind": "process"
         },
         {
+          "id": "e-celevoy-zapas-klienta-v-dnyah-pokrytiya--sell-out-balans-sell-in",
+          "source": "celevoy-zapas-klienta-v-dnyah-pokrytiya",
+          "target": "sell-out-balans-sell-in",
+          "kind": "process"
+        },
+        {
           "id": "e-sell-out-balans-sell-in--prognoz-sell-in-po-kanalam-1-900300",
           "source": "sell-out-balans-sell-in",
           "target": "prognoz-sell-in-po-kanalam-1-900300",
@@ -701,14 +812,7 @@
           "kind": "process"
         }
       ],
-      "inputs": [
-        {
-          "system": "ERP",
-          "label": "Sell-Out и остатки клиента из ERP",
-          "stage": 3,
-          "direction": "in"
-        }
-      ],
+      "inputs": [],
       "outputs": []
     },
     {
@@ -762,10 +866,11 @@
           "id": "building-blocks-i-korrektirovki",
           "type": "step",
           "label": "Building Blocks и корректировки",
-          "description": "Обогащение прогноза блоками Building Blocks: объёмные, процентные, замещающие. Распределение вниз и пересчёт вверх, версии и аудит правок.\n\nBPMN: DP-070 — Обогащение прогноза",
+          "description": "Обогащение прогноза блоками Building Blocks: объёмные, процентные, замещающие — в том числе листинг, делистинг и запуск новинок. Распределение вниз и пересчёт вверх, версии и аудит правок.\n\nПромо, уже посчитанное на этапе 2, блоком повторно не вводится: иначе эффект акции попадёт в план дважды.\n\nBPMN: DP-070 — Обогащение прогноза",
           "group": "obogaschenie",
           "inputs": [
             "Объёмные, процентные, замещающие блоки",
+            "Листинг, делистинг, запуск новинок",
             "Распределение вниз, пересчёт вверх",
             "Версии, аудит"
           ],
@@ -787,10 +892,12 @@
           "id": "demand-review-meeting",
           "type": "step",
           "label": "Demand Review Meeting",
-          "description": "Согласование прогноза на Demand Review Meeting: консенсус в объёме и в деньгах, согласование исключений, согласованный план спроса Sell-In.\n\nBPMN: DP-080-010 — Анализ скорректированного прогноза по итогам DRM",
+          "description": "Согласование прогноза на Demand Review Meeting по дашбордам и аналитическим отчётам: консенсус в объёме и, при наличии цен, в деньгах; сравнение версий и сценариев; согласование исключений; согласованный план спроса Sell-In.\n\nКоммерческие финансы на встрече не присылают свой прогноз: они дают цены и оценивают план в деньгах.\n\nBPMN: DP-080-010 — Анализ скорректированного прогноза по итогам DRM",
           "group": "soglasovanie",
           "inputs": [
+            "Дашборды и отчёты для DRM",
             "Консенсус в объёме и в деньгах",
+            "Версии и сценарный анализ",
             "Согласование исключений",
             "Согласованный план спроса Sell-In"
           ],
@@ -798,20 +905,20 @@
             "Согласованный план спроса Sell-In",
             "Перечень согласованных исключений"
           ],
-          "owner": "Руководитель планирования спроса",
+          "owner": "Руководитель планирования спроса совместно с коммерческими финансами",
           "position": {
             "x": 710,
             "y": 168
           },
           "slidePosition": {
             "x": 852,
-            "y": 289
+            "y": 324
           }
         },
         {
-          "id": "kategoriynyy-menedzhment-proverka-building-blocks",
+          "id": "kategoriynyy-menedzhment-proverka-bb",
           "type": "data",
-          "label": "Категорийный менеджмент: проверка Building Blocks",
+          "label": "Категорийный менеджмент: проверка BB",
           "direction": "in",
           "position": {
             "x": 0,
@@ -819,13 +926,13 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 469
+            "y": 444
           }
         },
         {
-          "id": "kommercheskie-finansy-konsensus-prognoz-v-dengah",
+          "id": "kommercheskie-finansy-ceny-ocenka-v-dengah",
           "type": "data",
-          "label": "Коммерческие финансы: консенсус-прогноз в деньгах",
+          "label": "Коммерческие финансы: цены, оценка в деньгах",
           "direction": "in",
           "position": {
             "x": 355,
@@ -833,7 +940,7 @@
           },
           "slidePosition": {
             "x": 10,
-            "y": 542
+            "y": 530
           }
         },
         {
@@ -853,8 +960,8 @@
       ],
       "edges": [
         {
-          "id": "e-kategoriynyy-menedzhment-proverka-building-blocks--building-blocks-i-korrektirovki",
-          "source": "kategoriynyy-menedzhment-proverka-building-blocks",
+          "id": "e-kategoriynyy-menedzhment-proverka-bb--building-blocks-i-korrektirovki",
+          "source": "kategoriynyy-menedzhment-proverka-bb",
           "target": "building-blocks-i-korrektirovki",
           "kind": "process"
         },
@@ -865,8 +972,8 @@
           "kind": "process"
         },
         {
-          "id": "e-kommercheskie-finansy-konsensus-prognoz-v-dengah--demand-review-meeting",
-          "source": "kommercheskie-finansy-konsensus-prognoz-v-dengah",
+          "id": "e-kommercheskie-finansy-ceny-ocenka-v-dengah--demand-review-meeting",
+          "source": "kommercheskie-finansy-ceny-ocenka-v-dengah",
           "target": "demand-review-meeting",
           "kind": "process"
         },
@@ -921,11 +1028,25 @@
           "direction": "in",
           "position": {
             "x": 0,
-            "y": 316
+            "y": 336
           },
           "slidePosition": {
             "x": 831,
             "y": 103
+          }
+        },
+        {
+          "id": "fakt-prodazh-za-zakrytyy-period",
+          "type": "data",
+          "label": "Факт продаж за закрытый период",
+          "direction": "in",
+          "position": {
+            "x": 355,
+            "y": 88
+          },
+          "slidePosition": {
+            "x": 831,
+            "y": 155
           }
         },
         {
@@ -934,28 +1055,30 @@
           "label": "Пороги точности и правила алертов",
           "direction": "in",
           "position": {
-            "x": 0,
-            "y": 93
+            "x": 355,
+            "y": 176
           },
           "slidePosition": {
             "x": 831,
-            "y": 155
+            "y": 208
           }
         },
         {
           "id": "publikaciya-plana-sprosa",
           "type": "step",
           "label": "Публикация плана спроса",
-          "description": "Дезагрегация DFU → SKU и публикация плана спроса с лагом, передача неограниченного плана в SNP и MEIO с фиксацией версии.\n\nBPMN: DP-080-030 — Дезагрегация DFU->SKU и публикация прогноза",
+          "description": "Дезагрегация DFU → SKU и публикация плана спроса с лагом, передача неограниченного плана в SNP и MEIO с фиксацией версии.\n\nКаждая опубликованная версия ложится в архив по лагам: без него точность и FVA на следующем шаге считать не с чем.\n\nBPMN: DP-080-030 — Дезагрегация DFU->SKU и публикация прогноза",
           "group": "publikaciya",
           "inputs": [
             "DFU → SKU, публикация с лагом",
             "Передача плана в SNP и MEIO",
-            "Версия и дата фиксации плана"
+            "Версия и дата фиксации плана",
+            "Архив прогнозов по лагам"
           ],
           "outputs": [
             "Опубликованный план спроса на SKU",
-            "Версия и дата фиксации плана"
+            "Версия и дата фиксации плана",
+            "Архив прогнозов по лагам"
           ],
           "owner": "Планер спроса",
           "algorithms": [
@@ -964,7 +1087,7 @@
           ],
           "position": {
             "x": 296,
-            "y": 196
+            "y": 338
           },
           "slidePosition": {
             "x": 1069,
@@ -990,24 +1113,24 @@
           "owner": "Руководитель планирования спроса",
           "position": {
             "x": 710,
-            "y": 35
+            "y": 27
           },
           "slidePosition": {
             "x": 1069,
-            "y": 253
+            "y": 271
           }
         },
         {
           "id": "kontrol-tochnosti-i-fva",
           "type": "step",
           "label": "Контроль точности и FVA",
-          "description": "Оценка точности по версии прогноза и лагу: FA, MAPE, BIAS, а на разреженных рядах WAPE. FVA-разложение показывает вклад каждого слоя — наивный прогноз, статистика, корректировки Building Blocks, консенсус DRM, — и BIAS считается в том числе по авторам корректировок.\n\nРезультат возвращается на этап 2: сегментация, методы и чемпион пересматриваются по ретроспективе точности. Без этой обратной связи ручной этап 4 остаётся без измерения качества.\n\nBPMN: DP-030 — Расчет метрик точности прогноза",
+          "description": "Оценка точности по версии прогноза и лагу: FA, MAPE, BIAS, а на разреженных рядах WAPE — при нулевом факте MAPE не считается. FVA-разложение показывает вклад каждого слоя — наивный прогноз, статистика, корректировки Building Blocks, консенсус DRM, — и BIAS считается в том числе по авторам корректировок. Дашборды точности показывают и эффективность моделей.\n\nРезультат возвращается на этап 2: сегментация, методы и чемпион пересматриваются по ретроспективе точности. Без этой обратной связи ручной этап 4 остаётся без измерения качества.\n\nBPMN: DP-030 — Расчет метрик точности прогноза",
           "group": "sverka-i-kontrol",
           "inputs": [
             "FA, MAPE, BIAS, WAPE по версии и лагу",
             "FVA: наивный → статистика → Building Blocks → консенсус",
             "BIAS по авторам корректировок",
-            "Алерты точности и разбор причин"
+            "Дашборды точности и эффективности моделей"
           ],
           "outputs": [
             "KPI точности: FA, MAPE, BIAS, WAPE",
@@ -1021,11 +1144,26 @@
           ],
           "position": {
             "x": 710,
-            "y": 145
+            "y": 219
           },
           "slidePosition": {
             "x": 1069,
-            "y": 415
+            "y": 433
+          }
+        },
+        {
+          "id": "poluchenie-ogranichennogo-plana-iz-modulya-snp",
+          "type": "data",
+          "label": "Получение ограниченного плана из модуля SNP",
+          "direction": "in",
+          "system": "SNP",
+          "position": {
+            "x": 355,
+            "y": 0
+          },
+          "slidePosition": {
+            "x": 10,
+            "y": 615
           }
         },
         {
@@ -1051,22 +1189,7 @@
           },
           "slidePosition": {
             "x": 1069,
-            "y": 612
-          }
-        },
-        {
-          "id": "poluchenie-ogranichennogo-prognoza-iz-modulya-snp",
-          "type": "data",
-          "label": "Получение ограниченного прогноза из модуля SNP",
-          "direction": "in",
-          "system": "SNP",
-          "position": {
-            "x": 355,
-            "y": 0
-          },
-          "slidePosition": {
-            "x": 10,
-            "y": 615
+            "y": 648
           }
         },
         {
@@ -1077,11 +1200,11 @@
           "system": "SNP",
           "position": {
             "x": 769,
-            "y": 333
+            "y": 458
           },
           "slidePosition": {
             "x": 1069,
-            "y": 845
+            "y": 880
           }
         },
         {
@@ -1091,7 +1214,7 @@
           "direction": "out",
           "position": {
             "x": 769,
-            "y": 245
+            "y": 370
           },
           "slidePosition": {
             "x": 1297,
@@ -1105,7 +1228,7 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 245
+            "y": 370
           },
           "slidePosition": {
             "x": 1297,
@@ -1119,7 +1242,7 @@
           "direction": "out",
           "position": {
             "x": 1183,
-            "y": 333
+            "y": 458
           },
           "slidePosition": {
             "x": 1297,
@@ -1161,8 +1284,8 @@
           "kind": "process"
         },
         {
-          "id": "e-poluchenie-ogranichennogo-prognoza-iz-modulya-snp--sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
-          "source": "poluchenie-ogranichennogo-prognoza-iz-modulya-snp",
+          "id": "e-poluchenie-ogranichennogo-plana-iz-modulya-snp--sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
+          "source": "poluchenie-ogranichennogo-plana-iz-modulya-snp",
           "target": "sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu",
           "kind": "process"
         },
@@ -1179,9 +1302,15 @@
           "kind": "process"
         },
         {
-          "id": "e-porogi-tochnosti-i-pravila-alertov--publikaciya-plana-sprosa",
+          "id": "e-fakt-prodazh-za-zakrytyy-period--kontrol-tochnosti-i-fva",
+          "source": "fakt-prodazh-za-zakrytyy-period",
+          "target": "kontrol-tochnosti-i-fva",
+          "kind": "process"
+        },
+        {
+          "id": "e-porogi-tochnosti-i-pravila-alertov--kontrol-tochnosti-i-fva",
           "source": "porogi-tochnosti-i-pravila-alertov",
-          "target": "publikaciya-plana-sprosa",
+          "target": "kontrol-tochnosti-i-fva",
           "kind": "process"
         },
         {
@@ -1212,7 +1341,7 @@
       "inputs": [
         {
           "system": "SNP",
-          "label": "Получение ограниченного прогноза из модуля SNP",
+          "label": "Получение ограниченного плана из модуля SNP",
           "stage": 5,
           "direction": "in"
         }
@@ -1235,12 +1364,6 @@
   ],
   "overviewEdges": [
     {
-      "id": "ov-stage-1-podgotovka-istorii--stage-2-raschet-prognoza",
-      "source": "stage-1-podgotovka-istorii",
-      "target": "stage-2-raschet-prognoza",
-      "kind": "process"
-    },
-    {
       "id": "ov-stage-5-publikaciya-i-kontrol-tochnosti--stage-2-raschet-prognoza",
       "source": "stage-5-publikaciya-i-kontrol-tochnosti",
       "target": "stage-2-raschet-prognoza",
@@ -1259,6 +1382,12 @@
       "kind": "process"
     },
     {
+      "id": "ov-stage-1-podgotovka-istorii--stage-2-raschet-prognoza",
+      "source": "stage-1-podgotovka-istorii",
+      "target": "stage-2-raschet-prognoza",
+      "kind": "process"
+    },
+    {
       "id": "ov-stage-2-raschet-prognoza--stage-3-sell-in-po-modeli-kanala",
       "source": "stage-2-raschet-prognoza",
       "target": "stage-3-sell-in-po-modeli-kanala",
@@ -1268,24 +1397,6 @@
       "id": "ov-ERP--stage-1-podgotovka-istorii",
       "source": "ERP",
       "target": "stage-1-podgotovka-istorii",
-      "kind": "integration"
-    },
-    {
-      "id": "ov-SNP--stage-1-podgotovka-istorii",
-      "source": "SNP",
-      "target": "stage-1-podgotovka-istorii",
-      "kind": "integration"
-    },
-    {
-      "id": "ov-PS--stage-1-podgotovka-istorii",
-      "source": "PS",
-      "target": "stage-1-podgotovka-istorii",
-      "kind": "integration"
-    },
-    {
-      "id": "ov-ERP--stage-3-sell-in-po-modeli-kanala",
-      "source": "ERP",
-      "target": "stage-3-sell-in-po-modeli-kanala",
       "kind": "integration"
     },
     {
