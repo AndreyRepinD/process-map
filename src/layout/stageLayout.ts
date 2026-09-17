@@ -26,6 +26,7 @@ import dagre from '@dagrejs/dagre';
 import type { NodeType, ProcessMap, ProcessNode, Stage } from '../data/schema.ts';
 import {
   DATA_NODE_SIZE,
+  GROUP_FRAME_PADDING,
   STAGE_NODE_SIZE as STAGE_SIZE,
   STEP_NODE_SIZE,
   type NodeSize,
@@ -199,6 +200,24 @@ function bySlideOrder(a: ProcessNode, b: ProcessNode): number {
   return a.id < b.id ? -1 : a.id > b.id ? 1 : 0;
 }
 
+/** Излом маршрута: ребро идёт горизонтально до `x`, затем вертикально до `y`. */
+export interface RouteTurn {
+  x: number;
+  y: number;
+}
+
+/** Раскладка этапа вместе с маршрутами рёбер потока (id ребра → изломы). */
+export interface StageLayout {
+  placements: Map<string, Placement>;
+  routes: Map<string, RouteTurn[]>;
+}
+
+interface FlowLayout {
+  placements: Map<string, Placement>;
+  /** Точки dagre по каждому ребру потока (id ребра → точки), в координатах placements. */
+  points: Map<string, { x: number; y: number }[]>;
+}
+
 /**
  * Раскладка потока шагов этапа.
  *
@@ -209,12 +228,173 @@ function bySlideOrder(a: ProcessNode, b: ProcessNode): number {
  *
  * `members` — не обязательно только шаги. Data-узлы, СВЯЗАННЫЕ рёбрами, тоже
  * приходят сюда: см. wiredDataNodes ниже.
+ *
+ * Проходов два: первый даёт ранги, по ним второй выравнивает крайние карточки
+ * данных в сквозные колонки (edgeMinLengths).
  */
-function layoutFlow(stage: Stage, members: readonly ProcessNode[]): Map<string, Placement> {
-  const flow = [...members].sort(bySlideOrder);
+function layoutFlow(stage: Stage, members: readonly ProcessNode[]): FlowLayout {
+  const first = runDagre(stage, members, new Map());
+  const minlen = edgeMinLengths(stage, members, first.placements);
+  if (minlen.size === 0) {
+    return first;
+  }
+  const aligned = runDagre(stage, members, minlen);
+
+  // Выравнивание оправдано, только если выровненная карточка связана со своим
+  // шагом прямой линией с одним поворотом у цели. Если путь на своей высоте
+  // перекрыт (чужая рамка, карточка) и ребру нужен объездной коридор,
+  // карточка возвращается к своему шагу: длинная петля вокруг рамки читается
+  // хуже, чем карточка вне общей колонки (этап 4 карты MEIO, 17.09.2026).
+  const routes = routeEdges(stage, members, aligned.placements, aligned.points);
+  const kept = new Map(minlen);
+  for (const edge of innerEdges(stage, new Set(members.map((node) => node.id)))) {
+    const key = edgeKey(edge.source, edge.target);
+    if (!kept.has(key)) {
+      continue;
+    }
+    const route = routes.get(edge.id);
+    if (route === undefined || route.length > 1) {
+      kept.delete(key);
+    }
+  }
+  return kept.size === minlen.size ? aligned : runDagre(stage, members, kept);
+}
+
+interface Column {
+  center: number;
+  left: number;
+  right: number;
+}
+
+/**
+ * Колонки (ранги) раскладки: узлы одного ранга dagre ставит с общим центром по
+ * X, поэтому колонка — это общий центр и крайние границы её узлов.
+ */
+function columnsOf(
+  members: readonly ProcessNode[],
+  placements: ReadonlyMap<string, Placement>,
+): { columns: Column[]; indexOf: Map<string, number> } {
+  const centerOf = (node: ProcessNode): number =>
+    Math.round((placements.get(node.id)?.x ?? 0) + NODE_SIZE[node.type].width / 2);
+  const byCenter = new Map<number, Column>();
+  for (const node of members) {
+    const center = centerOf(node);
+    const left = placements.get(node.id)?.x ?? 0;
+    const right = left + NODE_SIZE[node.type].width;
+    const column = byCenter.get(center);
+    byCenter.set(
+      center,
+      column === undefined
+        ? { center, left, right }
+        : { center, left: Math.min(column.left, left), right: Math.max(column.right, right) },
+    );
+  }
+  const columns = [...byCenter.values()].sort((a, b) => a.center - b.center);
+  const order = columns.map((column) => column.center);
+  return {
+    columns,
+    indexOf: new Map(members.map((node) => [node.id, order.indexOf(centerOf(node))])),
+  };
+}
+
+/**
+ * Длины рёбер, которые выстраивают карточки данных в сквозные колонки
+ * (решение владельца 17.09.2026: «чтобы аккуратно всё смотрелось»).
+ *
+ * Без них dagre ставит карточку-вход ровно рангом раньше её шага. У этапа, где
+ * шаги стоят на разных рангах, входы расползаются лесенкой по трём-четырём
+ * столбцам, а выходы — по стольким же: глаз не находит, где у этапа «вход» и
+ * где «результат». С длиной ребра = рангу потребителя каждый вход оказывается
+ * в нулевом ранге, с длиной = (последний ранг − ранг производителя) каждый
+ * выход — в последнем. Ранги берутся из первого прохода.
+ *
+ * Трогаются только крайние карточки: вход без входящих рёбер и выход без
+ * исходящих. Промежуточная карточка (из шага в шаг) остаётся между ними.
+ * Длинное ребро dagre ведёт в обход узлов, и маршрут этого обхода рисуется
+ * (routeEdges ниже) — иначе выравнивание дало бы линии поверх карточек.
+ */
+function edgeMinLengths(
+  stage: Stage,
+  members: readonly ProcessNode[],
+  placements: ReadonlyMap<string, Placement>,
+): Map<string, number> {
+  const ids = new Set(members.map((node) => node.id));
+  const byId = new Map(members.map((node) => [node.id, node]));
+  const { indexOf: rank } = columnsOf(members, placements);
+  const lastRank = Math.max(0, ...rank.values());
+  const inner = innerEdges(stage, ids);
+  const hasIncoming = new Set(inner.map((edge) => edge.target));
+  const hasOutgoing = new Set(inner.map((edge) => edge.source));
+  const result = new Map<string, number>();
+  for (const edge of inner) {
+    const source = byId.get(edge.source);
+    const target = byId.get(edge.target);
+    if (source === undefined || target === undefined) {
+      continue;
+    }
+    if (source.type === 'data' && !hasIncoming.has(source.id) && target.type !== 'data') {
+      result.set(edgeKey(edge.source, edge.target), Math.max(1, rank.get(target.id) ?? 1));
+    } else if (target.type === 'data' && !hasOutgoing.has(target.id) && source.type !== 'data') {
+      result.set(
+        edgeKey(edge.source, edge.target),
+        Math.max(1, lastRank - (rank.get(source.id) ?? lastRank - 1)),
+      );
+    }
+  }
+  return result;
+}
+
+function innerEdges(stage: Stage, ids: ReadonlySet<string>): Stage['edges'] {
+  return [...stage.edges]
+    .filter((edge) => ids.has(edge.source) && ids.has(edge.target) && edge.source !== edge.target)
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+}
+
+/** Ключ пары узлов. `|` в id не встречается: id — слаги из латиницы, цифр и дефиса. */
+function edgeKey(source: string, target: string): string {
+  return `${source}|${target}`;
+}
+
+/**
+ * Исходный порядок узлов для dagre: шаги — по геометрии источника, крайние
+ * карточки данных — по геометрии СВОЕГО шага.
+ *
+ * ЗАЧЕМ. dagre начинает упорядочивание рангов с исходного порядка и улучшает
+ * его локально. На слайде все плашки-входы стоят общей колонкой в порядке
+ * этапов, а не шагов, и вход нижнего шага оказывался в колонке выше входов
+ * верхнего — после выравнивания в общий ранг его линия пересекала их все.
+ * Вход без входящих рёбер сортируется по первому потребителю, выход без
+ * исходящих — по первому производителю, а уже внутри своего шага — по себе.
+ */
+function seedOrder(stage: Stage, members: readonly ProcessNode[]): ProcessNode[] {
+  const byId = new Map(members.map((node) => [node.id, node]));
+  const inner = innerEdges(stage, new Set(byId.keys()));
+  const hasIncoming = new Set(inner.map((edge) => edge.target));
+  const hasOutgoing = new Set(inner.map((edge) => edge.source));
+  const anchorOf = (node: ProcessNode): ProcessNode => {
+    if (node.type !== 'data') {
+      return node;
+    }
+    const partner = !hasIncoming.has(node.id)
+      ? inner.find((edge) => edge.source === node.id)?.target
+      : !hasOutgoing.has(node.id)
+        ? inner.find((edge) => edge.target === node.id)?.source
+        : undefined;
+    return (partner === undefined ? undefined : byId.get(partner)) ?? node;
+  };
+  return [...members].sort((a, b) => bySlideOrder(anchorOf(a), anchorOf(b)) || bySlideOrder(a, b));
+}
+
+function runDagre(
+  stage: Stage,
+  members: readonly ProcessNode[],
+  minlen: ReadonlyMap<string, number>,
+): FlowLayout {
+  const flow = seedOrder(stage, members);
   const placements = new Map<string, Placement>();
+  const points = new Map<string, { x: number; y: number }[]>();
   if (flow.length === 0) {
-    return placements;
+    return { placements, points };
   }
 
   const graph = new graphlib.Graph({ compound: true, multigraph: false, directed: true });
@@ -246,11 +426,11 @@ function layoutFlow(stage: Stage, members: readonly ProcessNode[]): Map<string, 
     }
   }
 
-  const edges = [...stage.edges].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  for (const edge of edges) {
-    if (flowIds.has(edge.source) && flowIds.has(edge.target) && edge.source !== edge.target) {
-      graph.setEdge(edge.source, edge.target, {});
-    }
+  const edgeEnds = new Map<string, { source: string; target: string }>();
+  for (const edge of innerEdges(stage, flowIds)) {
+    const length = minlen.get(edgeKey(edge.source, edge.target));
+    graph.setEdge(edge.source, edge.target, length === undefined ? {} : { minlen: length });
+    edgeEnds.set(edge.id, { source: edge.source, target: edge.target });
   }
 
   dagreLayout(graph);
@@ -271,7 +451,223 @@ function layoutFlow(stage: Stage, members: readonly ProcessNode[]): Map<string, 
   for (const [id, placement] of placements) {
     placements.set(id, { x: placement.x - minX, y: placement.y - minY });
   }
-  return placements;
+  for (const [id, ends] of edgeEnds) {
+    const laid = graph.edge(ends.source, ends.target) as
+      { points?: { x: number; y: number }[] } | undefined;
+    points.set(
+      id,
+      (laid?.points ?? []).map((point) => ({ x: point.x - minX, y: point.y - minY })),
+    );
+  }
+  return { placements, points };
+}
+
+/** Зазор, который маршрут держит от карточек по вертикали, px раскладки. */
+const ROUTE_CLEARANCE = 4;
+/** Шаг между параллельными вертикалями в одном промежутке, px раскладки. */
+const LANE_STEP = 8;
+/** Отступ крайней вертикали от карточек промежутка, px раскладки. */
+const LANE_MARGIN = 4;
+/**
+ * Разница высот, которую маршрут не превращает в ступеньку, px раскладки.
+ * Карточка данных (56) и шаг (52) разной высоты, и dagre ставит их центры на
+ * несколько пикселей врозь: излом в 4–8 px читается как дрожание линии, а не
+ * как поворот. Меньше половины высоты карточки — стрелка всё равно упирается
+ * в её край.
+ */
+export const ROUTE_SNAP = 12;
+
+interface PendingTurn {
+  y: number;
+  gap: number;
+  /** Рёбра с одним ключом идут одной вертикалью (веер из шага или в шаг). */
+  lane: string;
+  /** Высота, по которой полосы упорядочиваются слева направо. */
+  order: number;
+}
+
+/**
+ * Маршруты прямых рёбер потока (id ребра → изломы).
+ *
+ * ЗАЧЕМ. React Flow рисует ребро smoothstep с одним изломом посередине пути. Для
+ * соседних рангов середина лежит в промежутке между колонками, а для длинного
+ * ребра — внутри чужой колонки: вертикаль режет карточки и рамки групп. dagre
+ * для длинного ребра уже оставил свободный коридор — фиктивный узел в каждом
+ * промежуточном ранге. Маршрут идёт по этим коридорам: горизонтально сквозь
+ * колонку на высоте коридора, вертикально — только в промежутках между
+ * колонками, где карточек нет по построению.
+ *
+ * ПОЛОСЫ. В одном промежутке поворачивают рёбра от разных шагов к разным
+ * карточкам; на общей вертикали не видно, какая линия куда идёт. Поэтому у
+ * каждого излома есть полоса: рёбра, сходящиеся в одну цель, — полоса цели;
+ * остальные — полоса источника (веер из шага остаётся одним стволом);
+ * промежуточные изломы — своя. Полосы разводятся на LANE_STEP в пределах
+ * промежутка.
+ *
+ * СНАЧАЛА ПРЯМО. Коридор нужен, только когда путь на своей высоте занят:
+ * карточкой этой колонки или рамкой чужой группы. Иначе ребро идёт прямо —
+ * так веер из одного шага в несколько выходов получает общий ствол, а не
+ * расходится по отдельным коридорам.
+ *
+ * Маршрут проверяется: если на высоте коридора в колонке всё же стоит карточка,
+ * у ребра маршрута нет, и оно рисуется как раньше.
+ */
+function routeEdges(
+  stage: Stage,
+  members: readonly ProcessNode[],
+  placements: ReadonlyMap<string, Placement>,
+  points: ReadonlyMap<string, { x: number; y: number }[]>,
+): Map<string, RouteTurn[]> {
+  const { columns, indexOf } = columnsOf(members, placements);
+  const byId = new Map(members.map((node) => [node.id, node]));
+  const handleY = (node: ProcessNode): number =>
+    (placements.get(node.id)?.y ?? 0) + NODE_SIZE[node.type].height / 2;
+  const blocked = (column: number, y: number, except: ReadonlySet<string>): boolean =>
+    members.some((node) => {
+      if (except.has(node.id) || indexOf.get(node.id) !== column) {
+        return false;
+      }
+      const top = (placements.get(node.id)?.y ?? 0) - ROUTE_CLEARANCE;
+      const bottom = top + NODE_SIZE[node.type].height + ROUTE_CLEARANCE * 2;
+      return y >= top && y <= bottom;
+    });
+
+  // Рамки групп — как их рисует экран этапа (stageGraph.ts): габарит карточек
+  // группы плюс GROUP_FRAME_PADDING.
+  const frames = new Map<string, Rect>();
+  for (const node of members) {
+    if (node.group === undefined || node.type === 'data') {
+      continue;
+    }
+    const placement = placements.get(node.id) ?? { x: 0, y: 0 };
+    const size = NODE_SIZE[node.type];
+    const frame = frames.get(node.group);
+    const x0 = Math.min(frame?.x ?? Number.POSITIVE_INFINITY, placement.x);
+    const y0 = Math.min(frame?.y ?? Number.POSITIVE_INFINITY, placement.y);
+    const x1 = Math.max(frame === undefined ? 0 : frame.x + frame.width, placement.x + size.width);
+    const y1 = Math.max(
+      frame === undefined ? 0 : frame.y + frame.height,
+      placement.y + size.height,
+    );
+    frames.set(node.group, { x: x0, y: y0, width: x1 - x0, height: y1 - y0 });
+  }
+  const foreignFrame = (column: number, y: number, own: ReadonlySet<string>): boolean => {
+    const band = columns[column];
+    return (
+      band !== undefined &&
+      [...frames].some(([group, box]) => {
+        if (own.has(group)) {
+          return false;
+        }
+        const left = box.x - GROUP_FRAME_PADDING.x;
+        const right = box.x + box.width + GROUP_FRAME_PADDING.x;
+        const top = box.y - GROUP_FRAME_PADDING.top;
+        const bottom = box.y + box.height + GROUP_FRAME_PADDING.bottom;
+        return y >= top && y <= bottom && left <= band.right && right >= band.left;
+      })
+    );
+  };
+
+  const incoming = new Map<string, number>();
+  for (const edge of innerEdges(stage, new Set(byId.keys()))) {
+    incoming.set(edge.target, (incoming.get(edge.target) ?? 0) + 1);
+  }
+
+  const pending = new Map<string, PendingTurn[]>();
+  for (const edge of innerEdges(stage, new Set(byId.keys()))) {
+    const source = byId.get(edge.source);
+    const target = byId.get(edge.target);
+    const from = indexOf.get(edge.source);
+    const to = indexOf.get(edge.target);
+    if (source === undefined || target === undefined || from === undefined || to === undefined) {
+      continue;
+    }
+    if (to - from < 1) {
+      continue;
+    }
+    const except = new Set([source.id, target.id]);
+    const own = new Set(
+      [source.group, target.group].filter((group): group is string => group !== undefined),
+    );
+    const turns: PendingTurn[] = [];
+    let y = handleY(source);
+    let valid = true;
+    for (let column = from + 1; column < to; column += 1) {
+      if (!blocked(column, y, except) && !foreignFrame(column, y, own)) {
+        continue;
+      }
+      const band = columns[column];
+      const corridor = (points.get(edge.id) ?? []).find(
+        (point) => band !== undefined && point.x >= band.left && point.x <= band.right,
+      );
+      if (corridor === undefined || blocked(column, corridor.y, except)) {
+        valid = false;
+        break;
+      }
+      const straight = Math.abs(corridor.y - y) <= ROUTE_SNAP && !blocked(column, y, except);
+      if (!straight && Math.round(corridor.y) !== Math.round(y)) {
+        const fanOut = column === from + 1 && target.type === 'data';
+        turns.push({
+          y: Math.round(corridor.y),
+          gap: column,
+          lane: fanOut ? `out:${source.id}` : `edge:${edge.id}`,
+          order: y,
+        });
+        y = corridor.y;
+      }
+    }
+    if (!valid) {
+      continue;
+    }
+    const fanIn = (incoming.get(target.id) ?? 0) > 1;
+    const targetY = handleY(target);
+    turns.push({
+      // Почти на уровне цели — без ступеньки: ребро входит в карточку чуть
+      // выше или ниже её середины (ROUTE_SNAP).
+      y: Math.round(Math.abs(targetY - y) <= ROUTE_SNAP ? y : targetY),
+      gap: to,
+      // Сходящиеся в одну цель рёбра — одной вертикалью у цели; иначе ребро
+      // идёт полосой своего источника, и веер из шага остаётся одним стволом.
+      lane: fanIn ? `in:${target.id}` : `out:${source.id}`,
+      order: fanIn ? handleY(target) : handleY(source),
+    });
+    pending.set(edge.id, turns);
+  }
+
+  // Полосы: в каждом промежутке ключи упорядочиваются по высоте и
+  // раскладываются симметрично относительно середины промежутка.
+  const lanesByGap = new Map<number, Map<string, number>>();
+  for (const turns of pending.values()) {
+    for (const turn of turns) {
+      const lanes = lanesByGap.get(turn.gap) ?? new Map<string, number>();
+      lanes.set(turn.lane, Math.min(lanes.get(turn.lane) ?? Number.POSITIVE_INFINITY, turn.order));
+      lanesByGap.set(turn.gap, lanes);
+    }
+  }
+  const laneX = new Map<string, number>();
+  for (const [gap, lanes] of lanesByGap) {
+    const previous = columns[gap - 1];
+    const current = columns[gap];
+    if (previous === undefined || current === undefined) {
+      continue;
+    }
+    const center = (previous.right + current.left) / 2;
+    const room = Math.max(0, current.left - previous.right - LANE_MARGIN * 2);
+    const ordered = [...lanes.entries()].sort((a, b) => a[1] - b[1] || (a[0] < b[0] ? -1 : 1));
+    const step = ordered.length > 1 ? Math.min(LANE_STEP, room / (ordered.length - 1)) : 0;
+    ordered.forEach(([lane], index) => {
+      laneX.set(`${gap}|${lane}`, Math.round(center + (index - (ordered.length - 1) / 2) * step));
+    });
+  }
+
+  const routes = new Map<string, RouteTurn[]>();
+  for (const [id, turns] of pending) {
+    routes.set(
+      id,
+      turns.map((turn) => ({ x: laneX.get(`${turn.gap}|${turn.lane}`) ?? 0, y: turn.y })),
+    );
+  }
+  return routes;
 }
 
 /**
@@ -291,6 +687,8 @@ function layoutFlow(stage: Stage, members: readonly ProcessNode[]): Map<string, 
  * Поэтому связанные карточки идут в dagre наравне с шагами — он ставит вход
  * рангом раньше потребителя, выход рангом позже производителя и сам минимизирует
  * пересечения. Несвязанные остаются в колонках, и карта SNP не меняется вовсе.
+ * С 17.09.2026 крайние связанные карточки выравниваются в первый и последний
+ * ранг (edgeMinLengths), а длинные рёбра к ним идут по маршрутам dagre.
  */
 function wiredDataNodes(stage: Stage): Set<string> {
   const linked = new Set<string>();
@@ -320,11 +718,16 @@ function stackColumn(nodes: readonly ProcessNode[]): number {
  * карточек нет ни одной, поэтому её раскладка не меняется.
  */
 export function layoutStage(stage: Stage): Map<string, Placement> {
+  return layoutStageDetailed(stage).placements;
+}
+
+/** То же, что layoutStage, плюс маршруты прямых рёбер потока (routeEdges). */
+export function layoutStageDetailed(stage: Stage): StageLayout {
   // Поток — шаги ПЛЮС связанные карточки данных (см. wiredDataNodes). Несвязанные
   // остаются колонкам: там карточка ничем, кроме колонки, к этапу не привязана.
   const wired = wiredDataNodes(stage);
   const flow = stage.nodes.filter((node) => node.type !== 'data' || wired.has(node.id));
-  const flowPlacements = layoutFlow(stage, flow);
+  const { placements: flowPlacements, points } = layoutFlow(stage, flow);
   const flowRects: Rect[] = flow.map((node) => {
     const placement = flowPlacements.get(node.id) ?? { x: 0, y: 0 };
     const size = NODE_SIZE[node.type];
@@ -372,7 +775,13 @@ export function layoutStage(stage: Stage): Map<string, Placement> {
   placeColumn(sortedInputs, inputsX, inputsHeight);
   placeColumn(sortedOutputs, outputsX, outputsHeight);
 
-  return result;
+  const shifted = new Map(
+    [...points].map(([id, list]) => [
+      id,
+      list.map((point) => ({ x: point.x + flowX, y: point.y + flowTop })),
+    ]),
+  );
+  return { placements: result, routes: routeEdges(stage, flow, result, shifted) };
 }
 
 // --------------------------------------------------------------------------------------

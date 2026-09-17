@@ -225,6 +225,79 @@ function spreadX(count: number, laneWidth: number): number[] {
   return Array.from({ length: count }, (_, index) => Math.round(LANE_PADDING_X + index * step));
 }
 
+/**
+ * Карточки свимлейна под своими этапами, когда систем меньше, чем колонок.
+ *
+ * ЗАЧЕМ (решение владельца 17.09.2026, «чтобы аккуратно всё смотрелось»).
+ * Равномерная раскладка spreadX совпадает с макетом, когда систем столько же,
+ * сколько этапов в ряду (карты SNP и MRP: по четыре). Когда систем меньше,
+ * она разносит их к краям полосы независимо от этапа: у DP обе системы-выхода
+ * этапа 5 вставали одна под первым этапом, другая под пятым, и пунктир к
+ * первой шёл через всё полотно. Здесь карточка встаёт в колонку своего
+ * первого этапа, а если колонка занята — в ближайшую свободную; внутри одного
+ * этапа порядок карточек сохраняется.
+ *
+ * @param columnsOfItems колонка первого этапа каждой карточки, по порядку карточек
+ * @returns x карточек относительно полосы
+ */
+function anchoredX(columnsOfItems: readonly number[], columns: number): number[] {
+  const taken = new Set<number>();
+  const assigned: number[] = new Array<number>(columnsOfItems.length).fill(0);
+  const order = columnsOfItems
+    .map((column, index) => ({ column, index }))
+    .sort((a, b) => a.column - b.column || a.index - b.index);
+  for (const item of order) {
+    let best = item.column;
+    for (let distance = 0; distance < columns; distance += 1) {
+      const left = item.column - distance;
+      const right = item.column + distance;
+      if (right < columns && !taken.has(right)) {
+        best = right;
+        break;
+      }
+      if (left >= 0 && !taken.has(left)) {
+        best = left;
+        break;
+      }
+    }
+    taken.add(best);
+    assigned[item.index] = best;
+  }
+  // Карточки одного этапа могли разойтись в обратном порядке (занятая колонка
+  // справа отдала соседнюю слева) — колонки группы раздаются заново по порядку.
+  const byColumn = new Map<number, number[]>();
+  columnsOfItems.forEach((column, index) => {
+    byColumn.set(column, [...(byColumn.get(column) ?? []), index]);
+  });
+  for (const indexes of byColumn.values()) {
+    const slots = indexes.map((index) => assigned[index] ?? 0).sort((a, b) => a - b);
+    indexes.forEach((index, position) => {
+      assigned[index] = slots[position] ?? 0;
+    });
+  }
+  return assigned.map((column) =>
+    Math.round(STAGE_X0 + column * STAGE_STEP + (STAGE_WIDTH - IO_WIDTH) / 2 - LANE_X),
+  );
+}
+
+/** Колонка первого этапа, где встречается система, — для anchoredX. */
+function firstColumns(
+  map: ProcessMap,
+  items: readonly { system: SystemCode }[],
+  direction: 'in' | 'out',
+  grid: StageGrid,
+): number[] {
+  return items.map((item) => {
+    const index = map.stages.findIndex((stage) =>
+      (direction === 'in' ? stage.inputs : stage.outputs).some((io) => io.system === item.system),
+    );
+    return index < 0 ? 0 : index % grid.columns;
+  });
+}
+
+/** Отступ обратного ребра под карточками систем компактного режима, px. */
+const BACK_EDGE_CLEARANCE = 14;
+
 // ───────────────────────────── сборка графа ─────────────────────────────
 
 export interface OverviewGraph {
@@ -245,6 +318,16 @@ export interface OverviewGraph {
 // Карты snp и mrp четырёхэтапные, их вид меняться не должен — это сторожат
 // tests/overview.test.tsx и e2e/compact.spec.ts.
 const MAX_STAGE_COLUMNS = 4;
+
+// ПЯТЬ ЭТАПОВ — ОДНИМ РЯДОМ (решение владельца 17.09.2026, «чтобы аккуратно
+// всё смотрелось»). Карты DP и MEIO пятиэтапные. В сетке 4+1 пятый этап
+// вставал под первым: переход 4 → 5 шёл через всё полотно справа налево,
+// обратная связь 5 → 2 — снизу вверх между первыми карточками, а пунктир от
+// системы-входа к пятому этапу пересекал карточки первого ряда. Пять карточек
+// в ряд — 1520 px, fitView на 1280 даёт ≈0.78: мельче, чем 4 в ряд (≈0.85),
+// но крупнее прежних двух рядов (0.75), и поток читается слева направо. С шести
+// этапов остаётся сетка по MAX_STAGE_COLUMNS.
+const SINGLE_ROW_MAX_STAGES = 5;
 
 /**
  * Вертикальный шаг между строками карточек.
@@ -275,7 +358,10 @@ function stageGridOf(stageCount: number, compact: boolean): StageGrid {
   const y0 = compact ? STAGE_Y_COMPACT : STAGE_Y;
   const step = compact ? STAGE_STEP_COMPACT : STAGE_STEP;
   const rowStep = compact ? STAGE_ROW_STEP_COMPACT : STAGE_ROW_STEP;
-  const columns = Math.max(1, Math.min(stageCount, MAX_STAGE_COLUMNS));
+  const columns = Math.max(
+    1,
+    stageCount <= SINGLE_ROW_MAX_STAGES ? stageCount : Math.min(stageCount, MAX_STAGE_COLUMNS),
+  );
   const rows = stageCount === 0 ? 0 : Math.ceil(stageCount / columns);
   const rowOf = (index: number): number => Math.floor(index / columns);
   return {
@@ -444,7 +530,10 @@ export function buildOverviewGraph(
         focusable: false,
       });
 
-      const xs = spreadX(lane.items.length, laneWidth);
+      const xs =
+        lane.items.length < grid.columns
+          ? anchoredX(firstColumns(map, lane.items, lane.direction, grid), grid.columns)
+          : spreadX(lane.items.length, laneWidth);
       lane.items.forEach((item, index) => {
         nodes.push({
           id: systemNodeId(lane.direction, item.system),
@@ -548,14 +637,46 @@ export function buildOverviewGraph(
       const sameRow =
         grid.rowOf(stageIndex.get(edge.source) ?? 0) ===
         grid.rowOf(stageIndex.get(edge.target) ?? 0);
+      // В компактном режиме под карточкой этапа стоит карточка систем, и
+      // обратное ребро с изломом в 20 px под этапом ложилось на её верхний край.
+      // Маршрут уводит его ниже карточек систем и поднимает к цели в промежутке
+      // перед ней. Только для расчётных мест: переставленный владельцем этап
+      // рисуется прежним smoothstep.
+      const sourceIndex = stageIndex.get(edge.source) ?? 0;
+      const targetIndex = stageIndex.get(edge.target) ?? 0;
+      const route =
+        compact &&
+        backward &&
+        sameRow &&
+        compactSystemStages.size > 0 &&
+        positions[edge.source] === undefined &&
+        positions[edge.target] === undefined
+          ? (() => {
+              const from = grid.positionOf(sourceIndex);
+              const to = grid.positionOf(targetIndex);
+              const below =
+                IO_COMPACT_Y +
+                grid.rowOf(sourceIndex) * grid.rowStep +
+                IO_NODE_SIZE.height +
+                BACK_EDGE_CLEARANCE;
+              // Старт — правый хэндл: под этапом стоит его карточка систем во
+              // всю ширину, и вертикаль из середины низа прошла бы сквозь неё.
+              return [
+                { x: from.x + stageSize.width + STAGE_GAP_COMPACT / 2, y: below },
+                { x: to.x - STAGE_GAP_COMPACT / 2, y: to.y + stageSize.height / 2 },
+              ];
+            })()
+          : undefined;
       edges.push({
         id: edge.id,
         type: 'process',
         source: edge.source,
         target: edge.target,
-        sourceHandle: backward || !sameRow ? STAGE_HANDLE.bottom : STAGE_HANDLE.right,
+        sourceHandle:
+          route === undefined && (backward || !sameRow) ? STAGE_HANDLE.bottom : STAGE_HANDLE.right,
         targetHandle: STAGE_HANDLE.left,
         ...(edge.label === undefined ? {} : { label: edge.label }),
+        ...(route === undefined ? {} : { data: { route } }),
       });
       continue;
     }

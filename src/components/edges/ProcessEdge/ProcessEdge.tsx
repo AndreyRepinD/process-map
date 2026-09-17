@@ -11,7 +11,7 @@
 // и общий тип слил бы два вида рёбер в один счётчик в тестах.
 import { BaseEdge, getSmoothStepPath, type Edge, type EdgeProps } from '@xyflow/react';
 import { EdgeLabel } from '../EdgeLabel';
-import { EDGE_BORDER_RADIUS } from '../edgeGeometry';
+import { EDGE_BORDER_RADIUS, routedPath, type EdgeTurn } from '../edgeGeometry';
 import { useEdgeMarkers } from '../edgeMarkerContext';
 import styles from '../edges.module.css';
 
@@ -27,6 +27,20 @@ export type ProcessInnerEdgeType = Edge<Record<string, unknown>, 'processInner'>
  * раньше они выбрасывались, и поле `label` из схемы не рисовалось ничем
  * (process-map-70e.6).
  */
+function isTurnList(value: unknown): value is EdgeTurn[] {
+  return (
+    Array.isArray(value) &&
+    value.length > 0 &&
+    value.every(
+      (item: unknown) =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as { x?: unknown }).x === 'number' &&
+        typeof (item as { y?: unknown }).y === 'number',
+    )
+  );
+}
+
 function smoothStepPathOf({
   sourceX,
   sourceY,
@@ -34,10 +48,17 @@ function smoothStepPathOf({
   targetX,
   targetY,
   targetPosition,
+  data,
 }: Pick<
   EdgeProps<ProcessEdgeType>,
-  'sourceX' | 'sourceY' | 'sourcePosition' | 'targetX' | 'targetY' | 'targetPosition'
+  'sourceX' | 'sourceY' | 'sourcePosition' | 'targetX' | 'targetY' | 'targetPosition' | 'data'
 >): { path: string; labelX: number; labelY: number } {
+  // Ребро этапа идёт по маршруту раскладки (stageGraph.ts::stageRoutes): у
+  // длинного ребра излом посередине пути пришёлся бы на чужую колонку.
+  const route: unknown = data?.route;
+  if (isTurnList(route)) {
+    return routedPath(sourceX, sourceY, targetX, targetY, route);
+  }
   const [path, labelX, labelY] = getSmoothStepPath({
     sourceX,
     sourceY,

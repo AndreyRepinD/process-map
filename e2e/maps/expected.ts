@@ -59,8 +59,9 @@ export const MAP_EXPECTATIONS: Record<string, MapExpectations> = {
   dp: {
     moduleLabel: 'Модуль DP',
     pageTitle: 'Процесс планирования спроса',
-    // Пять этапов — первая карта репозитория не с четырьмя. Обзор раскладывает
-    // их сеткой 4+1 (MAX_STAGE_COLUMNS в overviewGraph.ts), а не одним рядом.
+    // Пять этапов — первая карта репозитория не с четырьмя. С 17.09.2026 обзор
+    // ставит их одним рядом (SINGLE_ROW_MAX_STAGES в overviewGraph.ts); сетка
+    // по четыре — с шести этапов.
     stageCount: 5,
     stageBadge: '5 этапов',
     algorithmNode: {
