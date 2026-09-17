@@ -56,7 +56,26 @@ describe('обзор: при четырёх и менее этапах ряд о
   });
 });
 
-describe('обзор: пять и более этапов переносятся на строки', () => {
+describe('обзор: пять этапов — одним рядом (решение владельца 17.09.2026)', () => {
+  it('пять этапов стоят в одну строку по той же формуле шага', () => {
+    const positions = stagePositions(mapWithStages(5));
+    expect(positions.map((p) => p.x)).toEqual(
+      Array.from({ length: 5 }, (_, i) => STAGE_X0 + i * STAGE_STEP),
+    );
+    expect(new Set(positions.map((p) => p.y)).size).toBe(1);
+  });
+
+  it('с шести этапов — снова сетка по четыре', () => {
+    const positions = stagePositions(mapWithStages(6));
+    const rows = new Map<number, number>();
+    for (const { y } of positions) {
+      rows.set(y, (rows.get(y) ?? 0) + 1);
+    }
+    expect([...rows.values()]).toEqual([4, 2]);
+  });
+});
+
+describe('обзор: шесть и более этапов переносятся на строки', () => {
   it('десять этапов ложатся 4 + 4 + 2', () => {
     const positions = stagePositions(mapWithStages(10));
     const rows = new Map<number, number>();

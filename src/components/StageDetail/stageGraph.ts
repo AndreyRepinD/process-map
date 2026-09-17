@@ -9,8 +9,14 @@
 //   · выбирает хэндлы рёбер.
 import type { Edge as FlowEdge, FitViewOptions } from '@xyflow/react';
 import type { ProcessNode, Stage } from '../../data/schema';
+import { layoutStageDetailed, type RouteTurn } from '../../layout/stageLayout.ts';
 import { ru } from '../../i18n/ru';
-import { DATA_NODE_SIZE, STEP_NODE_SIZE, type NodeSize } from '../../theme/sizes';
+import {
+  DATA_NODE_SIZE,
+  GROUP_FRAME_PADDING,
+  STEP_NODE_SIZE,
+  type NodeSize,
+} from '../../theme/sizes';
 import { splitStageDataNodes } from '../../utils/stageNodes';
 import type { DataNodeType } from '../nodes/DataNode';
 import type { GroupNodeType } from '../nodes/GroupNode';
@@ -49,17 +55,11 @@ export type StageDetailNode =
 const INTERACTIVE_NODE_STYLE = { pointerEvents: 'all' } as const;
 
 /**
- * Паддинги dashed-контейнера группы.
- *
- * По макету A2 они 16 / 48 / 28 (лево-право / верх / низ). Верх+низ = 76, но
- * scripts/layout.ts оставляет между соседними по вертикали группами ровно
- * 64 px (dagre nodesep 32 + половины карточек), и на этапах 2 и 3 рамки при
- * макетных паддингах накладываются друг на друга на 12 px. Поэтому по
- * вертикали 40 + 20 = 60 ≤ 64: заголовок (11px/14px) помещается, рамки не
- * пересекаются. Сторож — tests/stageGraph.test.ts, проверка непересечения
- * контейнеров на реальных данных всех этапов.
+ * Паддинги dashed-контейнера группы — GROUP_FRAME_PADDING из src/theme/sizes.ts.
+ * Живут там, потому что их же учитывает раскладка этапа (маршруты рёбер не
+ * проходят сквозь чужую рамку, src/layout/stageLayout.ts::routeEdges).
  */
-export const GROUP_PADDING = { x: 16, top: 40, bottom: 20 } as const;
+export const GROUP_PADDING = GROUP_FRAME_PADDING;
 
 /** Высота заголовка колонки над её первой карточкой (макет A2: 108 − 84). */
 export const COLUMN_TITLE_HEIGHT = 24;
@@ -231,6 +231,42 @@ export function initialViewport(
     y: axisOffset(container.height, bounds.y, bounds.height, anchor.y, zoom),
     zoom,
   };
+}
+
+/**
+ * Маршруты рёбер потока этапа (id ребра → изломы) — или null, если рисовать
+ * по ним нельзя.
+ *
+ * Маршрут посчитан для раскладки конвейера (layoutStageDetailed в
+ * src/layout/stageLayout.ts) и верен, только пока каждая карточка стоит там,
+ * куда её поставила раскладка, и имеет размер по умолчанию. Владелец мог
+ * сдвинуть карточку, поменять размер, добавить или удалить узел — тогда
+ * коридоры dagre к полотну уже не относятся, и рёбра рисуются smoothstep, как
+ * раньше. Раскладка детерминирована, поэтому для неизменённого этапа она
+ * совпадает с координатами файла точно.
+ */
+const routesCache = new WeakMap<Stage, ReadonlyMap<string, RouteTurn[]> | null>();
+
+export function stageRoutes(stage: Stage): ReadonlyMap<string, RouteTurn[]> | null {
+  const cached = routesCache.get(stage);
+  if (cached !== undefined) {
+    return cached;
+  }
+  let routes: ReadonlyMap<string, RouteTurn[]> | null = null;
+  if (stage.nodes.every((node) => node.size === undefined)) {
+    const laid = layoutStageDetailed(stage);
+    const inPlace = stage.nodes.every((node) => {
+      const placement = laid.placements.get(node.id);
+      return (
+        placement !== undefined &&
+        placement.x === node.position.x &&
+        placement.y === node.position.y
+      );
+    });
+    routes = inPlace ? laid.routes : null;
+  }
+  routesCache.set(stage, routes);
+  return routes;
 }
 
 /** id контейнера группы — с префиксом, чтобы не столкнуться с id узлов. */
@@ -576,6 +612,7 @@ export function buildStageGraph(stage: Stage, showIntegrations = true): StageGra
 
   // ── рёбра ──
   const nodeById = new Map(stage.nodes.map((node) => [node.id, node]));
+  const routes = stageRoutes(stage);
   const edges: FlowEdge[] = [];
   for (const edge of stage.edges) {
     const source = nodeById.get(edge.source);
@@ -615,6 +652,8 @@ export function buildStageGraph(stage: Stage, showIntegrations = true): StageGra
      */
     const edgeType =
       edge.kind === 'integration' ? 'integration' : edge.kind === 'data' ? 'data' : processType;
+    // Маршрут есть только у прямого ребра потока между колонками (stageRoutes выше).
+    const route = forward && edgeType !== 'integration' ? routes?.get(edge.id) : undefined;
     edges.push({
       id: edge.id,
       type: edgeType,
@@ -623,6 +662,7 @@ export function buildStageGraph(stage: Stage, showIntegrations = true): StageGra
       sourceHandle: forward ? STEP_HANDLE.right : STEP_HANDLE.bottom,
       targetHandle: forward ? STEP_HANDLE.left : STEP_HANDLE.top,
       ...(edge.label === undefined ? {} : { label: edge.label }),
+      ...(route === undefined ? {} : { data: { route } }),
     });
   }
 

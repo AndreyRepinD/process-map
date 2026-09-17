@@ -49,6 +49,19 @@ export const STEP_NODE_SIZE: NodeSize = { width: 318, height: 52 };
 /** DataNode, уровень 2 (SPEC §4.2). */
 export const DATA_NODE_SIZE: NodeSize = { width: 200, height: 56 };
 
+/**
+ * Паддинги dashed-контейнера группы.
+ *
+ * По макету A2 они 16 / 48 / 28 (лево-право / верх / низ). Верх+низ = 76, но
+ * scripts/layout.ts оставляет между соседними по вертикали группами ровно
+ * 64 px (dagre nodesep 32 + половины карточек), и на этапах 2 и 3 рамки при
+ * макетных паддингах накладываются друг на друга на 12 px. Поэтому по
+ * вертикали 40 + 20 = 60 ≤ 64: заголовок (11px/14px) помещается, рамки не
+ * пересекаются. Сторож — tests/stageGraph.test.ts, проверка непересечения
+ * контейнеров на реальных данных всех этапов.
+ */
+export const GROUP_FRAME_PADDING = { x: 16, top: 40, bottom: 20 } as const;
+
 /** Drawer (SPEC §4.3). */
 export const DRAWER_WIDTH = 360;
 
