@@ -80,7 +80,7 @@ const STEPS_BY_STAGE: string[][] = [
 
 const INPUTS = [
   'Структура текущих запасов и фактические отгрузки из ERP',
-  'Спрос и волатильность из DP',
+  'Прогноз спроса из DP',
   'Параметры цепочки из ERP',
   'Сроки годности и требования сетей к остаточному сроку из ERP',
   'Ошибка прогноза по горизонту из DP',
@@ -164,7 +164,7 @@ describe('карта MEIO: содержание', () => {
     const stageOf = (label: string): number | undefined =>
       map.stages.find((stage) => stage.nodes.some((node) => node.label === label))?.number;
     expect(stageOf('Структура текущих запасов и фактические отгрузки из ERP')).toBe(1);
-    expect(stageOf('Спрос и волатильность из DP')).toBe(2);
+    expect(stageOf('Прогноз спроса из DP')).toBe(2);
     expect(stageOf('Параметры цепочки из ERP')).toBe(2);
     expect(stageOf('Сроки годности и требования сетей к остаточному сроку из ERP')).toBe(2);
     expect(stageOf('Ошибка прогноза по горизонту из DP')).toBe(2);

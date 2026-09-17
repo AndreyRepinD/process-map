@@ -1,7 +1,7 @@
 {
   "version": "1.0.0",
   "id": "meio",
-  "updatedAt": "2026-09-08",
+  "updatedAt": "2026-09-17",
   "title": "Процесс мультиэшелонной оптимизации запасов",
   "moduleLabel": "Модуль MEIO",
   "stages": [
@@ -1345,7 +1345,7 @@
           "direction": "in",
           "position": {
             "x": 355,
-            "y": 88
+            "y": 0
           },
           "slidePosition": {
             "x": 183,
@@ -1436,14 +1436,14 @@
           }
         },
         {
-          "id": "spros-i-volatilnost-iz-dp",
+          "id": "prognoz-sprosa-iz-dp",
           "type": "data",
-          "label": "Спрос и волатильность из DP",
+          "label": "Прогноз спроса из DP",
           "direction": "in",
           "system": "DP",
           "position": {
             "x": 355,
-            "y": 0
+            "y": 88
           },
           "slidePosition": {
             "x": 10,
@@ -1737,8 +1737,8 @@
           "kind": "process"
         },
         {
-          "id": "e-spros-i-volatilnost-iz-dp--raschet-volatilnosti-sprosa",
-          "source": "spros-i-volatilnost-iz-dp",
+          "id": "e-prognoz-sprosa-iz-dp--raschet-volatilnosti-sprosa",
+          "source": "prognoz-sprosa-iz-dp",
           "target": "raschet-volatilnosti-sprosa",
           "kind": "process"
         },
@@ -1860,7 +1860,7 @@
       "inputs": [
         {
           "system": "DP",
-          "label": "Спрос и волатильность из DP",
+          "label": "Прогноз спроса из DP",
           "stage": 2,
           "direction": "in"
         },

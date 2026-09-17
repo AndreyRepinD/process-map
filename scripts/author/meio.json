@@ -1,5 +1,5 @@
 {
-  "_note": "authoring source владельца для карты MEIO (паста §6). Из этого файла scripts/author/meio.py генерирует «In.Plan MEIO process <дата>.pptx» в профиле single-slide и сверяет таблицы STEP_DESCRIPTIONS/STAGE_KEY_OUTPUTS импортёра. CONTENT_FROZEN с 06.09.2026.",
+  "_note": "authoring source владельца для карты MEIO (паста §6). Из этого файла scripts/author/meio.py генерирует «In.Plan MEIO process <дата>.pptx» в профиле single-slide и сверяет таблицы STEP_DESCRIPTIONS/STAGE_KEY_OUTPUTS импортёра. CONTENT_FROZEN с 06.09.2026. 17.09.2026 (решение владельца по аудиту карты DP, п.8): контракт DP → MEIO — прогноз спроса и показатели ошибки прогноза по горизонту; вход «Спрос и волатильность из DP» переименован в «Прогноз спроса из DP», потому что волатильность продаж и ошибка прогноза — разные показатели, и волатильность MEIO считает по истории отгрузок сам.",
   "id": "meio",
   "title": "Процесс мультиэшелонной оптимизации запасов",
   "moduleLabel": "Модуль MEIO",
@@ -397,7 +397,7 @@
       "externals": [
         {
           "direction": "in",
-          "label": "Спрос и волатильность из DP",
+          "label": "Прогноз спроса из DP",
           "attachTo": "raschet-volatilnosti-sprosa",
           "expectSystems": ["DP"]
         },
