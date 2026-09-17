@@ -58,11 +58,15 @@ const INPUTS = [
   'Открытые заказы сетей и дистрибьюторов по EDI',
   'Категорийный менеджмент: проверка BB',
   'Коммерческие финансы: цены, оценка в деньгах',
+  'Sales/KAM: коммерческие допущения',
   'Получение ограниченного плана из модуля SNP',
 ];
 
 /** Выход процесса в смежные модули. */
 const OUTPUT = 'Передача неограниченного плана спроса в SNP и MEIO';
+
+/** Ошибка прогноза по горизонту — вторая часть контракта с MEIO. */
+const MEIO_ERROR_OUTPUT = 'Ошибка прогноза по горизонту в MEIO';
 
 /** Обмен с NRM: базовый прогноз уходит туда, промо-план приходит оттуда. */
 const NRM_OUTPUT = 'Передача базового прогноза в NRM';
@@ -101,19 +105,22 @@ describe('карта DP: содержание', () => {
     }
   });
 
-  it('двадцать шесть входов и тринадцать выходов, каждый при своём этапе', () => {
+  it('двадцать восемь входов и четырнадцать выходов, каждый при своём этапе', () => {
     // Входов стало больше решением владельца от 17.09.2026 (исправление 7):
     // шаги пользовались данными, которых на карте не было, — календарями
     // дефицитов и событий, логистической схемой, ассортиментной матрицей,
     // фактом продаж для расчёта точности.
-    expect(data).toHaveLength(39);
+    // Ещё два входа и один выход — по аудиту карты (решение владельца
+    // 17.09.2026, п.7–9): прогноз Sell-Out для баланса дистрибьютора,
+    // коммерческие допущения Sales/KAM и ошибка прогноза для MEIO.
+    expect(data).toHaveLength(42);
     // INPUTS — плашки слайда, называющие внешние системы. Кроме них в колонке
     // входов стоят карточки входных данных этапа (STAGE_INPUT_CARDS): они
     // систему не называют и ExternalIO не создают.
     for (const label of INPUTS) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
-    expect(data.filter((node) => node.direction === 'in')).toHaveLength(26);
+    expect(data.filter((node) => node.direction === 'in')).toHaveLength(28);
     for (const label of [
       'Справочник DFU и маппинг SKU',
       'Календарь OOS и дефицитов',
@@ -121,6 +128,7 @@ describe('карта DP: содержание', () => {
       'Ассортиментная матрица',
       'Коэффициенты подобия и каннибализации',
       'Факт продаж за закрытый период',
+      'Прогноз Sell-Out с учтёнными эффектами',
     ]) {
       expect(labels(data.filter((node) => node.direction === 'in'))).toContain(label);
     }
@@ -129,7 +137,8 @@ describe('карта DP: содержание', () => {
     // (решение владельца от 07.09.2026, приём карты SNP).
     expect(labels(data.filter((node) => node.direction === 'out'))).toContain(OUTPUT);
     expect(labels(data.filter((node) => node.direction === 'out'))).toContain(NRM_OUTPUT);
-    expect(data.filter((node) => node.direction === 'out')).toHaveLength(13);
+    expect(labels(data.filter((node) => node.direction === 'out'))).toContain(MEIO_ERROR_OUTPUT);
+    expect(data.filter((node) => node.direction === 'out')).toHaveLength(14);
 
     const stageOf = (label: string): number | undefined =>
       map.stages.find((stage) => stage.nodes.some((node) => node.label === label))?.number;
@@ -143,8 +152,10 @@ describe('карта DP: содержание', () => {
     expect(stageOf('Открытые заказы сетей и дистрибьюторов по EDI')).toBe(3);
     expect(stageOf('Категорийный менеджмент: проверка BB')).toBe(4);
     expect(stageOf('Коммерческие финансы: цены, оценка в деньгах')).toBe(4);
+    expect(stageOf('Sales/KAM: коммерческие допущения')).toBe(4);
     expect(stageOf('Получение ограниченного плана из модуля SNP')).toBe(5);
     expect(stageOf(OUTPUT)).toBe(5);
+    expect(stageOf(MEIO_ERROR_OUTPUT)).toBe(5);
   });
 
   it('входная карточка ведёт к шагу, который её использует', () => {
@@ -171,17 +182,40 @@ describe('карта DP: содержание', () => {
     ]);
     expect(consumerOf('Пороги точности и правила алертов')).toEqual(['kontrol-tochnosti-i-fva']);
     expect(consumerOf('Факт продаж за закрытый период')).toEqual(['kontrol-tochnosti-i-fva']);
+    expect(consumerOf('Прогноз Sell-Out с учтёнными эффектами')).toEqual([
+      'sell-out-balans-sell-in',
+    ]);
+    // Модель канала выбирает маршрут клиента, поэтому нужна обеим ветвям.
+    expect(consumerOf('Модель канала по клиентам')).toEqual([
+      'pryamye-kanaly-pryamoy-prognoz-sell-in',
+      'sell-out-balans-sell-in',
+    ]);
   });
 
-  it('рёбра внутри этапов: 10 + 13 + 7 + 6 + 12', () => {
+  it('обе ветви Sell-In дают общий результат', () => {
+    // Аудит 17.09.2026 (P0-2): прямая ветвь была тупиком — её прогноз никуда не
+    // шёл, и «Прогноз Sell-In по каналам» считался только балансом дистрибьютора.
+    const stage = map.stages[2];
+    const result = stage?.nodes.find((node) => node.label === 'Прогноз Sell-In по каналам');
+    const producers = (stage?.edges ?? [])
+      .filter((edge) => edge.target === result?.id)
+      .map((edge) => edge.source)
+      .sort();
+    expect(producers).toEqual([
+      'pryamye-kanaly-pryamoy-prognoz-sell-in',
+      'sell-out-balans-sell-in',
+    ]);
+  });
+
+  it('рёбра внутри этапов: 10 + 13 + 10 + 7 + 13', () => {
     // Рёбер стало заметно больше решением владельца от 07.09.2026: карточки
     // входов и результатов перестали висеть отдельно от потока. До этого 49
     // узлов из 87 на двух картах не имели ни одной связи, и карта не показывала
     // главного — что из чего считается.
     //
     // «Прямые каналы» и «Sell-Out → баланс → Sell-In» по-прежнему параллельны и
-    // между собой не связаны.
-    expect(map.stages.map((stage) => stage.edges.length)).toEqual([10, 13, 7, 6, 12]);
+    // между собой не связаны: общие у них вход (модель канала) и результат.
+    expect(map.stages.map((stage) => stage.edges.length)).toEqual([10, 13, 10, 7, 13]);
   });
 
   it('поток 1 → 2 → 3 → 4 → 5 и ОБРАТНАЯ связь 5 → 2 по точности', () => {
@@ -222,10 +256,13 @@ describe('карта DP: содержание', () => {
     // у такой плашки нет, и ExternalIO она не создаёт.
     expect(map.stages[2]?.inputs).toEqual([]);
     expect(map.stages[4]?.inputs.map((io) => io.system)).toEqual(['SNP']);
-    expect(map.stages[4]?.outputs.map((io) => io.system)).toEqual(['SNP', 'IO']);
-    for (const io of map.stages[4]?.outputs ?? []) {
-      expect(io.label).toBe(OUTPUT);
-    }
+    // Вторая запись IO — ошибка прогноза по горизонту (контракт с MEIO,
+    // решение владельца 17.09.2026; сверка обеих карт — tests/dpMeioContract).
+    expect(map.stages[4]?.outputs.map((io) => [io.system, io.label])).toEqual([
+      ['SNP', OUTPUT],
+      ['IO', OUTPUT],
+      ['IO', MEIO_ERROR_OUTPUT],
+    ]);
   });
 
   it('TPM, NRM, EDI и роли внешними системами НЕ стали', () => {
@@ -306,6 +343,7 @@ describe('карта DP: содержание', () => {
       'Статистика, ансамбли, ML',
       'Backtest, чемпион для серии',
       'Запуск по настройкам сегмента и расписанию',
+      'Ассортимент на период прогноза: запуски и выводы',
     ]);
     expect(nodes.find((node) => node.id === 'novinki-pohozhie-tovary')?.inputs).toEqual([
       'Референс, коэффициент, даты действия',
@@ -330,6 +368,40 @@ describe('карта DP: содержание', () => {
     ]) {
       expect(labels(data)).toContain(label);
     }
+  });
+
+  it('описания ссылаются на регламент и не выдают требования за действующее', () => {
+    // Решение владельца 17.09.2026 (п.15): детальные правила — в
+    // docs/regulations/dp.md, на карте — ссылки на его разделы. Правило, чья
+    // реализация в In.Plan не подтверждена, так и помечено (п.6, п.10).
+    for (const step of steps) {
+      expect(step.description, `шаг «${step.id}»`).toMatch(/Правила: регламент DP, §\d+/);
+    }
+    const quality = nodes.find((node) => node.id === 'proverka-kachestva-dannyh')?.description;
+    expect(quality).toContain('реализация в In.Plan не подтверждена');
+    const fva = nodes.find((node) => node.id === 'kontrol-tochnosti-i-fva')?.description;
+    expect(fva).toContain('хранение промежуточных слоёв не проверено');
+    // Знак BIAS не утверждается, пока не сверен с формулой In.Plan (п.4).
+    expect(fva).not.toMatch(/положительн\S* BIAS|плюс\s*=\s*завыш/i);
+  });
+
+  it('редакторских пояснений и выдуманных правил в описаниях нет', () => {
+    // П.1 и п.3 разбора аудита: «только действующей матрицы», пояснения
+    // капсом и «единственный выход этапа 2» были моими формулировками.
+    const text = steps.map((step) => step.description ?? '').join('\n');
+    expect(text).not.toContain('действующей ассортиментной');
+    expect(text).not.toContain('единственный выход');
+    expect(text).not.toContain('ОТДЕЛЬНЫЙ ШАГ');
+    expect(text).not.toContain('намеренно');
+    expect(text).not.toContain('не присылают');
+  });
+
+  it('поглощение заказами — один раз и не в DP', () => {
+    // П.12: на стенде In.Plan поглощение — процесс «SNP Поглощение прогноза»
+    // (реестр процессов, 17.09.2026), в модели BPMN — SP-010-020.
+    const publication = nodes.find((node) => node.id === 'publikaciya-plana-sprosa');
+    expect(publication?.inputs).toContain('Без вычета заказов: поглощение — в SNP');
+    expect(publication?.description).toContain('SNP Поглощение прогноза');
   });
 
   it('разделения потоков спроса на карте нет', () => {
@@ -384,12 +456,17 @@ describe('карта DP: содержание', () => {
       'KPI точности: FA, MAPE, BIAS, WAPE',
       'FVA по слоям',
       'Алерты точности',
+      'Ошибка прогноза по горизонту и уровню для MEIO',
     ]);
-    // Коммерческие финансы — участник встречи, а не поставщик прогноза
-    // (исправления 3 и 4 от 17.09.2026).
+    // Коммерческие финансы и Sales/KAM — участники встречи (п.2 и п.9 разбора
+    // аудита от 17.09.2026); решение по разрыву — совместное (п.13).
     expect(nodes.find((node) => node.id === 'demand-review-meeting')?.owner).toBe(
-      'Руководитель планирования спроса совместно с коммерческими финансами',
+      'Руководитель планирования спроса совместно с Sales/KAM и коммерческими финансами',
     );
+    expect(
+      nodes.find((node) => node.id === 'sverka-s-ogranichennym-planom-snp-i-reshenie-po-razryvu')
+        ?.owner,
+    ).toBe('Supply-планер, Sales/Marketing и руководитель планирования спроса; эскалация — S&OP');
   });
 
   it('ОТВЕТСТВЕННЫЙ — ручное поле и переживает перегенерацию', () => {
